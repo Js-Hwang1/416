@@ -7,8 +7,8 @@
 - [ ] Use Leaflet (or alternate) for including maps in GUI
 
 ## Data Acquisition
-- [ ] Download enacted district plan for Massachusetts
-- [ ] Download enacted district plan for Texas
+- [X] Download enacted district plan for Massachusetts
+- [X] Download enacted district plan for Texas
 - [ ] Integrate MA district plan (as GeoJSON) into GUI map of state
 - [ ] Integrate TX district plan (as GeoJSON) into GUI map of state
 

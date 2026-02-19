@@ -1,0 +1,63 @@
+{
+  "MA": {
+    "state": "Massachusetts",
+    "total_districts": 9,
+    "party_split": { "Democrat": 9, "Republican": 0 },
+    "representatives": [
+      { "district": 1, "name": "Richard Neal", "party": "Democrat", "race_ethnicity": "White" },
+      { "district": 2, "name": "James P. McGovern", "party": "Democrat", "race_ethnicity": "White" },
+      { "district": 3, "name": "Lori Trahan", "party": "Democrat", "race_ethnicity": "White" },
+      { "district": 4, "name": "Jake Auchincloss", "party": "Democrat", "race_ethnicity": "White" },
+      { "district": 5, "name": "Katherine Clark", "party": "Democrat", "race_ethnicity": "White" },
+      { "district": 6, "name": "Seth Moulton", "party": "Democrat", "race_ethnicity": "White" },
+      { "district": 7, "name": "Ayanna Pressley", "party": "Democrat", "race_ethnicity": "Black" },
+      { "district": 8, "name": "Stephen F. Lynch", "party": "Democrat", "race_ethnicity": "White" },
+      { "district": 9, "name": "William R. Keating", "party": "Democrat", "race_ethnicity": "White" }
+    ]
+  },
+  "TX": {
+    "state": "Texas",
+    "total_districts": 38,
+    "party_split": { "Democrat": 13, "Republican": 25 },
+    "representatives": [
+      { "district": 1, "name": "Nathaniel Moran", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 2, "name": "Dan Crenshaw", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 3, "name": "Keith Self", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 4, "name": "Pat Fallon", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 5, "name": "Lance Gooden", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 6, "name": "Jake Ellzey", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 7, "name": "Lizzie Fletcher", "party": "Democrat", "race_ethnicity": "White" },
+      { "district": 8, "name": "Morgan Luttrell", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 9, "name": "Al Green", "party": "Democrat", "race_ethnicity": "Black" },
+      { "district": 10, "name": "Michael McCaul", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 11, "name": "August Pfluger", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 12, "name": "Craig Goldman", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 13, "name": "Ronny Jackson", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 14, "name": "Randy Weber", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 15, "name": "Monica De La Cruz", "party": "Republican", "race_ethnicity": "Hispanic" },
+      { "district": 16, "name": "Veronica Escobar", "party": "Democrat", "race_ethnicity": "Hispanic" },
+      { "district": 17, "name": "Pete Sessions", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 18, "name": "Christian Menefee", "party": "Democrat", "race_ethnicity": "Black" },
+      { "district": 19, "name": "Jodey Arrington", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 20, "name": "Joaquin Castro", "party": "Democrat", "race_ethnicity": "Hispanic" },
+      { "district": 21, "name": "Chip Roy", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 22, "name": "Troy Nehls", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 23, "name": "Tony Gonzales", "party": "Republican", "race_ethnicity": "Hispanic" },
+      { "district": 24, "name": "Beth Van Duyne", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 25, "name": "Roger Williams", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 26, "name": "Brandon Gill", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 27, "name": "Michael Cloud", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 28, "name": "Henry Cuellar", "party": "Democrat", "race_ethnicity": "Hispanic" },
+      { "district": 29, "name": "Sylvia Garcia", "party": "Democrat", "race_ethnicity": "Hispanic" },
+      { "district": 30, "name": "Jasmine Crockett", "party": "Democrat", "race_ethnicity": "Black" },
+      { "district": 31, "name": "John Carter", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 32, "name": "Julie Johnson", "party": "Democrat", "race_ethnicity": "White" },
+      { "district": 33, "name": "Marc Veasey", "party": "Democrat", "race_ethnicity": "Black" },
+      { "district": 34, "name": "Vicente Gonzalez", "party": "Democrat", "race_ethnicity": "Hispanic" },
+      { "district": 35, "name": "Greg Casar", "party": "Democrat", "race_ethnicity": "Hispanic" },
+      { "district": 36, "name": "Brian Babin", "party": "Republican", "race_ethnicity": "White" },
+      { "district": 37, "name": "Lloyd Doggett", "party": "Democrat", "race_ethnicity": "White" },
+      { "district": 38, "name": "Wesley Hunt", "party": "Republican", "race_ethnicity": "Black" }
+    ]
+  }
+}
