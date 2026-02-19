@@ -13,7 +13,7 @@
 - [ ] Integrate TX district plan (as GeoJSON) into GUI map of state
 
 ## Reading / Research
-- [ ] Read Becker, et al paper ("Computational Redistricting and the Voting Rights Act")
+- [X] Read Becker, et al paper ("Computational Redistricting and the Voting Rights Act")
 - [ ] Read/run GerryChain (standard ReCom)
 - [ ] Read/run modified GerryChain (VRA-constrained ReCom)
 - [ ] Read/run PyEI (Ecological Inference)
