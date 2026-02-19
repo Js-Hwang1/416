@@ -7,6 +7,10 @@ We'll be performing analysis on states:
 Tech Stack:
 JS (or TS), D3 (GUI), Java (Server), Python, and etc.
 
+Group Member Roles:
+### Karen Zhao
+Database
+
 Data Sources:
 
 ### Precinct/VTD Shapefiles (MGGG)
@@ -31,3 +35,4 @@ Data Sources:
 
 ### Urban/Rural Classification (Census TIGER/Line)
 11. [2020 Urban Areas (National)](https://www2.census.gov/geo/tiger/TIGER2025/UAC20/tl_2025_us_uac20.zip) — Urban area boundary polygons for classifying precincts as urban/rural/suburban
+
