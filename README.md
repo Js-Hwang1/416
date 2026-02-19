@@ -8,8 +8,7 @@ Tech Stack:
 JS (or TS), D3 (GUI), Java (Server), Python, and etc.
 
 Group Member Roles:
-### Karen Zhao
-Database
+Karen Zhao - Database
 
 Data Sources:
 
