@@ -1,0 +1,31 @@
+{
+  "state": "Texas",
+  "state_abbr": "TX",
+  "total_population": 25145561,
+  "voting_age_population": 18279737,
+  "population_by_group": {
+    "white": 11397345,
+    "black": 3168469,
+    "hispanic": 9460921,
+    "asian": 0,
+    "other": 1118826
+  },
+  "vap_by_group": {
+    "white": 9074684,
+    "black": 2196259,
+    "hispanic": 6143144,
+    "asian": 0,
+    "other": 933861
+  },
+  "num_congressional_districts": 38,
+  "party_split": {
+    "Democrat": 13,
+    "Republican": 25
+  },
+  "feasible_demographic_groups": [
+    "white",
+    "black",
+    "hispanic",
+    "other"
+  ]
+}

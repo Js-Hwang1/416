@@ -1,0 +1,29 @@
+{
+  "state": "Massachusetts",
+  "state_abbr": "MA",
+  "total_population": 6547629,
+  "voting_age_population": 5128706,
+  "population_by_group": {
+    "white": 4984800,
+    "black": 391693,
+    "hispanic": 627654,
+    "asian": 347495,
+    "other": 195987
+  },
+  "vap_by_group": {
+    "white": 4029458,
+    "black": 288523,
+    "hispanic": 416775,
+    "asian": 269089,
+    "other": 124861
+  },
+  "num_congressional_districts": 9,
+  "party_split": {
+    "Democrat": 9,
+    "Republican": 0
+  },
+  "feasible_demographic_groups": [
+    "white",
+    "hispanic"
+  ]
+}
