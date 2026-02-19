@@ -1,4 +1,4 @@
-Group Tigers! 
+Group Tigers!  
 
 We'll be performing analysis on states: 
 1. Massachusetts (Non-preclearance State)
@@ -9,6 +9,7 @@ JS (or TS), D3 (GUI), Java (Server), Python, and etc.
 
 Group Member Roles:
 Karen Zhao - Database
+Kevin Darby - Frontend 
 
 Data Sources:
 
