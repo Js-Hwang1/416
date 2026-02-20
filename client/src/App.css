@@ -94,6 +94,18 @@
   to { background: #f7f8fa; }
 }
 
+.state-map-wrapper .leaflet-map {
+  height: 540px;
+  width: 100%;
+}
+
+.state-map-wrapper .leaflet-container {
+  height: 540px;
+  width: 100%;
+}
+
+.leaflet-attribution-flag { display: none !important; }
+
 /* ── State Nav ───────────────────────────────────── */
 .state-nav {
   display: flex;
@@ -305,10 +317,8 @@
   margin-top: 4px;
 }
 
-.state-map-wrapper svg {
+.state-map-wrapper .leaflet-container svg {
   display: block;
-  width: 100%;
-  height: auto;
 }
 
 .state-info-panel {
