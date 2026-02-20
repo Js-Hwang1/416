@@ -5,28 +5,34 @@ import StatePage from "./StatePage";
 
 import BoxPlotChart from './box_and_whisker';
 import BarChart from "./bar_chart";
+import ProbabilityChart from "./probability_curve";
+import box_data from "./dummy_data/dummy_box_and_whisker.json";
 
 
 function App() {
   return (
-    <Router>
-      <div className="App">
-        <Routes>
-          <Route path="/" element={<SplashPage />} />
-          <Route path="/state/:stateSlug" element={<StatePage />} />
-        </Routes>
-      </div>
-    </Router>
+    // <Router>
+    //   <div className="App">
+    //     <Routes>
+    //       <Route path="/" element={<SplashPage />} />
+    //       <Route path="/state/:stateSlug" element={<StatePage />} />
+    //     </Routes>
+    //   </div>
+    // </Router>
     
     // example box and whisker
-    // <div>
-    //   <BoxPlotChart districts={box_data.districts} />
-    // </div>
+    <div> 
+      <BoxPlotChart districts={box_data.districts} />
+    </div>
     
     // <div style={{ width: "25vw", height: "25vh" }}>
     //   <BarChart />
     // </div>
     
+    // for gui 12
+    // <div style={{ width: "100vw", height: "100vh" }}>
+    //   <ProbabilityChart />
+    // </div>
     
   );
 }
