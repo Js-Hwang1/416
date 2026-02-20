@@ -1,38 +1,248 @@
+/* ── Base ─────────────────────────────────────────── */
 .App {
+  min-height: 100vh;
+}
+
+/* ── Splash Page ─────────────────────────────────── */
+.splash-page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* ── Map Container ───────────────────────────────── */
+.map-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.map-container svg {
+  display: block;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 90%;
+  max-width: 1100px;
+  height: auto;
+}
+
+.zoom-overlay {
+  position: absolute;
+  inset: 0;
+  background: #999;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ── State Page ──────────────────────────────────── */
+.state-page {
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+
+.fade-in {
+  animation: fadeFromGrey 0.6s ease-out;
+}
+
+@keyframes fadeFromGrey {
+  from {
+    background: #999;
+  }
+  to {
+    background: #f5f6f8;
+  }
+}
+
+/* ── State Nav ───────────────────────────────────── */
+.state-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: #222;
+  border-bottom: 2px solid #555;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #ccc;
+  font-family: "Inter", sans-serif;
+  font-size: 0.9rem;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #999;
+  color: #fff;
+}
+
+.nav-title {
+  font-family: "Playfair Display", Georgia, serif;
+  color: #999;
+  font-size: 0.95rem;
+  letter-spacing: 0.5px;
+}
+
+/* ── State Header ────────────────────────────────── */
+.state-header {
+  background: linear-gradient(170deg, #222, #333);
+  padding: 48px 32px;
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.state-abbr-badge {
+  display: inline-block;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #999;
+  border: 2px solid #666;
+  border-radius: 6px;
+  padding: 4px 14px;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.state-name {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 2.6rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  margin: 8px 0 24px;
 }
 
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.state-meta {
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 32px;
 }
 
-.App-link {
-  color: #61dafb;
+.meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.meta-label {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.meta-value {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.meta-divider {
+  width: 1px;
+  height: 40px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* ── State Content ───────────────────────────────── */
+.state-content {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+
+.state-section {
+  margin-bottom: 40px;
+}
+
+.section-title {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #444;
+  display: inline-block;
+}
+
+.section-text {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: #444;
+  margin: 0;
+}
+
+/* ── Tools Grid ──────────────────────────────────── */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+
+.tool-card {
+  background: #fff;
+  border: 1px solid #e0e4ea;
+  border-radius: 10px;
+  padding: 24px;
+  transition: all 0.25s ease;
+}
+
+.tool-card:hover {
+  border-color: #888;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.tool-card h3 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+  margin: 0 0 8px;
+}
+
+.tool-card p {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #556;
+  margin: 0;
+}
+
+/* ── Responsive ──────────────────────────────────── */
+@media (max-width: 640px) {
+  .state-name {
+    font-size: 2rem;
   }
-  to {
-    transform: rotate(360deg);
+
+  .state-meta {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .meta-divider {
+    width: 40px;
+    height: 1px;
+  }
+
+  .state-nav {
+    padding: 12px 16px;
   }
 }
