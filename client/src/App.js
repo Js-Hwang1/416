@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import "leaflet/dist/leaflet.css";
 import "./App.css";
 import SplashPage from "./SplashPage";
 import StatePage from "./StatePage";
