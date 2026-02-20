@@ -5,11 +5,12 @@ We'll be performing analysis on states:
 2. Texas (Preclearance State)
 
 Tech Stack:
-JS (or TS), D3 (GUI), Java (Server), Python, and etc.
+JS (or TS), D3 (GUI; Visualization), Java (Server), Python, and etc.
 
 Group Member Roles:
 Karen Zhao - Database
 Kevin Darby - Frontend 
+Junsung Hwang - Backend (Server)
 
 Data Sources:
 

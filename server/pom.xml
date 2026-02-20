@@ -1,0 +1,14 @@
+<!-- Maven build configuration for Spring Boot + MongoDB redistricting server -->
+<!--
+  groupId:    com.tigers
+  artifactId: redistricting
+
+  Dependencies to include:
+    - spring-boot-starter-web          (REST controllers, embedded Tomcat)
+    - spring-boot-starter-data-mongodb (MongoRepository, @Document mapping)
+    - spring-boot-starter-test         (JUnit, MockMvc for integration tests)
+    - lombok (optional)                (reduce boilerplate getters/setters)
+
+  Plugins:
+    - spring-boot-maven-plugin         (mvn spring-boot:run)
+-->
