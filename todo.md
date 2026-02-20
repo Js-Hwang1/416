@@ -25,8 +25,8 @@
 - [ ] Build a box & whisker chart
 
 ## GUI Use-Cases
-- [ ] GUI-1. Select state to display (required)
-- [ ] GUI-2. Display the current district plan when state is selected (required)
+- [X] GUI-1. Select state to display (required)
+- [X] GUI-2. Display the current district plan when state is selected (required)
 - [ ] GUI-3. State data summary (required)
 - [ ] GUI-4. Display demographic heat map by precinct (required)
 - [ ] GUI-5. Display demographic heat map by census block (preferred)
