@@ -1,24 +1,111 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import * as d3 from "d3";
+
+const DISTRICT_COLORS = [
+  "#e8e8e8", "#d4d4d4", "#c0c0c0", "#acacac",
+  "#e0dcd0", "#ccc8bc", "#d8d4c8", "#c4c0b4",
+  "#dcdcdc", "#c8c8c8", "#b4b4b4", "#e4e0d8",
+  "#d0ccc0", "#bcb8ac", "#d4d0c4", "#c0bcb0",
+  "#e0e0e0", "#cccccc", "#b8b8b8", "#a8a8a8",
+  "#dcd8cc", "#c8c4b8", "#d4d0c8", "#c0bcb4",
+  "#d8d8d8", "#c4c4c4", "#b0b0b0", "#e8e4dc",
+  "#d4d0c4", "#c0bcb0", "#dcd8d0", "#c8c4bc",
+  "#e4e4e4", "#d0d0d0", "#bcbcbc", "#d8d4cc",
+  "#c4c0b8", "#b0aca4",
+];
 
 const STATE_DATA = {
   texas: {
     name: "Texas",
     abbr: "TX",
+    fips: 48,
     districts: 38,
-    population: "30.5M",
-    description:
-      "Texas has 38 congressional districts, making it one of the largest and most complex states for redistricting analysis.",
+    population: "30,503,340",
+    geojson: "/data/tx_districts.geojson",
+    ensembles: [
+      {
+        id: 1,
+        type: "Race-Blind",
+        plans: 5000,
+        populationThreshold: "2.0%",
+      },
+      {
+        id: 2,
+        type: "VRA-Constrained",
+        plans: 5000,
+        populationThreshold: "2.0%",
+      },
+    ],
   },
   massachusetts: {
     name: "Massachusetts",
     abbr: "MA",
+    fips: 25,
     districts: 9,
-    population: "7.0M",
-    description:
-      "Massachusetts has 9 congressional districts with a compact geographic footprint that presents unique redistricting challenges.",
+    population: "7,029,917",
+    geojson: "/data/ma_districts.geojson",
+    ensembles: [
+      {
+        id: 1,
+        type: "Race-Blind",
+        plans: 5000,
+        populationThreshold: "2.0%",
+      },
+      {
+        id: 2,
+        type: "VRA-Constrained",
+        plans: 5000,
+        populationThreshold: "2.0%",
+      },
+    ],
   },
 };
+
+function StateMap({ geojsonPath }) {
+  const svgRef = useRef();
+
+  useEffect(() => {
+    const width = 600;
+    const height = 450;
+
+    d3.json(geojsonPath).then((geojson) => {
+      const svg = d3
+        .select(svgRef.current)
+        .attr("viewBox", [0, 0, width, height])
+        .style("width", "100%")
+        .style("height", "auto");
+
+      svg.selectAll("*").remove();
+
+      const projection = d3.geoMercator();
+      const path = d3.geoPath().projection(projection);
+
+      projection.fitExtent(
+        [
+          [20, 20],
+          [width - 20, height - 20],
+        ],
+        geojson
+      );
+
+      const g = svg.append("g");
+
+      // Draw congressional districts
+      g.selectAll("path")
+        .data(geojson.features)
+        .join("path")
+        .attr("d", path)
+        .attr("fill", (d, i) => DISTRICT_COLORS[i % DISTRICT_COLORS.length])
+        .attr("stroke", "#555")
+        .attr("stroke-width", 1)
+        .append("title")
+        .text((d) => d.properties.name);
+    });
+  }, [geojsonPath]);
+
+  return <svg ref={svgRef}></svg>;
+}
 
 export default function StatePage() {
   const { stateSlug } = useParams();
@@ -56,6 +143,16 @@ export default function StatePage() {
           </svg>
           Back to Map
         </button>
+
+        <select
+          className="state-dropdown"
+          value={stateSlug}
+          onChange={(e) => navigate(`/state/${e.target.value}`)}
+        >
+          <option value="texas">Texas</option>
+          <option value="massachusetts">Massachusetts</option>
+        </select>
+
         <span className="nav-title">Redistricting Analysis</span>
       </nav>
 
@@ -76,37 +173,38 @@ export default function StatePage() {
       </header>
 
       <main className="state-content">
-        <section className="state-section">
-          <h2 className="section-title">Overview</h2>
-          <p className="section-text">{stateInfo.description}</p>
-        </section>
-
-        <section className="state-section">
-          <h2 className="section-title">Analysis Tools</h2>
-          <div className="tools-grid">
-            <div className="tool-card">
-              <h3>Ensemble Analysis</h3>
-              <p>
-                Generate and compare thousands of possible district maps using
-                Markov chain Monte Carlo methods.
-              </p>
-            </div>
-            <div className="tool-card">
-              <h3>District Metrics</h3>
-              <p>
-                Evaluate compactness, population equality, and other
-                redistricting criteria across plans.
-              </p>
-            </div>
-            <div className="tool-card">
-              <h3>Demographic Data</h3>
-              <p>
-                Explore census data and demographic distributions at the
-                precinct level.
-              </p>
+        <div className="state-layout">
+          <div className="state-map-panel">
+            <h2 className="section-title">State Map</h2>
+            <div className="state-map-wrapper">
+              <StateMap geojsonPath={stateInfo.geojson} />
             </div>
           </div>
-        </section>
+
+          <div className="state-info-panel">
+            <section className="state-section">
+              <h2 className="section-title">Available Ensembles</h2>
+              <table className="ensemble-table">
+                <thead>
+                  <tr>
+                    <th>Ensemble Type</th>
+                    <th>District Plans</th>
+                    <th>Pop. Equality Threshold</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stateInfo.ensembles.map((e) => (
+                    <tr key={e.id}>
+                      <td>{e.type}</td>
+                      <td>{e.plans.toLocaleString()}</td>
+                      <td>{e.populationThreshold}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+          </div>
+        </div>
       </main>
     </div>
   );
