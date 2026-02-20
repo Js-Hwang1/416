@@ -4,7 +4,7 @@ import SplashPage from "./SplashPage";
 import StatePage from "./StatePage";
 
 import BoxPlotChart from './box_and_whisker';
-import box_data from './dummy_data/dummy_box_and_whisker.json';
+import BarChart from "./bar_chart";
 
 
 function App() {
@@ -22,6 +22,12 @@ function App() {
     // <div>
     //   <BoxPlotChart districts={box_data.districts} />
     // </div>
+    
+    // <div style={{ width: "25vw", height: "25vh" }}>
+    //   <BarChart />
+    // </div>
+    
+    
   );
 }
 
