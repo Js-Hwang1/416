@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as d3 from "d3";
 
@@ -62,12 +62,20 @@ const STATE_DATA = {
   },
 };
 
+const VIEWS = [
+  { id: "map", label: "District Map" },
+  { id: "ensemble", label: "Ensemble Summary" },
+  { id: "demographics", label: "Demographics" },
+  { id: "representation", label: "Representation" },
+  { id: "analysis", label: "Analysis" },
+];
+
 function StateMap({ geojsonPath }) {
   const svgRef = useRef();
 
   useEffect(() => {
-    const width = 600;
-    const height = 450;
+    const width = 720;
+    const height = 540;
 
     d3.json(geojsonPath).then((geojson) => {
       const svg = d3
@@ -111,6 +119,7 @@ export default function StatePage() {
   const { stateSlug } = useParams();
   const navigate = useNavigate();
   const stateInfo = STATE_DATA[stateSlug];
+  const [activeView, setActiveView] = useState("map");
 
   if (!stateInfo) {
     return (
@@ -128,83 +137,110 @@ export default function StatePage() {
   return (
     <div className="state-page fade-in">
       <nav className="state-nav">
-        <button className="back-button" onClick={() => navigate("/")}>
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M19 12H5M12 19l-7-7 7-7" />
-          </svg>
-          Back to Map
-        </button>
+        <div className="nav-left">
+          <button className="back-button" onClick={() => navigate("/")}>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M19 12H5M12 19l-7-7 7-7" />
+            </svg>
+            Back
+          </button>
 
-        <select
-          className="state-dropdown"
-          value={stateSlug}
-          onChange={(e) => navigate(`/state/${e.target.value}`)}
-        >
-          <option value="texas">Texas</option>
-          <option value="massachusetts">Massachusetts</option>
-        </select>
+          <select
+            className="state-dropdown"
+            value={stateSlug}
+            onChange={(e) => navigate(`/state/${e.target.value}`)}
+          >
+            <option value="texas">Texas</option>
+            <option value="massachusetts">Massachusetts</option>
+          </select>
+        </div>
+
+        <div className="nav-views">
+          {VIEWS.map((v) => (
+            <button
+              key={v.id}
+              className={`nav-view-btn${activeView === v.id ? " active" : ""}`}
+              onClick={() => setActiveView(v.id)}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
 
         <span className="nav-title">Redistricting Analysis</span>
       </nav>
 
       <header className="state-header">
-        <span className="state-abbr-badge">{stateInfo.abbr}</span>
-        <h1 className="state-name">{stateInfo.name}</h1>
-        <div className="state-meta">
-          <div className="meta-item">
-            <span className="meta-label">Congressional Districts</span>
-            <span className="meta-value">{stateInfo.districts}</span>
-          </div>
-          <div className="meta-divider"></div>
-          <div className="meta-item">
-            <span className="meta-label">Population</span>
-            <span className="meta-value">{stateInfo.population}</span>
+        <div className="header-content">
+          <span className="state-abbr-badge">{stateInfo.abbr}</span>
+          <h1 className="state-name">{stateInfo.name}</h1>
+          <div className="state-meta">
+            <div className="meta-item">
+              <span className="meta-label">Districts</span>
+              <span className="meta-value">{stateInfo.districts}</span>
+            </div>
+            <div className="meta-divider"></div>
+            <div className="meta-item">
+              <span className="meta-label">Population</span>
+              <span className="meta-value">{stateInfo.population}</span>
+            </div>
           </div>
         </div>
       </header>
 
       <main className="state-content">
-        <div className="state-layout">
-          <div className="state-map-panel">
-            <h2 className="section-title">State Map</h2>
-            <div className="state-map-wrapper">
-              <StateMap geojsonPath={stateInfo.geojson} />
+        {activeView === "map" && (
+          <div className="state-layout">
+            <div className="state-map-panel">
+              <h2 className="section-title">Congressional Districts</h2>
+              <div className="state-map-wrapper">
+                <StateMap geojsonPath={stateInfo.geojson} />
+              </div>
+            </div>
+
+            <div className="state-info-panel">
+              <section className="state-section">
+                <h2 className="section-title">Ensemble Summary</h2>
+                <table className="ensemble-table">
+                  <thead>
+                    <tr>
+                      <th>Type</th>
+                      <th>Plans</th>
+                      <th>Pop. Threshold</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stateInfo.ensembles.map((e) => (
+                      <tr key={e.id}>
+                        <td className="td-label">{e.type}</td>
+                        <td className="td-number">{e.plans.toLocaleString()}</td>
+                        <td className="td-number">{e.populationThreshold}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </section>
             </div>
           </div>
+        )}
 
-          <div className="state-info-panel">
-            <section className="state-section">
-              <h2 className="section-title">Available Ensembles</h2>
-              <table className="ensemble-table">
-                <thead>
-                  <tr>
-                    <th>Ensemble Type</th>
-                    <th>District Plans</th>
-                    <th>Pop. Equality Threshold</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {stateInfo.ensembles.map((e) => (
-                    <tr key={e.id}>
-                      <td>{e.type}</td>
-                      <td>{e.plans.toLocaleString()}</td>
-                      <td>{e.populationThreshold}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </section>
+        {activeView !== "map" && (
+          <div className="placeholder-view">
+            <span className="placeholder-label">
+              {VIEWS.find((v) => v.id === activeView)?.label}
+            </span>
+            <span className="placeholder-sub">Coming soon</span>
           </div>
-        </div>
+        )}
       </main>
     </div>
   );

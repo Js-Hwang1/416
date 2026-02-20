@@ -8,6 +8,12 @@ const FOCUS_STATES = {
   25: { name: "Massachusetts", slug: "massachusetts" },
 };
 
+const STATE_OPTIONS = [
+  { label: "Select a State", value: "" },
+  { label: "Texas", value: "texas" },
+  { label: "Massachusetts", value: "massachusetts" },
+];
+
 export default function SplashPage() {
   const svgRef = useRef();
   const overlayRef = useRef();
@@ -160,6 +166,21 @@ export default function SplashPage() {
 
   return (
     <div className="splash-page">
+      <div className="splash-dropdown-bar">
+        <select
+          className="splash-state-select"
+          defaultValue=""
+          onChange={(e) => {
+            if (e.target.value) navigate(`/state/${e.target.value}`);
+          }}
+        >
+          {STATE_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value} disabled={!opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
       <div className="map-container">
         <svg ref={svgRef}></svg>
         <div ref={overlayRef} className="zoom-overlay"></div>

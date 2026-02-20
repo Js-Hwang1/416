@@ -14,6 +14,43 @@
   overflow: hidden;
 }
 
+.splash-dropdown-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 20px 32px;
+  z-index: 20;
+}
+
+.splash-state-select {
+  background: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  padding: 8px 32px 8px 12px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23666'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.splash-state-select:hover,
+.splash-state-select:focus {
+  border-color: #333;
+}
+
 /* ── Map Container ───────────────────────────────── */
 .map-container {
   position: relative;
@@ -45,7 +82,7 @@
 /* ── State Page ──────────────────────────────────── */
 .state-page {
   min-height: 100vh;
-  background: #f5f6f8;
+  background: #f7f8fa;
 }
 
 .fade-in {
@@ -53,12 +90,8 @@
 }
 
 @keyframes fadeFromGrey {
-  from {
-    background: #999;
-  }
-  to {
-    background: #f5f6f8;
-  }
+  from { background: #999; }
+  to { background: #f7f8fa; }
 }
 
 /* ── State Nav ───────────────────────────────────── */
@@ -66,137 +99,198 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 32px;
-  background: #222;
-  border-bottom: 2px solid #555;
+  padding: 0 24px;
+  height: 48px;
+  background: #1a1a1a;
+  border-bottom: 1px solid #333;
+}
+
+.nav-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .back-button {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  color: #ccc;
+  border: 1px solid #444;
+  border-radius: 0;
+  color: #aaa;
   font-family: "Inter", sans-serif;
-  font-size: 0.9rem;
-  padding: 8px 16px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 5px 12px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
 }
 
 .back-button:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: #999;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: #888;
   color: #fff;
 }
 
+.nav-views {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  height: 100%;
+}
+
+.nav-view-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #777;
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  padding: 0 16px;
+  height: 100%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nav-view-btn:hover {
+  color: #ccc;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.nav-view-btn.active {
+  color: #fff;
+  border-bottom-color: #fff;
+}
+
 .nav-title {
-  font-family: "Playfair Display", Georgia, serif;
-  color: #999;
-  font-size: 0.95rem;
-  letter-spacing: 0.5px;
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  color: #555;
+  font-size: 0.7rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
 /* ── State Header ────────────────────────────────── */
 .state-header {
-  background: linear-gradient(170deg, #222, #333);
-  padding: 48px 32px;
+  background: #1a1a1a;
+  padding: 32px 32px 28px;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.header-content {
+  max-width: 1200px;
+  margin: 0 auto;
   text-align: center;
 }
 
 .state-abbr-badge {
   display: inline-block;
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #999;
-  border: 2px solid #666;
-  border-radius: 6px;
-  padding: 4px 14px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #888;
+  border: 1px solid #555;
+  padding: 3px 12px;
   letter-spacing: 2px;
-  margin-bottom: 12px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
 }
 
 .state-name {
   font-family: "Playfair Display", Georgia, serif;
-  font-size: 2.6rem;
+  font-size: 2.2rem;
   font-weight: 700;
   color: #f0f0f0;
-  margin: 8px 0 24px;
+  margin: 6px 0 20px;
+  letter-spacing: -0.5px;
 }
 
 .state-meta {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 32px;
+  gap: 40px;
 }
 
 .meta-item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .meta-label {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: #888;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: #666;
   text-transform: uppercase;
   letter-spacing: 1.5px;
 }
 
 .meta-value {
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 1.6rem;
+  font-family: "Inter", sans-serif;
+  font-size: 1.3rem;
   font-weight: 600;
-  color: #f0f0f0;
+  color: #e0e0e0;
+  letter-spacing: -0.3px;
 }
 
 .meta-divider {
   width: 1px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.15);
+  height: 36px;
+  background: #333;
 }
 
 /* ── State Dropdown ──────────────────────────────── */
 .state-dropdown {
-  background: #333;
-  color: #ccc;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  padding: 8px 12px;
+  background: #222;
+  color: #aaa;
+  border: 1px solid #444;
+  border-radius: 0;
+  padding: 5px 28px 5px 10px;
   font-family: "Inter", sans-serif;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
   cursor: pointer;
   outline: none;
-  transition: border-color 0.2s ease;
+  transition: border-color 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
 }
 
 .state-dropdown:hover,
 .state-dropdown:focus {
-  border-color: #999;
+  border-color: #888;
   color: #fff;
 }
 
 .state-dropdown option {
-  background: #333;
-  color: #ccc;
+  background: #222;
+  color: #aaa;
 }
 
 /* ── State Content ───────────────────────────────── */
 .state-content {
-  max-width: 1100px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 32px;
+  padding: 32px 32px;
 }
 
 .state-layout {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  grid-template-columns: 3fr 2fr;
+  gap: 28px;
   align-items: start;
 }
 
@@ -206,9 +300,8 @@
 
 .state-map-wrapper {
   background: #fff;
-  border: 1px solid #e0e4ea;
-  border-radius: 10px;
-  padding: 16px;
+  border: 1px solid #ddd;
+  padding: 20px;
   margin-top: 4px;
 }
 
@@ -223,18 +316,20 @@
 }
 
 .state-section {
-  margin-bottom: 40px;
+  margin-bottom: 32px;
 }
 
 .section-title {
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 1.5rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
   font-weight: 600;
-  color: #222;
-  margin: 0 0 12px;
+  color: #333;
+  margin: 0 0 8px;
   padding-bottom: 8px;
-  border-bottom: 2px solid #444;
+  border-bottom: 2px solid #1a1a1a;
   display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
 }
 
 /* ── Ensemble Table ─────────────────────────────── */
@@ -242,44 +337,91 @@
   width: 100%;
   border-collapse: collapse;
   background: #fff;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #e0e4ea;
+  border: 1px solid #ddd;
   margin-top: 4px;
 }
 
 .ensemble-table th {
-  background: #222;
-  color: #ccc;
+  background: #1a1a1a;
+  color: #999;
   font-family: "Inter", sans-serif;
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
-  padding: 12px 16px;
+  padding: 10px 16px;
   text-align: left;
+  border-bottom: 1px solid #333;
+}
+
+.ensemble-table th:not(:last-child) {
+  border-right: 1px solid #333;
 }
 
 .ensemble-table td {
   font-family: "Inter", sans-serif;
-  font-size: 0.9rem;
-  color: #333;
-  padding: 12px 16px;
-  border-top: 1px solid #e0e4ea;
+  font-size: 0.85rem;
+  color: #222;
+  padding: 10px 16px;
+  border-top: 1px solid #e8e8e8;
+}
+
+.ensemble-table td:not(:last-child) {
+  border-right: 1px solid #e8e8e8;
+}
+
+.td-label {
+  font-weight: 500;
+  color: #111;
+}
+
+.td-number {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  letter-spacing: -0.2px;
 }
 
 .ensemble-table tbody tr:hover {
-  background: #f8f9fa;
+  background: #f5f5f5;
+}
+
+/* ── Placeholder View ────────────────────────────── */
+.placeholder-view {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  border: 1px dashed #ccc;
+  background: #fff;
+}
+
+.placeholder-label {
+  font-family: "Inter", sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.placeholder-sub {
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 /* ── Responsive ──────────────────────────────────── */
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .state-layout {
     grid-template-columns: 1fr;
   }
 
   .state-name {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
 
   .state-meta {
@@ -293,6 +435,22 @@
   }
 
   .state-nav {
-    padding: 12px 16px;
+    padding: 0 12px;
+    flex-wrap: wrap;
+    height: auto;
+    gap: 0;
+  }
+
+  .nav-views {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+    border-top: 1px solid #333;
+  }
+
+  .nav-view-btn {
+    padding: 0 12px;
+    font-size: 0.65rem;
+    white-space: nowrap;
   }
 }
