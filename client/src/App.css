@@ -414,6 +414,54 @@
   letter-spacing: 1px;
 }
 
+/* ── Chart Views ─────────────────────────────────── */
+.chart-view {
+  width: 100%;
+}
+
+.chart-section {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 32px;
+  border-radius: 2px;
+}
+
+.chart-description {
+  font-family: "Inter", sans-serif;
+  font-size: 0.85rem;
+  color: #555;
+  line-height: 1.6;
+  margin: 12px 0 24px;
+  max-width: 800px;
+}
+
+.chart-container {
+  width: 100%;
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-container > div {
+  width: 100%;
+}
+
+/* ── Bar Chart Grid ──────────────────────────────── */
+.bar-chart-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  width: 100%;
+}
+
+.bar-chart-item {
+  background: #fff;
+  padding: 20px;
+  border: 1px solid #e0e0e0;
+}
+
 /* ── Responsive ──────────────────────────────────── */
 @media (max-width: 900px) {
   .state-layout {
@@ -452,5 +500,18 @@
     padding: 0 12px;
     font-size: 0.65rem;
     white-space: nowrap;
+  }
+
+  .bar-chart-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .chart-section {
+    padding: 20px;
+  }
+
+  .chart-description {
+    font-size: 0.8rem;
   }
 }

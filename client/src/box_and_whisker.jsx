@@ -1,18 +1,22 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 
 export default function BoxPlotChart({ districts }) {
   const svgRef = useRef();
+  const [selectedGroup, setSelectedGroup] = useState("Hispanic");
+  
+  // Available minority groups (would come from props in real app)
+  const minorityGroups = ["Hispanic", "Black", "Asian", "Native American"];
 
   useEffect(() => {
     if (!districts || districts.length === 0) return;
 
-    const width = 928;
-    const height = 600;
-    const marginTop = 20;
-    const marginRight = 20;
-    const marginBottom = 50;
-    const marginLeft = 60;
+    const width = 1000;
+    const height = 500;
+    const marginTop = 40;
+    const marginRight = 40;
+    const marginBottom = 60;
+    const marginLeft = 70;
 
     d3.select(svgRef.current).selectAll("*").remove();
 
@@ -83,15 +87,21 @@ export default function BoxPlotChart({ districts }) {
         "transform",
         `translate(0,${height - marginBottom})`
       )
-      .call(d3.axisBottom(x));
+      .call(d3.axisBottom(x))
+      .selectAll("text")
+      .style("font-family", "'Inter', sans-serif")
+      .style("font-size", "11px");
     
     // X Axis label
     svg
       .append("text")
       .attr("x", width / 2)
-      .attr("y", height - 10)   // position below axis
+      .attr("y", height - 10)
       .attr("text-anchor", "middle")
-      .style("font-size", "14px")
+      .style("font-family", "'Inter', sans-serif")
+      .style("font-size", "13px")
+      .style("font-weight", "600")
+      .style("fill", "#333")
       .text("Districts");
 
     // Y Axis
@@ -101,9 +111,98 @@ export default function BoxPlotChart({ districts }) {
         "transform",
         `translate(${marginLeft},0)`
       )
-      .call(d3.axisLeft(y));
+      .call(d3.axisLeft(y).ticks(8))
+      .selectAll("text")
+      .style("font-family", "'Inter', sans-serif")
+      .style("font-size", "11px");
+    
+    // Y Axis label
+    svg
+      .append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("x", -(height / 2))
+      .attr("y", 15)
+      .attr("text-anchor", "middle")
+      .style("font-family", "'Inter', sans-serif")
+      .style("font-size", "13px")
+      .style("font-weight", "600")
+      .style("fill", "#333")
+      .text("Minority Group Percentage");
 
   }, [districts]);
 
-  return <svg ref={svgRef} />;
+  return (
+    <div style={{ width: "100%" }}>
+      <div style={{ 
+        marginBottom: "20px", 
+        padding: "16px", 
+        background: "#f7f8fa", 
+        border: "1px solid #e0e0e0",
+        borderRadius: "2px"
+      }}>
+        <div style={{ 
+          fontFamily: "'Inter', sans-serif", 
+          fontSize: "0.75rem", 
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "1px",
+          color: "#333",
+          marginBottom: "12px"
+        }}>
+          Select Minority Group:
+        </div>
+        <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+          {minorityGroups.map(group => (
+            <button
+              key={group}
+              onClick={() => setSelectedGroup(group)}
+              style={{
+                padding: "8px 16px",
+                background: selectedGroup === group ? "#1a1a1a" : "#fff",
+                color: selectedGroup === group ? "#fff" : "#333",
+                border: "1px solid #ccc",
+                borderColor: selectedGroup === group ? "#1a1a1a" : "#ccc",
+                cursor: "pointer",
+                fontFamily: "'Inter', sans-serif",
+                fontSize: "0.8rem",
+                fontWeight: 500,
+                textTransform: "uppercase",
+                letterSpacing: "0.5px",
+                transition: "all 0.2s ease"
+              }}
+              onMouseEnter={(e) => {
+                if (selectedGroup !== group) {
+                  e.target.style.borderColor = "#888";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (selectedGroup !== group) {
+                  e.target.style.borderColor = "#ccc";
+                }
+              }}
+            >
+              {group}
+            </button>
+          ))}
+        </div>
+        <div style={{
+          marginTop: "12px",
+          fontFamily: "'Inter', sans-serif",
+          fontSize: "0.75rem",
+          color: "#666"
+        }}>
+          Currently viewing: <strong>{selectedGroup}</strong> distribution across ensemble plans
+        </div>
+      </div>
+      <div style={{ 
+        background: "#fff", 
+        padding: "30px 20px", 
+        border: "1px solid #e0e0e0",
+        display: "flex",
+        justifyContent: "center"
+      }}>
+        <svg ref={svgRef} />
+      </div>
+    </div>
+  );
 }

@@ -1,6 +1,10 @@
 import React, { useRef, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as d3 from "d3";
+import BoxPlotChart from './box_and_whisker';
+import BarChart from "./bar_chart";
+import ProbabilityChart from "./probability_curve";
+import box_data from "./dummy_data/dummy_box_and_whisker.json";
 
 const DISTRICT_COLORS = [
   "#e8e8e8", "#d4d4d4", "#c0c0c0", "#acacac",
@@ -64,10 +68,10 @@ const STATE_DATA = {
 
 const VIEWS = [
   { id: "map", label: "District Map" },
-  { id: "ensemble", label: "Ensemble Summary" },
-  { id: "demographics", label: "Demographics" },
+  { id: "ensemble", label: "Ensemble Splits" },
+  { id: "demographics", label: "Box & Whisker" },
   { id: "representation", label: "Representation" },
-  { id: "analysis", label: "Analysis" },
+  { id: "analysis", label: "EI Analysis" },
 ];
 
 function StateMap({ geojsonPath }) {
@@ -233,7 +237,59 @@ export default function StatePage() {
           </div>
         )}
 
-        {activeView !== "map" && (
+        {activeView === "ensemble" && (
+          <div className="chart-view">
+            <section className="chart-section">
+              <h2 className="section-title">Ensemble Splits - Republican/Democratic Wins</h2>
+              <p className="chart-description">
+                Compare Race-Blind and VRA-Constrained ensemble results side-by-side. Each bar represents 
+                the frequency of a distinct simulated election outcome showing #Republican wins / #Democratic wins. 
+                The range of splits shown is the union of both ensemble sets, allowing direct comparison of 
+                election outcome distributions between the two approaches.
+              </p>
+              <div className="chart-container">
+                <BarChart />
+              </div>
+            </section>
+          </div>
+        )}
+
+        {activeView === "demographics" && (
+          <div className="chart-view">
+            <section className="chart-section">
+              <h2 className="section-title">Box & Whisker Analysis by District</h2>
+              <p className="chart-description">
+                Displays the distribution of minority group percentages across all districts in the ensemble of 
+                district plans. Select a racial/ethnic group to view its representation. Each box shows the 
+                interquartile range (25th to 75th percentile), the median line, and whiskers extending to 
+                minimum and maximum values. Districts are ordered by increasing percentage of the selected minority group.
+              </p>
+              <div className="chart-container">
+                <BoxPlotChart districts={box_data.districts} />
+              </div>
+            </section>
+          </div>
+        )}
+
+        {activeView === "analysis" && (
+          <div className="chart-view">
+            <section className="chart-section">
+              <h2 className="section-title">Ecological Inference (EI) Analysis</h2>
+              <p className="chart-description">
+                Results of Ecological Inference analysis showing candidate voting patterns by racial/ethnic group. 
+                Select multiple groups to compare their voting behavior. The X-axis represents the percentage of 
+                each racial/economic/region group that voted for a candidate, while the Y-axis shows the associated 
+                probability density for each percentage value. Each racial group is displayed with a distinct color 
+                and filled area under the curve.
+              </p>
+              <div className="chart-container">
+                <ProbabilityChart />
+              </div>
+            </section>
+          </div>
+        )}
+
+        {activeView === "representation" && (
           <div className="placeholder-view">
             <span className="placeholder-label">
               {VIEWS.find((v) => v.id === activeView)?.label}
