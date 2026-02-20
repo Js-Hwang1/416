@@ -3,6 +3,10 @@ import "./App.css";
 import SplashPage from "./SplashPage";
 import StatePage from "./StatePage";
 
+import BoxPlotChart from './box_and_whisker';
+import BarChart from "./bar_chart";
+
+
 function App() {
   return (
     <Router>
@@ -13,6 +17,17 @@ function App() {
         </Routes>
       </div>
     </Router>
+    
+    // example box and whisker
+    // <div>
+    //   <BoxPlotChart districts={box_data.districts} />
+    // </div>
+    
+    // <div style={{ width: "25vw", height: "25vh" }}>
+    //   <BarChart />
+    // </div>
+    
+    
   );
 }
 
