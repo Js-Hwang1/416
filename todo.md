@@ -2,15 +2,15 @@
 
 ## GUI Setup
 - [ ] Pick a GUI builder tool (e.g., Figma)
-- [ ] Build a splash page (with US map)
-- [ ] Select client framework (e.g., React)
-- [ ] Use Leaflet (or alternate) for including maps in GUI
+- [X] Build a splash page (with US map)
+- [X] Select client framework (e.g., React)
+- [X] Use Leaflet (or alternate) for including maps in GUI
 
 ## Data Acquisition
 - [X] Download enacted district plan for Massachusetts
 - [X] Download enacted district plan for Texas
-- [ ] Integrate MA district plan (as GeoJSON) into GUI map of state
-- [ ] Integrate TX district plan (as GeoJSON) into GUI map of state
+- [X] Integrate MA district plan (as GeoJSON) into GUI map of state
+- [X] Integrate TX district plan (as GeoJSON) into GUI map of state
 
 ## Reading / Research
 - [X] Read Becker, et al paper ("Computational Redistricting and the Voting Rights Act")
@@ -19,12 +19,18 @@
 - [ ] Read/run PyEI (Ecological Inference)
 
 ## Client-Side Visualizations
-- [ ] Start using a client-side visualization library (e.g., D3)
+- [X] Start using a client-side visualization library : 
+    - D3 : Chart / Data Visualization Library
+    - Leaflet : Interactive Map Library
 - [ ] Build a bubble chart
 - [ ] Build a bar chart
-- [ ] Build a box & whisker chart
+- [X] Build a box & whisker chart
 
 ## GUI Use-Cases
+- [ ] Design the screen layout according to the defined use cases
+    - For each use case, specify the corresponding UI location and controls (e.g., buttons, dropdowns, tabs)
+- [ ] Define and select an appropriate color theme for the interface
+
 - [X] GUI-1. Select state to display (required)
 - [X] GUI-2. Display the current district plan when state is selected (required)
 - [ ] GUI-3. State data summary (required)
@@ -44,4 +50,4 @@
 - [ ] GUI-17. Display box & whisker data (required) (SD)
 - [ ] GUI-18. Display vote share vs seat share curve (preferred)
 - [ ] GUI-19. Display an “interesting” district plan (preferred) 
-- [ ] GUI-20. Reset page (preferred) 
+- [ ] GUI-20. Reset page (preferred)
