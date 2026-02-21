@@ -1,10 +1,12 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as d3 from "d3";
 import BoxPlotChart from './box_and_whisker';
 import BarChart from "./bar_chart";
 import ProbabilityChart from "./probability_curve";
 import box_data from "./dummy_data/dummy_box_and_whisker.json";
+import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
+import L from "leaflet";
 
 const DISTRICT_COLORS = [
   "#e8e8e8", "#d4d4d4", "#c0c0c0", "#acacac",
@@ -27,6 +29,11 @@ const STATE_DATA = {
     districts: 38,
     population: "30,503,340",
     geojson: "/data/tx_districts.geojson",
+    mapView: {
+      fitPadding: [18, 18],
+      zoomOffset: 0,
+      panBoundsPad: 0.08,
+    },
     ensembles: [
       {
         id: 1,
@@ -49,6 +56,11 @@ const STATE_DATA = {
     districts: 9,
     population: "7,029,917",
     geojson: "/data/ma_districts.geojson",
+    mapView: {
+      fitPadding: [18, 18],
+      zoomOffset: 0,
+      panBoundsPad: 0.08,
+    },
     ensembles: [
       {
         id: 1,
@@ -74,49 +86,124 @@ const VIEWS = [
   { id: "analysis", label: "EI Analysis" },
 ];
 
-function StateMap({ geojsonPath }) {
-  const svgRef = useRef();
+function StateMap({ geojsonPath, mapView }) {
+  const [geojson, setGeojson] = useState(null);
 
   useEffect(() => {
-    const width = 720;
-    const height = 540;
+    const controller = new AbortController();
 
-    d3.json(geojsonPath).then((geojson) => {
-      const svg = d3
-        .select(svgRef.current)
-        .attr("viewBox", [0, 0, width, height])
-        .style("width", "100%")
-        .style("height", "auto");
+    setGeojson(null);
+    fetch(geojsonPath, { signal: controller.signal })
+      .then((r) => r.json())
+      .then((data) => setGeojson(data))
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          console.error("geojson fetch error", err);
+        }
+      });
 
-      svg.selectAll("*").remove();
-
-      const projection = d3.geoMercator();
-      const path = d3.geoPath().projection(projection);
-
-      projection.fitExtent(
-        [
-          [20, 20],
-          [width - 20, height - 20],
-        ],
-        geojson
-      );
-
-      const g = svg.append("g");
-
-      // Draw congressional districts
-      g.selectAll("path")
-        .data(geojson.features)
-        .join("path")
-        .attr("d", path)
-        .attr("fill", (d, i) => DISTRICT_COLORS[i % DISTRICT_COLORS.length])
-        .attr("stroke", "#555")
-        .attr("stroke-width", 1)
-        .append("title")
-        .text((d) => d.properties.name);
-    });
+    return () => {
+      controller.abort();
+    };
   }, [geojsonPath]);
 
-  return <svg ref={svgRef}></svg>;
+  const styleFeature = (feature) => {
+    const rawDistrict =
+      feature?.properties?.district ??
+      feature?.properties?.DISTRICT ??
+      feature?.properties?.District;
+    const districtNumber = Number.parseInt(String(rawDistrict), 10);
+    const colorIndex = Number.isFinite(districtNumber)
+      ? Math.abs(districtNumber - 1) % DISTRICT_COLORS.length
+      : 0;
+
+    return {
+      weight: 1.5,
+      color: "#1a1a1a",
+      fillColor: DISTRICT_COLORS[colorIndex],
+      fillOpacity: 0.82,
+    };
+  };
+
+  const onEachFeature = (feature, layer) => {
+    const label =
+      feature?.properties?.name ??
+      feature?.properties?.DISTRICT ??
+      feature?.properties?.district ??
+      "district";
+    layer.bindTooltip(String(label), { sticky: true });
+    layer.on({
+      mouseover: () => {
+        layer.setStyle({ weight: 2.2, fillOpacity: 0.92 });
+        layer.bringToFront();
+      },
+      mouseout: () => {
+        layer.setStyle(styleFeature(feature));
+      },
+    });
+  };
+
+  const geoJsonKey = useMemo(
+    () => `${geojsonPath}-${geojson?.features?.length ?? 0}`,
+    [geojsonPath, geojson]
+  );
+
+  function FitGeoJsonBounds({ data, view }) {
+    const map = useMap();
+
+    useEffect(() => {
+      if (!data) return;
+
+      const bounds = L.geoJSON(data).getBounds();
+      if (bounds.isValid()) {
+        const fitPadding = view?.fitPadding ?? [18, 18];
+        const zoomOffset = view?.zoomOffset ?? 0;
+        const panBoundsPad = view?.panBoundsPad ?? 0.08;
+        const paddingPoint = L.point(fitPadding[0], fitPadding[1]);
+
+        // Reset min zoom before fitting in case previous state had a higher lock.
+        map.setMinZoom(0);
+
+        const fittedZoom = map.getBoundsZoom(bounds, false, paddingPoint);
+        const targetZoom = fittedZoom + zoomOffset;
+        map.setView(bounds.getCenter(), targetZoom, { animate: false });
+
+        // Lock zoom-out so the initial fitted/offset view is the maximum zoom-out.
+        map.setMinZoom(targetZoom);
+        // Keep panning near the selected state's extent.
+        map.setMaxBounds(bounds.pad(panBoundsPad));
+      }
+    }, [map, data, view]);
+
+    return null;
+  }
+
+  return (
+    <MapContainer
+      className="leaflet-map"
+      center={[37.8, -96]}
+      zoom={4}
+      zoomSnap={0.25}
+      scrollWheelZoom={true}
+      maxBoundsViscosity={1}
+    >
+      <TileLayer
+        attribution="&copy; OpenStreetMap contributors"
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {geojson && (
+        <>
+          <GeoJSON
+            key={geoJsonKey}
+            data={geojson}
+            style={styleFeature}
+            onEachFeature={onEachFeature}
+          />
+          <FitGeoJsonBounds data={geojson} view={mapView} />
+        </>
+      )}
+    </MapContainer>
+  );
 }
 
 export default function StatePage() {
@@ -207,7 +294,7 @@ export default function StatePage() {
             <div className="state-map-panel">
               <h2 className="section-title">Congressional Districts</h2>
               <div className="state-map-wrapper">
-                <StateMap geojsonPath={stateInfo.geojson} />
+                <StateMap geojsonPath={stateInfo.geojson} mapView={stateInfo.mapView} />
               </div>
             </div>
 
