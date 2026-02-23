@@ -11,14 +11,14 @@ const BarChart = () => {
   // Combine all unique splits for x-axis
   const allSplits = Array.from(
     new Set([
-      ...raceBlindData.map(d => `${d.republican}/${d.democrat}`),
-      ...vraData.map(d => `${d.republican}/${d.democrat}`)
+      ...raceBlindData.map(d => `${d.republican}R / ${d.democrat}D`),
+      ...vraData.map(d => `${d.republican}R / ${d.democrat}D`)
     ])
   ).sort();
 
   const mapData = (data) =>
     allSplits.map(split => {
-      const [r, d] = split.split("/").map(Number);
+      const [r, d] = split.replace(/[RD]/g, '').split('/').map(s => Number(s.trim()));
       const item = data.find(datum => datum.republican === r && datum.democrat === d);
       return item ? item.freq : 0;
     });
@@ -27,10 +27,10 @@ const BarChart = () => {
     labels: allSplits,
     datasets: [
       {
-        label: "Race-Blind Ensemble",
+        label: "Frequency",
         data: mapData(raceBlindData),
-        backgroundColor: "rgba(54, 162, 235, 0.8)",
-        borderColor: "rgba(54, 162, 235, 1)",
+        backgroundColor: "rgba(100, 170, 160, 0.7)",
+        borderColor: "rgba(100, 170, 160, 1)",
         borderWidth: 1
       }
     ]
@@ -40,30 +40,27 @@ const BarChart = () => {
     labels: allSplits,
     datasets: [
       {
-        label: "VRA-Constrained Ensemble",
+        label: "Frequency",
         data: mapData(vraData),
-        backgroundColor: "rgba(255, 99, 132, 0.8)",
-        borderColor: "rgba(255, 99, 132, 1)",
+        backgroundColor: "rgba(200, 170, 80, 0.7)",
+        borderColor: "rgba(200, 170, 80, 1)",
         borderWidth: 1
       }
     ]
   };
 
-  const options = {
+  const makeOptions = (title) => ({
     responsive: true,
     maintainAspectRatio: true,
-    aspectRatio: 2,
+    aspectRatio: 1.8,
     plugins: {
-      legend: { 
-        position: "top",
-        labels: {
-          font: { size: 12, family: "'Inter', sans-serif" }
-        }
-      },
+      legend: { display: false },
       title: { 
         display: true, 
-        text: "Simulated Election Outcomes",
-        font: { size: 14, weight: 'bold', family: "'Inter', sans-serif" }
+        text: title,
+        font: { size: 12, weight: '600', family: "'Inter', sans-serif" },
+        color: '#333',
+        padding: { bottom: 12 }
       }
     },
     scales: {
@@ -71,57 +68,41 @@ const BarChart = () => {
         title: { 
           display: true, 
           text: "Republican / Democrat Wins",
-          font: { size: 12, family: "'Inter', sans-serif" }
+          font: { size: 11, family: "'Inter', sans-serif" },
+          color: '#888'
         },
         ticks: {
-          font: { size: 10, family: "'Inter', sans-serif" }
-        }
+          font: { size: 10, family: "'Inter', sans-serif" },
+          color: '#666'
+        },
+        grid: { display: false }
       },
       y: { 
         beginAtZero: true, 
         title: { 
           display: true, 
           text: "Frequency",
-          font: { size: 12, family: "'Inter', sans-serif" }
+          font: { size: 11, family: "'Inter', sans-serif" },
+          color: '#888'
         },
         ticks: {
-          font: { size: 10, family: "'Inter', sans-serif" }
-        }
+          font: { size: 10, family: "'Inter', sans-serif" },
+          color: '#666'
+        },
+        grid: { color: '#f0f0f0' }
       }
     }
-  };
+  });
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px', width: '100%' }}>
-      <div style={{ background: '#fff', padding: '20px', border: '1px solid #e0e0e0' }}>
-        <Bar
-          data={raceBlindChart}
-          options={{ 
-            ...options, 
-            plugins: { 
-              ...options.plugins, 
-              title: { 
-                ...options.plugins.title,
-                text: "Race-Blind Ensemble" 
-              } 
-            } 
-          }}
-        />
-      </div>
-      <div style={{ background: '#fff', padding: '20px', border: '1px solid #e0e0e0' }}>
-        <Bar
-          data={vraChart}
-          options={{ 
-            ...options, 
-            plugins: { 
-              ...options.plugins, 
-              title: { 
-                ...options.plugins.title,
-                text: "VRA-Constrained Ensemble" 
-              } 
-            } 
-          }}
-        />
+    <div style={{ width: '100%' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', width: '100%' }}>
+        <div style={{ border: '1px solid #e8e8e8', padding: '16px' }}>
+          <Bar data={raceBlindChart} options={makeOptions("Race-Blind Ensemble")} />
+        </div>
+        <div style={{ border: '1px solid #e8e8e8', padding: '16px' }}>
+          <Bar data={vraChart} options={makeOptions("VRA-Constrained Ensemble")} />
+        </div>
       </div>
     </div>
   );

@@ -80,10 +80,9 @@ const STATE_DATA = {
 
 const VIEWS = [
   { id: "map", label: "District Map" },
-  { id: "ensemble", label: "Ensemble Splits" },
-  { id: "demographics", label: "Box & Whisker" },
-  { id: "representation", label: "Representation" },
-  { id: "analysis", label: "EI Analysis" },
+  { id: "ensemble", label: "Election Splits" },
+  { id: "demographics", label: "Demographics" },
+  { id: "analysis", label: "Voting Patterns" },
 ];
 
 function StateMap({ geojsonPath, mapView }) {
@@ -229,22 +228,6 @@ export default function StatePage() {
     <div className="state-page fade-in">
       <nav className="state-nav">
         <div className="nav-left">
-          <button className="back-button" onClick={() => navigate("/")}>
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M19 12H5M12 19l-7-7 7-7" />
-            </svg>
-            Back
-          </button>
-
           <select
             className="state-dropdown"
             value={stateSlug}
@@ -267,7 +250,7 @@ export default function StatePage() {
           ))}
         </div>
 
-        <span className="nav-title">Redistricting Analysis</span>
+        <span className="nav-title">{}</span>
       </nav>
 
       <header className="state-header">
@@ -296,6 +279,12 @@ export default function StatePage() {
               <div className="state-map-wrapper">
                 <StateMap geojsonPath={stateInfo.geojson} mapView={stateInfo.mapView} />
               </div>
+              <button className="compare-enacted-btn" onClick={() => {}}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 3v18M3 12h18" />
+                </svg>
+                Compare with Enacted
+              </button>
             </div>
 
             <div className="state-info-panel">
@@ -326,64 +315,43 @@ export default function StatePage() {
 
         {activeView === "ensemble" && (
           <div className="chart-view">
-            <section className="chart-section">
-              <h2 className="section-title">Ensemble Splits - Republican/Democratic Wins</h2>
-              <p className="chart-description">
-                Compare Race-Blind and VRA-Constrained ensemble results side-by-side. Each bar represents 
-                the frequency of a distinct simulated election outcome showing #Republican wins / #Democratic wins. 
-                The range of splits shown is the union of both ensemble sets, allowing direct comparison of 
-                election outcome distributions between the two approaches.
-              </p>
-              <div className="chart-container">
-                <BarChart />
-              </div>
-            </section>
+            <div className="chart-toolbar">
+              <span className="chart-toolbar-subtitle">
+                R/D split frequency across {stateInfo.ensembles[0].plans.toLocaleString()} simulated plans
+              </span>
+            </div>
+            <div className="chart-body">
+              <BarChart />
+            </div>
           </div>
         )}
 
         {activeView === "demographics" && (
           <div className="chart-view">
-            <section className="chart-section">
-              <h2 className="section-title">Box & Whisker Analysis by District</h2>
-              <p className="chart-description">
-                Displays the distribution of minority group percentages across all districts in the ensemble of 
-                district plans. Select a racial/ethnic group to view its representation. Each box shows the 
-                interquartile range (25th to 75th percentile), the median line, and whiskers extending to 
-                minimum and maximum values. Districts are ordered by increasing percentage of the selected minority group.
-              </p>
-              <div className="chart-container">
-                <BoxPlotChart districts={box_data.districts} />
-              </div>
-            </section>
+            <div className="chart-toolbar">
+              <span className="chart-toolbar-subtitle">
+                Minority group distribution across ensemble district plans
+              </span>
+            </div>
+            <div className="chart-body">
+              <BoxPlotChart districts={box_data.districts} />
+            </div>
           </div>
         )}
 
         {activeView === "analysis" && (
           <div className="chart-view">
-            <section className="chart-section">
-              <h2 className="section-title">Ecological Inference (EI) Analysis</h2>
-              <p className="chart-description">
-                Results of Ecological Inference analysis showing candidate voting patterns by racial/ethnic group. 
-                Select multiple groups to compare their voting behavior. The X-axis represents the percentage of 
-                each racial/economic/region group that voted for a candidate, while the Y-axis shows the associated 
-                probability density for each percentage value. Each racial group is displayed with a distinct color 
-                and filled area under the curve.
-              </p>
-              <div className="chart-container">
-                <ProbabilityChart />
-              </div>
-            </section>
+            <div className="chart-toolbar">
+              <span className="chart-toolbar-subtitle">
+                Ecological inference of candidate support by racial/ethnic group
+              </span>
+            </div>
+            <div className="chart-body">
+              <ProbabilityChart />
+            </div>
           </div>
         )}
 
-        {activeView === "representation" && (
-          <div className="placeholder-view">
-            <span className="placeholder-label">
-              {VIEWS.find((v) => v.id === activeView)?.label}
-            </span>
-            <span className="placeholder-sub">Coming soon</span>
-          </div>
-        )}
       </main>
     </div>
   );

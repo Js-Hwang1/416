@@ -1,17 +1,81 @@
 /* ── Base ─────────────────────────────────────────── */
 .App {
-  min-height: 100vh;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Global App Header ───────────────────────────── */
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 40px;
+  background: #111;
+  border-bottom: 1px solid #2a2a2a;
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.app-header-left {
+  display: flex;
+  align-items: center;
+}
+
+.app-header-logo {
+  font-family: "Inter", sans-serif;
+  font-weight: 600;
+  color: #d0d0d0;
+  font-size: 0.72rem;
+  letter-spacing: 1.8px;
+  /*text-transform: uppercase;*/
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.app-header-logo:hover {
+  color: #fff;
+}
+
+.app-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.app-header-home-btn {
+  background: none;
+  border: 1px solid #444;
+  border-radius: 0;
+  color: #aaa;
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  /*text-transform: uppercase;*/
+  padding: 4px 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.app-header-home-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: #888;
+  color: #fff;
 }
 
 /* ── Splash Page ─────────────────────────────────── */
 .splash-page {
-  position: fixed;
-  inset: 0;
+  position: relative;
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #fff;
   overflow: hidden;
+  height: calc(100vh - 40px);
 }
 
 .splash-dropdown-bar {
@@ -21,7 +85,7 @@
   right: 0;
   display: flex;
   justify-content: flex-end;
-  padding: 20px 32px;
+  padding: 12px 32px;
   z-index: 20;
 }
 
@@ -35,7 +99,7 @@
   font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
   cursor: pointer;
   outline: none;
   transition: border-color 0.15s ease;
@@ -65,24 +129,28 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 90%;
-  max-width: 1100px;
-  height: auto;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  overflow: visible;
 }
 
 .zoom-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: #999;
   opacity: 0;
   pointer-events: none;
-  z-index: 10;
+  z-index: 50;
 }
 
 /* ── State Page ──────────────────────────────────── */
 .state-page {
-  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 40px);
   background: #f7f8fa;
+  overflow: hidden;
 }
 
 .fade-in {
@@ -95,12 +163,12 @@
 }
 
 .state-map-wrapper .leaflet-map {
-  height: 540px;
+  height: 420px;
   width: 100%;
 }
 
 .state-map-wrapper .leaflet-container {
-  height: 540px;
+  height: 420px;
   width: 100%;
 }
 
@@ -112,9 +180,10 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
-  height: 48px;
+  height: 38px;
   background: #1a1a1a;
   border-bottom: 1px solid #333;
+  flex-shrink: 0;
 }
 
 .nav-left {
@@ -135,7 +204,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
   padding: 5px 12px;
   cursor: pointer;
   transition: all 0.15s ease;
@@ -163,7 +232,7 @@
   font-size: 0.72rem;
   font-weight: 500;
   letter-spacing: 0.6px;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
   padding: 0 16px;
   height: 100%;
   cursor: pointer;
@@ -186,76 +255,80 @@
   color: #555;
   font-size: 0.7rem;
   letter-spacing: 1.5px;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
 }
 
 /* ── State Header ────────────────────────────────── */
 .state-header {
   background: #1a1a1a;
-  padding: 32px 32px 28px;
+  padding: 10px 32px 10px;
   border-bottom: 1px solid #2a2a2a;
+  flex-shrink: 0;
 }
 
 .header-content {
   max-width: 1200px;
   margin: 0 auto;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 .state-abbr-badge {
   display: inline-block;
   font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   font-weight: 600;
   color: #888;
   border: 1px solid #555;
-  padding: 3px 12px;
+  padding: 2px 10px;
   letter-spacing: 2px;
-  text-transform: uppercase;
-  margin-bottom: 10px;
+  /*text-transform: uppercase;*/
+  flex-shrink: 0;
 }
 
 .state-name {
   font-family: "Playfair Display", Georgia, serif;
-  font-size: 2.2rem;
+  font-size: 1.3rem;
   font-weight: 700;
   color: #f0f0f0;
-  margin: 6px 0 20px;
-  letter-spacing: -0.5px;
+  margin: 0;
+  letter-spacing: -0.3px;
+  flex-shrink: 0;
 }
 
 .state-meta {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 40px;
+  gap: 20px;
+  margin-left: auto;
 }
 
 .meta-item {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 6px;
 }
 
 .meta-label {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 600;
   color: #666;
-  text-transform: uppercase;
-  letter-spacing: 1.5px;
+  /*text-transform: uppercase;*/
+  letter-spacing: 1px;
 }
 
 .meta-value {
   font-family: "Inter", sans-serif;
-  font-size: 1.3rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #e0e0e0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
 }
 
 .meta-divider {
   width: 1px;
-  height: 36px;
+  height: 20px;
   background: #333;
 }
 
@@ -270,7 +343,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.5px;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
   cursor: pointer;
   outline: none;
   transition: border-color 0.15s ease;
@@ -296,7 +369,10 @@
 .state-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 32px;
+  padding: 16px 32px;
+  flex: 1;
+  overflow: auto;
+  width: 100%;
 }
 
 .state-layout {
@@ -313,7 +389,7 @@
 .state-map-wrapper {
   background: #fff;
   border: 1px solid #ddd;
-  padding: 20px;
+  padding: 8px;
   margin-top: 4px;
 }
 
@@ -338,7 +414,7 @@
   padding-bottom: 8px;
   border-bottom: 2px solid #1a1a1a;
   display: inline-block;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
   letter-spacing: 1.5px;
 }
 
@@ -357,7 +433,7 @@
   font-family: "Inter", sans-serif;
   font-size: 0.65rem;
   font-weight: 600;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
   letter-spacing: 1px;
   padding: 10px 16px;
   text-align: left;
@@ -395,67 +471,176 @@
   background: #f5f5f5;
 }
 
-/* ── Placeholder View ────────────────────────────── */
-.placeholder-view {
-  display: flex;
-  flex-direction: column;
+/* ── Compare Button ──────────────────────────────── */
+.compare-enacted-btn {
+  display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-height: 400px;
-  border: 1px dashed #ccc;
-  background: #fff;
-}
-
-.placeholder-label {
+  gap: 8px;
+  background: #1a1a1a;
+  color: #d0d0d0;
+  border: 1px solid #444;
+  border-radius: 0;
   font-family: "Inter", sans-serif;
-  font-size: 1rem;
+  font-size: 0.7rem;
   font-weight: 600;
-  color: #333;
-  text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 0.8px;
+  /*text-transform: uppercase;*/
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 12px;
 }
 
-.placeholder-sub {
-  font-family: "Inter", sans-serif;
-  font-size: 0.75rem;
-  color: #999;
-  margin-top: 8px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+.compare-enacted-btn:hover {
+  background: #333;
+  border-color: #888;
+  color: #fff;
+}
+
+.compare-enacted-btn svg {
+  flex-shrink: 0;
 }
 
 /* ── Chart Views ─────────────────────────────────── */
 .chart-view {
   width: 100%;
-}
-
-.chart-section {
-  background: #fff;
-  border: 1px solid #ddd;
-  padding: 32px;
-  border-radius: 2px;
-}
-
-.chart-description {
-  font-family: "Inter", sans-serif;
-  font-size: 0.85rem;
-  color: #555;
-  line-height: 1.6;
-  margin: 12px 0 24px;
-  max-width: 800px;
-}
-
-.chart-container {
-  width: 100%;
-  min-height: 400px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  height: 100%;
 }
 
-.chart-container > div {
+.chart-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-bottom: none;
+  flex-shrink: 0;
+}
+
+.chart-toolbar-subtitle {
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  color: #777;
+  letter-spacing: 0.3px;
+}
+
+.chart-body {
+  flex: 1;
+  min-height: 0;
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 16px;
+  overflow: auto;
+}
+
+.chart-body > div {
   width: 100%;
+}
+
+/* ── Chart Control Bar (shared by box plot + EI) ── */
+.chart-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f7f8fa;
+  border: 1px solid #e0e0e0;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.chart-controls-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  color: #555;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.chart-control-btn {
+  padding: 4px 12px;
+  background: #fff;
+  color: #444;
+  border: 1px solid #ccc;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  transition: all 0.15s ease;
+}
+
+.chart-control-btn:hover {
+  border-color: #888;
+}
+
+.chart-control-btn.active {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+.chart-control-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: "Inter", sans-serif;
+  font-size: 0.78rem;
+  color: #444;
+}
+
+.chart-control-checkbox input {
+  cursor: pointer;
+}
+
+.chart-control-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+}
+
+/* ── Chart Legend ─────────────────────────────────── */
+.chart-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 5px 12px;
+  background: #fafafa;
+  border: 1px solid #e8e8e8;
+  margin-bottom: 8px;
+}
+
+.chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  color: #555;
+}
+
+.chart-legend-box {
+  width: 14px;
+  height: 10px;
+  border: 1px solid #bbb;
+}
+
+.chart-legend-line {
+  width: 14px;
+  height: 2px;
+}
+
+.chart-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
 }
 
 /* ── Bar Chart Grid ──────────────────────────────── */
@@ -479,16 +664,22 @@
   }
 
   .state-name {
-    font-size: 1.8rem;
+    font-size: 1.1rem;
+  }
+
+  .header-content {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
   }
 
   .state-meta {
-    flex-direction: column;
-    gap: 16px;
+    margin-left: 0;
+    gap: 12px;
   }
 
   .meta-divider {
-    width: 40px;
+    width: 20px;
     height: 1px;
   }
 
@@ -517,11 +708,11 @@
     gap: 20px;
   }
 
-  .chart-section {
-    padding: 20px;
+  .chart-body {
+    padding: 10px;
   }
 
-  .chart-description {
-    font-size: 0.8rem;
+  .app-header {
+    padding: 0 12px;
   }
 }
