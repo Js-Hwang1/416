@@ -252,7 +252,11 @@ export default function StatePage() {
           ))}
         </div>
 
-        <span className="nav-title">{}</span>
+        <div className="nav-right">
+          <button className="back-button" onClick={() => navigate("/")}>
+            Reset
+          </button>
+        </div>
       </nav>
 
       <header className="state-header">

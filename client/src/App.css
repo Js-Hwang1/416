@@ -10,21 +10,19 @@
 .app-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: 0 24px;
   height: 40px;
   background: #111;
   border-bottom: 1px solid #2a2a2a;
   z-index: 100;
   flex-shrink: 0;
+  position: relative;
 }
 
-.app-header-left {
-  display: flex;
-  align-items: center;
-}
-
-.app-header-logo {
+.app-header-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
   font-family: "Inter", sans-serif;
   font-weight: 600;
   color: #d0d0d0;
@@ -36,13 +34,12 @@
   transition: color 0.15s ease;
 }
 
-.app-header-logo:hover {
+.app-header-title:hover {
   color: #fff;
 }
 
 .app-header-right {
-  display: flex;
-  align-items: center;
+  margin-left: auto;
 }
 
 .app-header-home-btn {
@@ -190,6 +187,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
 }
 
 .back-button {
