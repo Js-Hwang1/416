@@ -19,7 +19,7 @@ function AppHeader() {
       <div className="app-header-right">
         {!isHome && (
           <button className="app-header-home-btn" onClick={() => navigate("/")}>
-            Home
+            Reset
           </button>
         )}
       </div>

@@ -20,18 +20,21 @@
 
 ## Client-Side Visualizations
 - [X] Start using a client-side visualization library : 
-    - D3 : Chart / Data Visualization Library
-    - Leaflet : Interactive Map Library
+  - D3 : Chart / Data Visualization Library
+  - Leaflet : Interactive Map Library
 - [ ] Build a bubble chart
 - [ ] Build a bar chart
 - [X] Build a box & whisker chart
 
 ## GUI Use-Cases
 - [ ] Design the screen layout according to the defined use cases
-    - For each use case, specify the corresponding UI location and controls (e.g., buttons, dropdowns, tabs)
+  - For each use case, specify the corresponding UI location and controls (e.g., buttons, dropdowns, tabs)
 - [ ] Define and select an appropriate color theme for the interface
 
 - [X] GUI-1. Select state to display (required)
+  - Location: SplashPage (/), US map + State dropdown
+  - Behavior: Clicking a state on the map or selecting from the dropdown navigates to /state/:stateSlug
+  - Result: StatePage loads for the selected state with enacted plan and analysis tabs
 - [X] GUI-2. Display the current district plan when state is selected (required)
 - [ ] GUI-3. State data summary (required)
 - [ ] GUI-4. Display demographic heat map by precinct (required)
@@ -51,3 +54,6 @@
 - [ ] GUI-18. Display vote share vs seat share curve (preferred)
 - [ ] GUI-19. Display an “interesting” district plan (preferred) 
 - [ ] GUI-20. Reset page (preferred)
+  - Location: StatePage
+  - Behavior: Reset all StatePage state and navigate to /
+  - Result: SplashPage with no state selected
