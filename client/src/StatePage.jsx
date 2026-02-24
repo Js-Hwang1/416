@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import * as d3 from "d3";
 import BoxPlotChart from './box_and_whisker';
@@ -127,6 +127,19 @@ const VIEWS = [
   { id: "ecologicalInference", label: "Ecological Inference" },
   { id: "ensembles", label: "Ensembles" },
   { id: "fairness", label: "Fairness" },
+];
+
+const INTERESTING_PLAN_OPTIONS = [
+  { value: "enacted", label: "Enacted" },
+  { value: "max_d", label: "Max D" },
+  { value: "min_d", label: "Min D" },
+  { value: "median", label: "Median" },
+  { value: "most_competitive", label: "Most Competitive" },
+  { value: "least_competitive", label: "Least Competitive" },
+  { value: "fewest_county_splits", label: "Fewest County Splits" },
+  { value: "most_county_splits", label: "Most County Splits" },
+  { value: "max_minority_districts", label: "Max Minority Districts" },
+  { value: "min_minority_districts", label: "Min Minority Districts" },
 ];
 
 function formatNumber(value) {
@@ -268,6 +281,20 @@ export default function StatePage() {
   const navigate = useNavigate();
   const stateInfo = STATE_DATA[stateSlug];
   const [activeView, setActiveView] = useState("planExplorer");
+  const [selectedInterestingPlan, setSelectedInterestingPlan] = useState("enacted");
+  const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
+  const interestingPlanRef = useRef(null);
+
+  useEffect(() => {
+    const onDocumentMouseDown = (event) => {
+      if (!interestingPlanRef.current?.contains(event.target)) {
+        setIsInterestingPlanOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onDocumentMouseDown);
+    return () => document.removeEventListener("mousedown", onDocumentMouseDown);
+  }, []);
 
   if (!stateInfo) {
     return (
@@ -287,7 +314,7 @@ export default function StatePage() {
       <nav className="state-nav">
         <div className="nav-left">
           <select
-            className="state-dropdown"
+            className="state-nav-dropdown"
             value={stateSlug}
             onChange={(e) => navigate(`/state/${e.target.value}`)}
           >
@@ -323,12 +350,47 @@ export default function StatePage() {
               <div className="state-map-wrapper">
                 <StateMap geojsonPath={stateInfo.geojson} mapView={stateInfo.mapView} />
               </div>
-              <button className="compare-enacted-btn" onClick={() => {}}>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M12 3v18M3 12h18" />
-                </svg>
-                Compare with Enacted
-              </button>
+              <div className="interesting-plan-controls">
+                <div className="interesting-plan-dropdown" ref={interestingPlanRef}>
+                  <button
+                    type="button"
+                    className="plan-select-dropdown interesting-plan-select"
+                    onClick={() => setIsInterestingPlanOpen((prev) => !prev)}
+                  >
+                    {selectedInterestingPlan
+                      ? INTERESTING_PLAN_OPTIONS.find((o) => o.value === selectedInterestingPlan)?.label
+                      : "Enacted"}
+                  </button>
+                  {isInterestingPlanOpen && (
+                    <div
+                      className="interesting-plan-menu"
+                      onWheel={(e) => e.stopPropagation()}
+                      onTouchMove={(e) => e.stopPropagation()}
+                    >
+                      {INTERESTING_PLAN_OPTIONS.map((option) => (
+                        <button
+                          type="button"
+                          key={option.value}
+                          className="interesting-plan-option"
+                          onClick={() => {
+                            setSelectedInterestingPlan(option.value);
+                            setIsInterestingPlanOpen(false);
+                          }}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="compare-enacted-btn"
+                  disabled={selectedInterestingPlan === "enacted"}
+                >
+                  Compare with enacted
+                </button>
+              </div>
             </div>
 
             <div className="state-info-panel">

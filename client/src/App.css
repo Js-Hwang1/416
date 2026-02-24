@@ -335,7 +335,8 @@
 }
 
 /* ── State Dropdown ──────────────────────────────── */
-.state-dropdown {
+.state-nav-dropdown,
+.plan-select-dropdown {
   background: #222;
   color: #aaa;
   border: 1px solid #444;
@@ -356,15 +357,107 @@
   background-position: right 8px center;
 }
 
-.state-dropdown:hover,
-.state-dropdown:focus {
+.state-nav-dropdown:hover,
+.state-nav-dropdown:focus,
+.plan-select-dropdown:hover,
+.plan-select-dropdown:focus {
   border-color: #888;
   color: #fff;
 }
 
-.state-dropdown option {
+.state-nav-dropdown option {
   background: #222;
   color: #aaa;
+}
+
+.interesting-plan-select {
+  margin-top: 12px;
+  width: 220px;
+  min-width: 0;
+  position: relative;
+  z-index: 5;
+  text-align: left;
+  background-image: none;
+}
+
+.interesting-plan-dropdown {
+  margin-top: 0;
+  position: relative;
+  width: 180px;
+  z-index: 20;
+}
+
+.interesting-plan-controls {
+  margin-top: 12px;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.interesting-plan-dropdown .interesting-plan-select {
+  margin-top: 0;
+  width: 100%;
+}
+
+.interesting-plan-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #222;
+  border: 1px solid #444;
+  max-height: calc(34px * 5);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-gutter: stable;
+  box-sizing: border-box;
+  scrollbar-width: auto;
+  scrollbar-color: #666 #222;
+}
+
+.interesting-plan-menu::-webkit-scrollbar {
+  width: 10px;
+}
+
+.interesting-plan-menu::-webkit-scrollbar-track {
+  background: #222;
+}
+
+.interesting-plan-menu::-webkit-scrollbar-thumb {
+  background: #666;
+  border: 2px solid #222;
+  border-radius: 0;
+}
+
+.interesting-plan-menu::-webkit-scrollbar-thumb:hover {
+  background: #888;
+}
+
+.interesting-plan-option {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 34px;
+  text-align: left;
+  background: #222;
+  color: #aaa;
+  border: none;
+  border-top: 1px solid #333;
+  padding: 7px 10px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  cursor: pointer;
+}
+
+.interesting-plan-option:first-child {
+  border-top: none;
+}
+
+.interesting-plan-option:hover {
+  background: #2c2c2c;
+  color: #fff;
 }
 
 /* ── State Content ───────────────────────────────── */
@@ -403,7 +496,8 @@
   min-width: 0;
 }
 
-.plan-explorer-content {
+.plan-explorer-content .state-layout {
+  height: 100%;
   overflow: hidden;
 }
 
@@ -433,14 +527,23 @@
   display: flex;
   flex-direction: column;
   margin: 0;
+  padding-top: 4px;
 }
 
 .plan-explorer-content .overview-cards {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
+  overscroll-behavior: contain;
   padding-right: 4px;
-  margin-top: 4px;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.plan-explorer-content .overview-cards::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .plan-explorer-content .state-map-panel .section-title,
@@ -532,20 +635,32 @@
   border: 1px solid #444;
   border-radius: 0;
   font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
-  font-weight: 600;
+  font-size: 0.75rem;
+  font-weight: 500;
   letter-spacing: 0.8px;
   /*text-transform: uppercase;*/
-  padding: 8px 18px;
+  padding: 5px 12px;
   cursor: pointer;
   transition: all 0.15s ease;
-  margin-top: 12px;
 }
 
 .compare-enacted-btn:hover {
   background: #333;
   border-color: #888;
   color: #fff;
+}
+
+.compare-enacted-btn:disabled {
+  background: #1a1a1a;
+  color: #666;
+  border-color: #333;
+  cursor: not-allowed;
+}
+
+.compare-enacted-btn:disabled:hover {
+  background: #1a1a1a;
+  border-color: #333;
+  color: #666;
 }
 
 .compare-enacted-btn svg {
@@ -752,6 +867,10 @@
 
 .overview-kv-row:first-child {
   border-top: none;
+}
+
+.overview-kv-row:last-child {
+  padding-bottom: 6px;
 }
 
 .overview-kv-row dt {
