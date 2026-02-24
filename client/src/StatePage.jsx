@@ -79,10 +79,12 @@ const STATE_DATA = {
 };
 
 const VIEWS = [
-  { id: "map", label: "District Map" },
-  { id: "ensemble", label: "Election Splits" },
+  { id: "planExplorer", label: "Plan Explorer" },
   { id: "demographics", label: "Demographics" },
-  { id: "analysis", label: "Voting Patterns" },
+  { id: "ginglesAnalysis", label: "Gingles Analysis" },
+  { id: "ecologicalInference", label: "Ecological Inference" },
+  { id: "ensembles", label: "Ensembles" },
+  { id: "fairness", label: "Fairness" },
 ];
 
 function StateMap({ geojsonPath, mapView }) {
@@ -209,7 +211,7 @@ export default function StatePage() {
   const { stateSlug } = useParams();
   const navigate = useNavigate();
   const stateInfo = STATE_DATA[stateSlug];
-  const [activeView, setActiveView] = useState("map");
+  const [activeView, setActiveView] = useState("planExplorer");
 
   if (!stateInfo) {
     return (
@@ -272,7 +274,7 @@ export default function StatePage() {
       </header>
 
       <main className="state-content">
-        {activeView === "map" && (
+        {activeView === "planExplorer" && (
           <div className="state-layout">
             <div className="state-map-panel">
               <h2 className="section-title">Congressional Districts</h2>
@@ -313,7 +315,7 @@ export default function StatePage() {
           </div>
         )}
 
-        {activeView === "ensemble" && (
+        {activeView === "ensembles" && (
           <div className="chart-view">
             <div className="chart-toolbar">
               <span className="chart-toolbar-subtitle">
@@ -339,7 +341,7 @@ export default function StatePage() {
           </div>
         )}
 
-        {activeView === "analysis" && (
+        {activeView === "ecologicalInference" && (
           <div className="chart-view">
             <div className="chart-toolbar">
               <span className="chart-toolbar-subtitle">
@@ -348,6 +350,32 @@ export default function StatePage() {
             </div>
             <div className="chart-body">
               <ProbabilityChart />
+            </div>
+          </div>
+        )}
+
+        {activeView === "ginglesAnalysis" && (
+          <div className="chart-view">
+            <div className="chart-toolbar">
+              <span className="chart-toolbar-subtitle">
+                Gingles analysis visualizations will appear here
+              </span>
+            </div>
+            <div className="chart-body">
+              <div className="placeholder-card">Coming soon</div>
+            </div>
+          </div>
+        )}
+
+        {activeView === "fairness" && (
+          <div className="chart-view">
+            <div className="chart-toolbar">
+              <span className="chart-toolbar-subtitle">
+                Fairness analysis visualizations will appear here
+              </span>
+            </div>
+            <div className="chart-body">
+              <div className="placeholder-card">Coming soon</div>
             </div>
           </div>
         )}
