@@ -21,7 +21,7 @@ const DISTRICT_COLORS = [
   "#c4c0b8", "#b0aca4",
 ];
 
-const STATE_DATA = {
+const STATE_DATA = {  // this is dummy data
   texas: {
     name: "Texas",
     abbr: "TX",
@@ -140,6 +140,30 @@ const INTERESTING_PLAN_OPTIONS = [
   { value: "most_county_splits", label: "Most County Splits" },
   { value: "max_minority_districts", label: "Max Minority Districts" },
   { value: "min_minority_districts", label: "Min Minority Districts" },
+];
+
+const DISTRICT_TABLE_PLACEHOLDER_ROWS = [
+  {
+    districtNumber: "1",
+    representative: "TBD",
+    party: "TBD",
+    racialEthnicGroup: "TBD",
+    voteMargin: "--",
+  },
+  {
+    districtNumber: "2",
+    representative: "TBD",
+    party: "TBD",
+    racialEthnicGroup: "TBD",
+    voteMargin: "--",
+  },
+  {
+    districtNumber: "3",
+    representative: "TBD",
+    party: "TBD",
+    racialEthnicGroup: "TBD",
+    voteMargin: "--",
+  },
 ];
 
 function formatNumber(value) {
@@ -281,9 +305,11 @@ export default function StatePage() {
   const navigate = useNavigate();
   const stateInfo = STATE_DATA[stateSlug];
   const [activeView, setActiveView] = useState("planExplorer");
+  const [activeDetailPanel, setActiveDetailPanel] = useState("stateOverview");
   const [selectedInterestingPlan, setSelectedInterestingPlan] = useState("enacted");
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
   const interestingPlanRef = useRef(null);
+  const isStateOverviewPanel = activeDetailPanel === "stateOverview";
 
   useEffect(() => {
     const onDocumentMouseDown = (event) => {
@@ -390,87 +416,132 @@ export default function StatePage() {
                 >
                   Compare with enacted
                 </button>
+                <button
+                  type="button"
+                  className="compare-enacted-btn panel-mode-toggle-btn"
+                  onClick={() =>
+                    setActiveDetailPanel((prev) =>
+                      prev === "stateOverview" ? "districtDetail" : "stateOverview"
+                    )
+                  }
+                >
+                  {isStateOverviewPanel ? "District Detail" : "State Overview"}
+                </button>
               </div>
             </div>
 
             <div className="state-info-panel">
               <section className="state-section">
-                <h2 className="section-title">State Overview</h2>
-                <div className="overview-cards">
-                  <article className="overview-card">
-                    <h3 className="overview-card-title">Population</h3>
-                    <dl className="overview-kv-list">
-                      <div className="overview-kv-row">
-                        <dt>Total Population</dt>
-                        <dd>{formatNumber(stateInfo.overview.totalPopulation)}</dd>
-                      </div>
-                      <div className="overview-kv-row">
-                        <dt>Voting Age Population</dt>
-                        <dd>{formatNumber(stateInfo.overview.votingAgePopulation)}</dd>
-                      </div>
-                    </dl>
-                  </article>
-
-                  <article className="overview-card">
-                    <h3 className="overview-card-title">Statewide Voter Distribution</h3>
-                    <dl className="overview-kv-list">
-                      <div className="overview-kv-row">
-                        <dt>Democratic Vote Share</dt>
-                        <dd>{formatPct1(stateInfo.overview.voterShare.democratic)}</dd>
-                      </div>
-                      <div className="overview-kv-row">
-                        <dt>Republican Vote Share</dt>
-                        <dd>{formatPct1(stateInfo.overview.voterShare.republican)}</dd>
-                      </div>
-                      <div className="overview-kv-row">
-                        <dt>Other</dt>
-                        <dd>{formatPct1(stateInfo.overview.voterShare.other)}</dd>
-                      </div>
-                    </dl>
-                  </article>
-
-                  <article className="overview-card">
-                    <h3 className="overview-card-title">Racial/Ethnic Population Share</h3>
-                    <dl className="overview-kv-list">
-                      {Object.entries(stateInfo.overview.populationByGroup).map(([group, value]) => (
-                        <div className="overview-kv-row" key={group}>
-                          <dt>{group}</dt>
-                          <dd>
-                            {formatPercent(value, stateInfo.overview.totalPopulation)} ({formatNumber(value)})
-                          </dd>
+                <h2 className="section-title">{isStateOverviewPanel ? "State Overview" : "District Detail"}</h2>
+                {isStateOverviewPanel ? (
+                  <div className="overview-cards">
+                    <article className="overview-card">
+                      <h3 className="overview-card-title">Population</h3>
+                      <dl className="overview-kv-list">
+                        <div className="overview-kv-row">
+                          <dt>Total Population</dt>
+                          <dd>{formatNumber(stateInfo.overview.totalPopulation)}</dd>
                         </div>
-                      ))}
-                    </dl>
-                  </article>
+                        <div className="overview-kv-row">
+                          <dt>Voting Age Population</dt>
+                          <dd>{formatNumber(stateInfo.overview.votingAgePopulation)}</dd>
+                        </div>
+                      </dl>
+                    </article>
 
-                  <article className="overview-card">
-                    <h3 className="overview-card-title">Redistricting Control</h3>
-                    <dl className="overview-kv-list">
-                      <div className="overview-kv-row">
-                        <dt>Redistricting Authority</dt>
-                        <dd>{stateInfo.overview.redistrictingAuthority}</dd>
-                      </div>
-                    </dl>
-                  </article>
+                    <article className="overview-card">
+                      <h3 className="overview-card-title">Statewide Voter Distribution</h3>
+                      <dl className="overview-kv-list">
+                        <div className="overview-kv-row">
+                          <dt>Democratic Vote Share</dt>
+                          <dd>{formatPct1(stateInfo.overview.voterShare.democratic)}</dd>
+                        </div>
+                        <div className="overview-kv-row">
+                          <dt>Republican Vote Share</dt>
+                          <dd>{formatPct1(stateInfo.overview.voterShare.republican)}</dd>
+                        </div>
+                        <div className="overview-kv-row">
+                          <dt>Other</dt>
+                          <dd>{formatPct1(stateInfo.overview.voterShare.other)}</dd>
+                        </div>
+                      </dl>
+                    </article>
 
-                  <article className="overview-card">
-                    <h3 className="overview-card-title">Congressional Representation</h3>
-                    <dl className="overview-kv-list">
-                      <div className="overview-kv-row">
-                        <dt>Democrats</dt>
-                        <dd>{stateInfo.overview.congressionalByParty.Democrat}</dd>
-                      </div>
-                      <div className="overview-kv-row">
-                        <dt>Republicans</dt>
-                        <dd>{stateInfo.overview.congressionalByParty.Republican}</dd>
-                      </div>
-                      <div className="overview-kv-row">
-                        <dt>Total Seats</dt>
-                        <dd>{stateInfo.overview.congressionalByParty.Democrat + stateInfo.overview.congressionalByParty.Republican}</dd>
-                      </div>
-                    </dl>
-                  </article>
-                </div>
+                    <article className="overview-card">
+                      <h3 className="overview-card-title">Racial/Ethnic Population Share</h3>
+                      <dl className="overview-kv-list">
+                        {Object.entries(stateInfo.overview.populationByGroup).map(([group, value]) => (
+                          <div className="overview-kv-row" key={group}>
+                            <dt>{group}</dt>
+                            <dd>
+                              {formatPercent(value, stateInfo.overview.totalPopulation)} ({formatNumber(value)})
+                            </dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </article>
+
+                    <article className="overview-card">
+                      <h3 className="overview-card-title">Redistricting Control</h3>
+                      <dl className="overview-kv-list">
+                        <div className="overview-kv-row">
+                          <dt>Redistricting Authority</dt>
+                          <dd>{stateInfo.overview.redistrictingAuthority}</dd>
+                        </div>
+                      </dl>
+                    </article>
+
+                    <article className="overview-card">
+                      <h3 className="overview-card-title">Congressional Representation</h3>
+                      <dl className="overview-kv-list">
+                        <div className="overview-kv-row">
+                          <dt>Democrats</dt>
+                          <dd>{stateInfo.overview.congressionalByParty.Democrat}</dd>
+                        </div>
+                        <div className="overview-kv-row">
+                          <dt>Republicans</dt>
+                          <dd>{stateInfo.overview.congressionalByParty.Republican}</dd>
+                        </div>
+                        <div className="overview-kv-row">
+                          <dt>Total Seats</dt>
+                          <dd>{stateInfo.overview.congressionalByParty.Democrat + stateInfo.overview.congressionalByParty.Republican}</dd>
+                        </div>
+                      </dl>
+                    </article>
+                  </div>
+                ) : (
+                  <div className="district-table-wrapper">
+                    <table className="district-table" aria-label="Congressional representation table">
+                      <colgroup>
+                        <col className="district-col-number" />
+                        <col className="district-col-representative" />
+                        <col className="district-col-party" />
+                        <col className="district-col-racial" />
+                        <col className="district-col-margin" />
+                      </colgroup>
+                      <thead>
+                        <tr>
+                          <th>#</th>
+                          <th>Representative</th>
+                          <th>Party</th>
+                          <th>Racial/Ethnic Group</th>
+                          <th>Vote Margin %</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {DISTRICT_TABLE_PLACEHOLDER_ROWS.map((row) => (
+                          <tr key={row.districtNumber}>
+                            <td>{row.districtNumber}</td>
+                            <td>{row.representative}</td>
+                            <td>{row.party}</td>
+                            <td>{row.racialEthnicGroup}</td>
+                            <td>{row.voteMargin}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </section>
             </div>
           </div>
