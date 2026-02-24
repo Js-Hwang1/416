@@ -27,7 +27,7 @@ const STATE_DATA = {
     abbr: "TX",
     fips: 48,
     districts: 38,
-    population: "30,503,340",
+    population: "25,145,561",
     geojson: "/data/tx_districts.geojson",
     mapView: {
       fitPadding: [18, 18],
@@ -48,13 +48,34 @@ const STATE_DATA = {
         populationThreshold: "2.0%",
       },
     ],
+    overview: {
+      totalPopulation: 25145561,
+      votingAgePopulation: 18279737,
+      populationByGroup: {
+        White: 11397345,
+        Black: 3168469,
+        "Hispanic / Latino": 9460921,
+        Asian: 0,
+        Other: 1118826,
+      },
+      voterShare: {
+        democratic: 46.5,
+        republican: 52.1,
+        other: 1.4,
+      },
+      redistrictingAuthority: "Republican Legislature",
+      congressionalByParty: {
+        Democrat: 13,
+        Republican: 25,
+      },
+    },
   },
   massachusetts: {
     name: "Massachusetts",
     abbr: "MA",
     fips: 25,
     districts: 9,
-    population: "7,029,917",
+    population: "6,547,629",
     geojson: "/data/ma_districts.geojson",
     mapView: {
       fitPadding: [18, 18],
@@ -75,6 +96,27 @@ const STATE_DATA = {
         populationThreshold: "2.0%",
       },
     ],
+    overview: {
+      totalPopulation: 6547629,
+      votingAgePopulation: 5128706,
+      populationByGroup: {
+        White: 4984800,
+        Black: 391693,
+        "Hispanic / Latino": 627654,
+        Asian: 347495,
+        Other: 195987,
+      },
+      voterShare: {
+        democratic: 65.6,
+        republican: 32.1,
+        other: 2.3,
+      },
+      redistrictingAuthority: "Democratic Legislature",
+      congressionalByParty: {
+        Democrat: 9,
+        Republican: 0,
+      },
+    },
   },
 };
 
@@ -86,6 +128,20 @@ const VIEWS = [
   { id: "ensembles", label: "Ensembles" },
   { id: "fairness", label: "Fairness" },
 ];
+
+function formatNumber(value) {
+  return Number(value).toLocaleString();
+}
+
+function formatPercent(value, total) {
+  if (!total) return "0.00%";
+  const pct = (value / total) * 100;
+  return `${pct.toFixed(2)}%`;
+}
+
+function formatPct1(value) {
+  return `${Number(value).toFixed(1)}%`;
+}
 
 function StateMap({ geojsonPath, mapView }) {
   const [geojson, setGeojson] = useState(null);
@@ -259,25 +315,7 @@ export default function StatePage() {
         </div>
       </nav>
 
-      <header className="state-header">
-        <div className="header-content">
-          <span className="state-abbr-badge">{stateInfo.abbr}</span>
-          <h1 className="state-name">{stateInfo.name}</h1>
-          <div className="state-meta">
-            <div className="meta-item">
-              <span className="meta-label">Districts</span>
-              <span className="meta-value">{stateInfo.districts}</span>
-            </div>
-            <div className="meta-divider"></div>
-            <div className="meta-item">
-              <span className="meta-label">Population</span>
-              <span className="meta-value">{stateInfo.population}</span>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      <main className="state-content">
+      <main className={`state-content${activeView === "planExplorer" ? " plan-explorer-content" : ""}`}>
         {activeView === "planExplorer" && (
           <div className="state-layout">
             <div className="state-map-panel">
@@ -295,25 +333,82 @@ export default function StatePage() {
 
             <div className="state-info-panel">
               <section className="state-section">
-                <h2 className="section-title">Ensemble Summary</h2>
-                <table className="ensemble-table">
-                  <thead>
-                    <tr>
-                      <th>Type</th>
-                      <th>Plans</th>
-                      <th>Pop. Threshold</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stateInfo.ensembles.map((e) => (
-                      <tr key={e.id}>
-                        <td className="td-label">{e.type}</td>
-                        <td className="td-number">{e.plans.toLocaleString()}</td>
-                        <td className="td-number">{e.populationThreshold}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <h2 className="section-title">State Overview</h2>
+                <div className="overview-cards">
+                  <article className="overview-card">
+                    <h3 className="overview-card-title">Population</h3>
+                    <dl className="overview-kv-list">
+                      <div className="overview-kv-row">
+                        <dt>Total Population</dt>
+                        <dd>{formatNumber(stateInfo.overview.totalPopulation)}</dd>
+                      </div>
+                      <div className="overview-kv-row">
+                        <dt>Voting Age Population</dt>
+                        <dd>{formatNumber(stateInfo.overview.votingAgePopulation)}</dd>
+                      </div>
+                    </dl>
+                  </article>
+
+                  <article className="overview-card">
+                    <h3 className="overview-card-title">Statewide Voter Distribution</h3>
+                    <dl className="overview-kv-list">
+                      <div className="overview-kv-row">
+                        <dt>Democratic Vote Share</dt>
+                        <dd>{formatPct1(stateInfo.overview.voterShare.democratic)}</dd>
+                      </div>
+                      <div className="overview-kv-row">
+                        <dt>Republican Vote Share</dt>
+                        <dd>{formatPct1(stateInfo.overview.voterShare.republican)}</dd>
+                      </div>
+                      <div className="overview-kv-row">
+                        <dt>Other</dt>
+                        <dd>{formatPct1(stateInfo.overview.voterShare.other)}</dd>
+                      </div>
+                    </dl>
+                  </article>
+
+                  <article className="overview-card">
+                    <h3 className="overview-card-title">Racial/Ethnic Population Share</h3>
+                    <dl className="overview-kv-list">
+                      {Object.entries(stateInfo.overview.populationByGroup).map(([group, value]) => (
+                        <div className="overview-kv-row" key={group}>
+                          <dt>{group}</dt>
+                          <dd>
+                            {formatPercent(value, stateInfo.overview.totalPopulation)} ({formatNumber(value)})
+                          </dd>
+                        </div>
+                      ))}
+                    </dl>
+                  </article>
+
+                  <article className="overview-card">
+                    <h3 className="overview-card-title">Redistricting Control</h3>
+                    <dl className="overview-kv-list">
+                      <div className="overview-kv-row">
+                        <dt>Redistricting Authority</dt>
+                        <dd>{stateInfo.overview.redistrictingAuthority}</dd>
+                      </div>
+                    </dl>
+                  </article>
+
+                  <article className="overview-card">
+                    <h3 className="overview-card-title">Congressional Representation</h3>
+                    <dl className="overview-kv-list">
+                      <div className="overview-kv-row">
+                        <dt>Democrats</dt>
+                        <dd>{stateInfo.overview.congressionalByParty.Democrat}</dd>
+                      </div>
+                      <div className="overview-kv-row">
+                        <dt>Republicans</dt>
+                        <dd>{stateInfo.overview.congressionalByParty.Republican}</dd>
+                      </div>
+                      <div className="overview-kv-row">
+                        <dt>Total Seats</dt>
+                        <dd>{stateInfo.overview.congressionalByParty.Democrat + stateInfo.overview.congressionalByParty.Republican}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                </div>
               </section>
             </div>
           </div>

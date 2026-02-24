@@ -392,7 +392,7 @@
   background: #fff;
   border: 1px solid #ddd;
   padding: 8px;
-  margin-top: 4px;
+  margin-top: 0;
 }
 
 .state-map-wrapper .leaflet-container svg {
@@ -401,6 +401,55 @@
 
 .state-info-panel {
   min-width: 0;
+}
+
+.plan-explorer-content {
+  overflow: hidden;
+}
+
+.plan-explorer-content .state-layout {
+  height: 100%;
+  overflow: hidden;
+}
+
+.plan-explorer-content .state-map-panel {
+  position: sticky;
+  top: 0;
+  align-self: start;
+  margin: 0;
+  padding-top: 0;
+}
+
+.plan-explorer-content .state-info-panel {
+  height: 100%;
+  overflow: hidden;
+  padding-right: 4px;
+  margin: 0;
+  padding-top: 0;
+}
+
+.plan-explorer-content .state-section {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+}
+
+.plan-explorer-content .overview-cards {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+  margin-top: 4px;
+}
+
+.plan-explorer-content .state-map-panel .section-title,
+.plan-explorer-content .state-info-panel .section-title {
+  margin-top: 0;
+}
+
+.plan-explorer-content .state-map-wrapper {
+  margin-top: 0;
 }
 
 .state-section {
@@ -660,6 +709,67 @@
 }
 
 /* ── Responsive ──────────────────────────────────── */
+.overview-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+.overview-card {
+  background: #FAFAFA;
+  border: 1px solid #ddd;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+}
+
+.overview-card-title {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: 0.8px;
+  background: #111;
+  border: 1px solid #2a2a2a;
+  padding: 6px 10px;
+}
+
+.overview-kv-list {
+  margin: 0;
+  padding: 0px 12px;
+  background: #FAFAFA;
+}
+
+.overview-kv-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 32px;
+  padding: 6px 0;
+  border-top: 1px solid #f0f0f0;
+}
+
+.overview-kv-row:first-child {
+  border-top: none;
+}
+
+.overview-kv-row dt {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #232323;
+}
+
+.overview-kv-row dd {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 500;
+  color: #232323;
+  text-align: right;
+}
 @media (max-width: 900px) {
   .state-layout {
     grid-template-columns: 1fr;
@@ -718,3 +828,4 @@
     padding: 0 12px;
   }
 }
+
