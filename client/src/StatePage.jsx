@@ -142,6 +142,23 @@ const INTERESTING_PLAN_OPTIONS = [
   { value: "min_minority_districts", label: "Min Minority Districts" },
 ];
 
+const ENSEMBLES_SUBTABS = [
+  { id: "seatSplits", label: "Seat Splits" },
+  { id: "minorityDistribution", label: "Minority Distribution" },
+];
+
+const DEMOGRAPHICS_SUBTABS = [
+  { id: "precinct", label: "Precinct" },
+  { id: "censusBlock", label: "Census Block" },
+];
+
+const ECOLOGICAL_INFERENCE_SUBTABS = [
+  { id: "probabilityCurves", label: "Probability Curves" },
+  { id: "supportSummary", label: "Support Summary" },
+  { id: "precinctMap", label: "Precinct Map" },
+  { id: "groupComparison", label: "Group Comparison" },
+];
+
 const DISTRICT_TABLE_PLACEHOLDER_ROWS = [
   {
     districtNumber: "1",
@@ -306,6 +323,9 @@ export default function StatePage() {
   const stateInfo = STATE_DATA[stateSlug];
   const [activeView, setActiveView] = useState("planExplorer");
   const [activeDetailPanel, setActiveDetailPanel] = useState("stateOverview");
+  const [activeEnsemblesSubtab, setActiveEnsemblesSubtab] = useState("seatSplits");
+  const [activeDemographicsSubtab, setActiveDemographicsSubtab] = useState("precinct");
+  const [activeEcologicalSubtab, setActiveEcologicalSubtab] = useState("probabilityCurves");
   const [selectedInterestingPlan, setSelectedInterestingPlan] = useState("enacted");
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
   const interestingPlanRef = useRef(null);
@@ -550,38 +570,105 @@ export default function StatePage() {
         {activeView === "ensembles" && (
           <div className="chart-view">
             <div className="chart-toolbar">
+              <fieldset className="ensembles-subtab-group" aria-label="Ensembles sub-tabs">
+                {ENSEMBLES_SUBTABS.map((subtab) => (
+                  <label key={subtab.id} className="ensembles-subtab-option">
+                    <input
+                      type="radio"
+                      name="ensembles-subtab"
+                      value={subtab.id}
+                      checked={activeEnsemblesSubtab === subtab.id}
+                      onChange={(e) => setActiveEnsemblesSubtab(e.target.value)}
+                    />
+                    <span>{subtab.label}</span>
+                  </label>
+                ))}
+              </fieldset>
               <span className="chart-toolbar-subtitle">
-                R/D split frequency across {stateInfo.ensembles[0].plans.toLocaleString()} simulated plans
+                {activeEnsemblesSubtab === "seatSplits"
+                  ? `R/D split frequency across ${stateInfo.ensembles[0].plans.toLocaleString()} simulated plans`
+                  : "Minority group distribution across ensemble district plans"}
               </span>
             </div>
             <div className="chart-body">
-              <BarChart />
+              {activeEnsemblesSubtab === "seatSplits" ? (
+                <BarChart />
+              ) : (
+                <BoxPlotChart districts={box_data.districts} />
+              )}
             </div>
           </div>
         )}
 
         {activeView === "demographics" && (
           <div className="chart-view">
-            <div className="chart-toolbar">
+              <div className="chart-toolbar">
+                <fieldset className="ensembles-subtab-group" aria-label="Demographics sub-tabs">
+                  {DEMOGRAPHICS_SUBTABS.map((subtab) => (
+                  <label key={subtab.id} className="ensembles-subtab-option">
+                    <input
+                      type="radio"
+                      name="demographics-subtab"
+                      value={subtab.id}
+                      checked={activeDemographicsSubtab === subtab.id}
+                      onChange={(e) => setActiveDemographicsSubtab(e.target.value)}
+                    />
+                    <span>{subtab.label}</span>
+                  </label>
+                ))}
+              </fieldset>
               <span className="chart-toolbar-subtitle">
                 Minority group distribution across ensemble district plans
               </span>
+              </div>
+              <div className="chart-body">
+                <div className="demographics-placeholder">
+                  <div className="demographics-placeholder-title">Coming Soon</div>
+                  <div className="demographics-placeholder-label">
+                    GUI-4: Demographic Heat Map by Precinct
+                  </div>
+                  <div className="demographics-placeholder-label">
+                    GUI-5: Demographic Heat Map by Census Block
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="chart-body">
-              <BoxPlotChart districts={box_data.districts} />
-            </div>
-          </div>
-        )}
+          )}
 
         {activeView === "ecologicalInference" && (
           <div className="chart-view">
             <div className="chart-toolbar">
+              <fieldset className="ensembles-subtab-group" aria-label="Ecological Inference sub-tabs">
+                {ECOLOGICAL_INFERENCE_SUBTABS.map((subtab) => (
+                  <label key={subtab.id} className="ensembles-subtab-option">
+                    <input
+                      type="radio"
+                      name="ecological-inference-subtab"
+                      value={subtab.id}
+                      checked={activeEcologicalSubtab === subtab.id}
+                      onChange={(e) => setActiveEcologicalSubtab(e.target.value)}
+                    />
+                    <span>{subtab.label}</span>
+                  </label>
+                ))}
+              </fieldset>
               <span className="chart-toolbar-subtitle">
                 Ecological inference of candidate support by racial/ethnic group
               </span>
             </div>
             <div className="chart-body">
-              <ProbabilityChart />
+              {activeEcologicalSubtab === "probabilityCurves" ? (
+                <ProbabilityChart />
+              ) : (
+                <div className="demographics-placeholder">
+                  <div className="demographics-placeholder-title">Coming Soon</div>
+                  <div className="demographics-placeholder-label">
+                    {activeEcologicalSubtab === "supportSummary" && "GUI-13"}
+                    {activeEcologicalSubtab === "precinctMap" && "GUI-14"}
+                    {activeEcologicalSubtab === "groupComparison" && "GUI-15"}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -594,7 +681,13 @@ export default function StatePage() {
               </span>
             </div>
             <div className="chart-body">
-              <div className="placeholder-card">Coming soon</div>
+              <div className="placeholder-card">
+                <div>Coming soon</div>
+                <div className="demographics-placeholder-label">GUI-8</div>
+                <div className="demographics-placeholder-label">GUI-9</div>
+                <div className="demographics-placeholder-label">GUI-10</div>
+                <div className="demographics-placeholder-label">Layout is identical to District Detail</div>
+              </div>
             </div>
           </div>
         )}

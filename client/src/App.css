@@ -693,6 +693,30 @@
   letter-spacing: 0.3px;
 }
 
+.ensembles-subtab-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.ensembles-subtab-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  color: #333;
+  cursor: pointer;
+}
+
+.ensembles-subtab-option input[type="radio"] {
+  margin: 0;
+  accent-color: #1a1a1a;
+}
+
 .chart-body {
   flex: 1;
   min-height: 0;
@@ -704,6 +728,31 @@
 
 .chart-body > div {
   width: 100%;
+}
+
+.demographics-placeholder {
+  height: 100%;
+  min-height: 320px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  gap: 8px;
+}
+
+.demographics-placeholder-title {
+  font-family: "Inter", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+}
+
+.demographics-placeholder-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.76rem;
+  color: #666;
+  letter-spacing: 0.2px;
 }
 
 /* ── Chart Control Bar (shared by box plot + EI) ── */
