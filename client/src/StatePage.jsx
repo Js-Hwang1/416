@@ -184,12 +184,10 @@ function parseDistrictNumber(feature) {
 
 function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) {
   const [geojson, setGeojson] = useState(null);
-  const districtLayersRef = useRef(new Map());
 
   useEffect(() => {
     const controller = new AbortController();
 
-    districtLayersRef.current.clear();
     setGeojson(null);
     fetch(geojsonPath, { signal: controller.signal })
       .then((r) => r.json())
@@ -210,24 +208,30 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
     const colorIndex = Number.isFinite(districtNumber)
       ? Math.abs(districtNumber - 1) % DISTRICT_COLORS.length
       : 0;
-    const isSelected = districtNumber === selectedDistrict;
 
     return {
-      weight: isSelected ? 2.5 : 1.5,
-      color: isSelected ? "#999" : "#1a1a1a",
+      weight: 1.5,
+      color: "#1a1a1a",
+      fillColor: DISTRICT_COLORS[colorIndex],
+      fillOpacity: 0.82,
+    };
+  };
+
+  const selectedDistrictStyle = (feature) => {
+    const districtNumber = parseDistrictNumber(feature);
+    const colorIndex = Number.isFinite(districtNumber)
+      ? Math.abs(districtNumber - 1) % DISTRICT_COLORS.length
+      : 0;
+
+    return {
+      weight: 2.5,
+      color: "#999",
       fillColor: DISTRICT_COLORS[colorIndex],
       fillOpacity: 0.82,
     };
   };
 
   const onEachFeature = (feature, layer) => {
-    const districtNumber = parseDistrictNumber(feature);
-    if (districtNumber !== null) {
-      const existingLayers = districtLayersRef.current.get(districtNumber) ?? [];
-      existingLayers.push(layer);
-      districtLayersRef.current.set(districtNumber, existingLayers);
-    }
-
     const label =
       feature?.properties?.name ??
       feature?.properties?.DISTRICT ??
@@ -235,6 +239,12 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
       "district";
     layer.bindTooltip(String(label), { sticky: true });
     layer.on({
+      mouseover: () => {
+        layer.setStyle({ weight: 2.5 });
+      },
+      mouseout: () => {
+        layer.setStyle({ weight: 1.5 });
+      },
       click: () => {
         const clickedDistrictNumber = parseDistrictNumber(feature);
         if (clickedDistrictNumber !== null) {
@@ -245,9 +255,21 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
   };
 
   const geoJsonKey = useMemo(
-    () => `${geojsonPath}-${geojson?.features?.length ?? 0}-${selectedDistrict ?? "none"}`,
-    [geojsonPath, geojson, selectedDistrict]
+    () => `${geojsonPath}-${geojson?.features?.length ?? 0}`,
+    [geojsonPath, geojson]
   );
+
+  const selectedDistrictGeojson = useMemo(() => {
+    if (!geojson || selectedDistrict === null) return null;
+    const selectedFeatures = (geojson.features ?? []).filter(
+      (feature) => parseDistrictNumber(feature) === selectedDistrict
+    );
+    if (selectedFeatures.length === 0) return null;
+    return {
+      ...geojson,
+      features: selectedFeatures,
+    };
+  }, [geojson, selectedDistrict]);
 
   function FitGeoJsonBounds({ data, view }) {
     const map = useMap();
@@ -279,16 +301,6 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
     return null;
   }
 
-  function BringSelectedDistrictToFront({ districtNumber }) {
-    useEffect(() => {
-      if (districtNumber === null) return;
-      const selectedLayers = districtLayersRef.current.get(districtNumber) ?? [];
-      selectedLayers.forEach((layer) => layer.bringToFront());
-    }, [districtNumber, geojson]);
-
-    return null;
-  }
-
   return (
     <MapContainer
       className="leaflet-map"
@@ -310,7 +322,14 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
             style={styleFeature}
             onEachFeature={onEachFeature}
           />
-          <BringSelectedDistrictToFront districtNumber={selectedDistrict} />
+          {selectedDistrictGeojson && (
+            <GeoJSON
+              key={`selected-${selectedDistrict}`}
+              data={selectedDistrictGeojson}
+              style={selectedDistrictStyle}
+              interactive={false}
+            />
+          )}
           <FitGeoJsonBounds data={geojson} view={mapView} />
         </>
       )}
