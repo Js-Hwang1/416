@@ -491,6 +491,14 @@
   display: block;
 }
 
+.state-map-wrapper .leaflet-container .leaflet-interactive:focus {
+  outline: none;
+}
+
+.state-map-wrapper .leaflet-container:focus {
+  outline: none;
+} 
+
 .state-info-panel {
   min-width: 0;
 }
@@ -1122,4 +1130,9 @@
     padding: 0 12px;
   }
 }
+
+
+
+
+
 

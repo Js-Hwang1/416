@@ -213,7 +213,7 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
     const isSelected = districtNumber === selectedDistrict;
 
     return {
-      weight: isSelected ? 4 : 1.5,
+      weight: isSelected ? 2.5 : 1.5,
       color: isSelected ? "#999" : "#1a1a1a",
       fillColor: DISTRICT_COLORS[colorIndex],
       fillOpacity: 0.82,
@@ -235,13 +235,6 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
       "district";
     layer.bindTooltip(String(label), { sticky: true });
     layer.on({
-      mouseover: () => {
-        layer.setStyle({ weight: 2.2, fillOpacity: 0.92 });
-        layer.bringToFront();
-      },
-      mouseout: () => {
-        layer.setStyle(styleFeature(feature));
-      },
       click: () => {
         const clickedDistrictNumber = parseDistrictNumber(feature);
         if (clickedDistrictNumber !== null) {
