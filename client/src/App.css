@@ -410,7 +410,6 @@
   overflow-y: auto;
   overscroll-behavior-y: contain;
   overscroll-behavior: contain;
-  touch-action: pan-y;
   scrollbar-gutter: stable;
   box-sizing: border-box;
   scrollbar-width: auto;
@@ -944,9 +943,19 @@
 }
 
 .district-table-wrapper {
+  --district-header-height: 34px;
+  --district-row-height: 34px;
   width: 100%;
   padding: 0;
   overflow-x: hidden;
+  max-height: calc(var(--district-header-height) + (15 * var(--district-row-height)));
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+  box-sizing: border-box;
+  scrollbar-width: auto;
+  scrollbar-color: #aaa #eee;
 }
 
 .district-table {
@@ -959,7 +968,7 @@
 }
 
 .district-col-number {
-  width: 8%;
+  width: 9%;
 }
 
 .district-col-representative {
@@ -985,10 +994,12 @@
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.8px;
-  padding: 8px 10px;
+  padding: 6px 10px;
   text-align: left;
   border-right: 1px solid #333;
   white-space: nowrap;
+  height: var(--district-header-height);
+  box-sizing: border-box;
 }
 
 .district-table th:last-child {
@@ -998,17 +1009,44 @@
 .district-table td {
   font-family: "Inter", sans-serif;
   font-size: 0.75rem;
-  color: #232323;
+  color: #111;
   padding: 8px 10px;
   border-top: 1px solid #ececec;
   border-right: 1px solid #ececec;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  height: var(--district-row-height);
+  box-sizing: border-box;
 }
 
 .district-table td:last-child {
   border-right: none;
+}
+
+.district-row-clickable {
+  cursor: pointer;
+}
+
+.district-row-clickable:focus-visible {
+  outline: 2px solid #5d5d5d;
+  outline-offset: -2px;
+}
+
+.district-row-clickable:hover td {
+  color: #777;
+}
+
+.district-row-selected {
+  background: #444 !important;
+}
+
+.district-row-selected td {
+  color: #f2f2f2;
+}
+
+.district-row-selected:hover td {
+  color: #f2f2f2;
 }
 
 .district-table th:nth-child(4),
@@ -1018,6 +1056,12 @@
 
 .district-table tbody tr:nth-child(even) {
   background: #fafafa;
+}
+
+.plan-explorer-content .district-table-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 @media (max-width: 900px) {

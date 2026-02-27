@@ -1,6 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import * as d3 from "d3";
 import BoxPlotChart from './box_and_whisker';
 import BarChart from "./bar_chart";
 import ProbabilityChart from "./probability_curve";
@@ -20,6 +19,7 @@ const DISTRICT_COLORS = [
   "#e4e4e4", "#d0d0d0", "#bcbcbc", "#d8d4cc",
   "#c4c0b8", "#b0aca4",
 ];
+
 
 const STATE_DATA = {  // this is dummy data
   texas: {
@@ -159,30 +159,6 @@ const ECOLOGICAL_INFERENCE_SUBTABS = [
   { id: "groupComparison", label: "Group Comparison" },
 ];
 
-const DISTRICT_TABLE_PLACEHOLDER_ROWS = [
-  {
-    districtNumber: "1",
-    representative: "TBD",
-    party: "TBD",
-    racialEthnicGroup: "TBD",
-    voteMargin: "--",
-  },
-  {
-    districtNumber: "2",
-    representative: "TBD",
-    party: "TBD",
-    racialEthnicGroup: "TBD",
-    voteMargin: "--",
-  },
-  {
-    districtNumber: "3",
-    representative: "TBD",
-    party: "TBD",
-    racialEthnicGroup: "TBD",
-    voteMargin: "--",
-  },
-];
-
 function formatNumber(value) {
   return Number(value).toLocaleString();
 }
@@ -197,12 +173,23 @@ function formatPct1(value) {
   return `${Number(value).toFixed(1)}%`;
 }
 
-function StateMap({ geojsonPath, mapView }) {
+function parseDistrictNumber(feature) {
+  const rawDistrict =
+    feature?.properties?.district ??
+    feature?.properties?.DISTRICT ??
+    feature?.properties?.District;
+  const districtNumber = Number.parseInt(String(rawDistrict), 10);
+  return Number.isFinite(districtNumber) ? districtNumber : null;
+}
+
+function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) {
   const [geojson, setGeojson] = useState(null);
+  const districtLayersRef = useRef(new Map());
 
   useEffect(() => {
     const controller = new AbortController();
 
+    districtLayersRef.current.clear();
     setGeojson(null);
     fetch(geojsonPath, { signal: controller.signal })
       .then((r) => r.json())
@@ -219,24 +206,28 @@ function StateMap({ geojsonPath, mapView }) {
   }, [geojsonPath]);
 
   const styleFeature = (feature) => {
-    const rawDistrict =
-      feature?.properties?.district ??
-      feature?.properties?.DISTRICT ??
-      feature?.properties?.District;
-    const districtNumber = Number.parseInt(String(rawDistrict), 10);
+    const districtNumber = parseDistrictNumber(feature);
     const colorIndex = Number.isFinite(districtNumber)
       ? Math.abs(districtNumber - 1) % DISTRICT_COLORS.length
       : 0;
+    const isSelected = districtNumber === selectedDistrict;
 
     return {
-      weight: 1.5,
-      color: "#1a1a1a",
+      weight: isSelected ? 4 : 1.5,
+      color: isSelected ? "#999" : "#1a1a1a",
       fillColor: DISTRICT_COLORS[colorIndex],
       fillOpacity: 0.82,
     };
   };
 
   const onEachFeature = (feature, layer) => {
+    const districtNumber = parseDistrictNumber(feature);
+    if (districtNumber !== null) {
+      const existingLayers = districtLayersRef.current.get(districtNumber) ?? [];
+      existingLayers.push(layer);
+      districtLayersRef.current.set(districtNumber, existingLayers);
+    }
+
     const label =
       feature?.properties?.name ??
       feature?.properties?.DISTRICT ??
@@ -251,12 +242,18 @@ function StateMap({ geojsonPath, mapView }) {
       mouseout: () => {
         layer.setStyle(styleFeature(feature));
       },
+      click: () => {
+        const clickedDistrictNumber = parseDistrictNumber(feature);
+        if (clickedDistrictNumber !== null) {
+          onDistrictSelect(clickedDistrictNumber);
+        }
+      },
     });
   };
 
   const geoJsonKey = useMemo(
-    () => `${geojsonPath}-${geojson?.features?.length ?? 0}`,
-    [geojsonPath, geojson]
+    () => `${geojsonPath}-${geojson?.features?.length ?? 0}-${selectedDistrict ?? "none"}`,
+    [geojsonPath, geojson, selectedDistrict]
   );
 
   function FitGeoJsonBounds({ data, view }) {
@@ -289,6 +286,16 @@ function StateMap({ geojsonPath, mapView }) {
     return null;
   }
 
+  function BringSelectedDistrictToFront({ districtNumber }) {
+    useEffect(() => {
+      if (districtNumber === null) return;
+      const selectedLayers = districtLayersRef.current.get(districtNumber) ?? [];
+      selectedLayers.forEach((layer) => layer.bringToFront());
+    }, [districtNumber, geojson]);
+
+    return null;
+  }
+
   return (
     <MapContainer
       className="leaflet-map"
@@ -310,6 +317,7 @@ function StateMap({ geojsonPath, mapView }) {
             style={styleFeature}
             onEachFeature={onEachFeature}
           />
+          <BringSelectedDistrictToFront districtNumber={selectedDistrict} />
           <FitGeoJsonBounds data={geojson} view={mapView} />
         </>
       )}
@@ -328,8 +336,20 @@ export default function StatePage() {
   const [activeEcologicalSubtab, setActiveEcologicalSubtab] = useState("probabilityCurves");
   const [selectedInterestingPlan, setSelectedInterestingPlan] = useState("enacted");
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
+  const [selectedDistrict, setSelectedDistrict] = useState(null);
   const interestingPlanRef = useRef(null);
   const isStateOverviewPanel = activeDetailPanel === "stateOverview";
+  const districtTableRows = useMemo(
+    () =>
+      Array.from({ length: stateInfo?.districts ?? 0 }, (_, index) => ({
+        districtNumber: String(index + 1),
+        representative: "TBD",
+        party: "--",
+        racialEthnicGroup: "--",
+        voteMargin: "--",
+      })),
+    [stateInfo]
+  );
 
   useEffect(() => {
     const onDocumentMouseDown = (event) => {
@@ -341,6 +361,10 @@ export default function StatePage() {
     document.addEventListener("mousedown", onDocumentMouseDown);
     return () => document.removeEventListener("mousedown", onDocumentMouseDown);
   }, []);
+
+  useEffect(() => {
+    setSelectedDistrict(null);
+  }, [stateSlug]);
 
   if (!stateInfo) {
     return (
@@ -394,7 +418,12 @@ export default function StatePage() {
             <div className="state-map-panel">
               <h2 className="section-title">Congressional Districts</h2>
               <div className="state-map-wrapper">
-                <StateMap geojsonPath={stateInfo.geojson} mapView={stateInfo.mapView} />
+                <StateMap
+                  geojsonPath={stateInfo.geojson}
+                  mapView={stateInfo.mapView}
+                  selectedDistrict={selectedDistrict}
+                  onDistrictSelect={setSelectedDistrict}
+                />
               </div>
               <div className="interesting-plan-controls">
                 <div className="interesting-plan-dropdown" ref={interestingPlanRef}>
@@ -544,20 +573,37 @@ export default function StatePage() {
                           <th>#</th>
                           <th>Representative</th>
                           <th>Party</th>
-                          <th>Racial/Ethnic Group</th>
+                          <th>Race</th>
                           <th>Vote Margin %</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {DISTRICT_TABLE_PLACEHOLDER_ROWS.map((row) => (
-                          <tr key={row.districtNumber}>
-                            <td>{row.districtNumber}</td>
-                            <td>{row.representative}</td>
-                            <td>{row.party}</td>
-                            <td>{row.racialEthnicGroup}</td>
-                            <td>{row.voteMargin}</td>
-                          </tr>
-                        ))}
+                        {districtTableRows.map((row) => {
+                          const districtNumber = Number.parseInt(row.districtNumber, 10);
+                          const isSelected = selectedDistrict === districtNumber;
+                          return (
+                            <tr
+                              key={row.districtNumber}
+                              className={`district-row-clickable${isSelected ? " district-row-selected" : ""}`}
+                              onClick={() => setSelectedDistrict(districtNumber)}
+                              onKeyDown={(event) => {
+                                if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault();
+                                  setSelectedDistrict(districtNumber);
+                                }
+                              }}
+                              tabIndex={0}
+                              role="button"
+                              aria-label={`Select district ${row.districtNumber}`}
+                            >
+                              <td>{row.districtNumber}</td>
+                              <td>{row.representative}</td>
+                              <td>{row.party}</td>
+                              <td>{row.racialEthnicGroup}</td>
+                              <td>{row.voteMargin}</td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
