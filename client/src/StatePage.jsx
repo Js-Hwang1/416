@@ -184,10 +184,12 @@ function parseDistrictNumber(feature) {
 
 function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) {
   const [geojson, setGeojson] = useState(null);
+  const hasFittedBoundsRef = useRef(false);
 
   useEffect(() => {
     const controller = new AbortController();
 
+    hasFittedBoundsRef.current = false;
     setGeojson(null);
     fetch(geojsonPath, { signal: controller.signal })
       .then((r) => r.json())
@@ -276,6 +278,7 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
 
     useEffect(() => {
       if (!data) return;
+      if (hasFittedBoundsRef.current) return;
 
       const bounds = L.geoJSON(data).getBounds();
       if (bounds.isValid()) {
@@ -295,6 +298,7 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
         map.setMinZoom(targetZoom);
         // Keep panning near the selected state's extent.
         map.setMaxBounds(bounds.pad(panBoundsPad));
+        hasFittedBoundsRef.current = true;
       }
     }, [map, data, view]);
 
