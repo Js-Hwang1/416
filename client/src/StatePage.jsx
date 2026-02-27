@@ -234,12 +234,6 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
   };
 
   const onEachFeature = (feature, layer) => {
-    const label =
-      feature?.properties?.name ??
-      feature?.properties?.DISTRICT ??
-      feature?.properties?.district ??
-      "district";
-    layer.bindTooltip(String(label), { sticky: true });
     layer.on({
       mouseover: () => {
         layer.setStyle({ weight: 2.5 });
@@ -250,7 +244,9 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
       click: () => {
         const clickedDistrictNumber = parseDistrictNumber(feature);
         if (clickedDistrictNumber !== null) {
-          onDistrictSelect(clickedDistrictNumber);
+          onDistrictSelect((prevSelected) =>
+            prevSelected === clickedDistrictNumber ? null : clickedDistrictNumber
+          );
         }
       },
     });
@@ -629,11 +625,17 @@ export default function StatePage() {
                                 }
                               }}
                               className={`district-row-clickable${isSelected ? " district-row-selected" : ""}`}
-                              onClick={() => setSelectedDistrict(districtNumber)}
+                              onClick={() =>
+                                setSelectedDistrict((prevSelected) =>
+                                  prevSelected === districtNumber ? null : districtNumber
+                                )
+                              }
                               onKeyDown={(event) => {
                                 if (event.key === "Enter" || event.key === " ") {
                                   event.preventDefault();
-                                  setSelectedDistrict(districtNumber);
+                                  setSelectedDistrict((prevSelected) =>
+                                    prevSelected === districtNumber ? null : districtNumber
+                                  );
                                 }
                               }}
                               tabIndex={0}
