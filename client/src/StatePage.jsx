@@ -350,6 +350,8 @@ export default function StatePage() {
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const interestingPlanRef = useRef(null);
+  const districtTableWrapperRef = useRef(null);
+  const districtRowRefs = useRef(new Map());
   const isStateOverviewPanel = activeDetailPanel === "stateOverview";
   const districtTableRows = useMemo(
     () =>
@@ -377,6 +379,25 @@ export default function StatePage() {
   useEffect(() => {
     setSelectedDistrict(null);
   }, [stateSlug]);
+
+  useEffect(() => {
+    if (selectedDistrict === null) return;
+
+    const wrapper = districtTableWrapperRef.current;
+    const row = districtRowRefs.current.get(selectedDistrict);
+    if (!wrapper || !row) return;
+
+    const rowTop = row.offsetTop;
+    const rowBottom = rowTop + row.offsetHeight;
+    const visibleTop = wrapper.scrollTop;
+    const visibleBottom = visibleTop + wrapper.clientHeight;
+
+    if (rowTop < visibleTop) {
+      wrapper.scrollTo({ top: rowTop, behavior: "smooth" });
+    } else if (rowBottom > visibleBottom) {
+      wrapper.scrollTo({ top: rowBottom - wrapper.clientHeight, behavior: "smooth" });
+    }
+  }, [selectedDistrict, isStateOverviewPanel]);
 
   if (!stateInfo) {
     return (
@@ -571,7 +592,7 @@ export default function StatePage() {
                     </article>
                   </div>
                 ) : (
-                  <div className="district-table-wrapper">
+                  <div className="district-table-wrapper" ref={districtTableWrapperRef}>
                     <table className="district-table" aria-label="Congressional representation table">
                       <colgroup>
                         <col className="district-col-number" />
@@ -596,6 +617,13 @@ export default function StatePage() {
                           return (
                             <tr
                               key={row.districtNumber}
+                              ref={(element) => {
+                                if (element) {
+                                  districtRowRefs.current.set(districtNumber, element);
+                                } else {
+                                  districtRowRefs.current.delete(districtNumber);
+                                }
+                              }}
                               className={`district-row-clickable${isSelected ? " district-row-selected" : ""}`}
                               onClick={() => setSelectedDistrict(districtNumber)}
                               onKeyDown={(event) => {
