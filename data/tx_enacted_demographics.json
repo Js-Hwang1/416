@@ -1,0 +1,840 @@
+{
+  "districts": [
+    {
+      "district": 1,
+      "total_vap": 573388,
+      "groups": {
+        "hispanic": {
+          "vap": 63487,
+          "pct": 11.07
+        },
+        "black": {
+          "vap": 103480,
+          "pct": 18.05
+        },
+        "white": {
+          "vap": 396728,
+          "pct": 69.19
+        },
+        "asian": {
+          "vap": 6055,
+          "pct": 1.06
+        }
+      }
+    },
+    {
+      "district": 2,
+      "total_vap": 406470,
+      "groups": {
+        "hispanic": {
+          "vap": 78934,
+          "pct": 19.42
+        },
+        "black": {
+          "vap": 35215,
+          "pct": 8.66
+        },
+        "white": {
+          "vap": 274189,
+          "pct": 67.46
+        },
+        "asian": {
+          "vap": 23779,
+          "pct": 5.85
+        }
+      }
+    },
+    {
+      "district": 3,
+      "total_vap": 394676,
+      "groups": {
+        "hispanic": {
+          "vap": 47025,
+          "pct": 11.91
+        },
+        "black": {
+          "vap": 31399,
+          "pct": 7.96
+        },
+        "white": {
+          "vap": 277436,
+          "pct": 70.29
+        },
+        "asian": {
+          "vap": 59521,
+          "pct": 15.08
+        }
+      }
+    },
+    {
+      "district": 4,
+      "total_vap": 483355,
+      "groups": {
+        "hispanic": {
+          "vap": 50437,
+          "pct": 10.43
+        },
+        "black": {
+          "vap": 40063,
+          "pct": 8.29
+        },
+        "white": {
+          "vap": 358016,
+          "pct": 74.07
+        },
+        "asian": {
+          "vap": 52645,
+          "pct": 10.89
+        }
+      }
+    },
+    {
+      "district": 5,
+      "total_vap": 426303,
+      "groups": {
+        "hispanic": {
+          "vap": 94009,
+          "pct": 22.05
+        },
+        "black": {
+          "vap": 53680,
+          "pct": 12.59
+        },
+        "white": {
+          "vap": 264671,
+          "pct": 62.09
+        },
+        "asian": {
+          "vap": 13240,
+          "pct": 3.11
+        }
+      }
+    },
+    {
+      "district": 6,
+      "total_vap": 457157,
+      "groups": {
+        "hispanic": {
+          "vap": 117102,
+          "pct": 25.62
+        },
+        "black": {
+          "vap": 56553,
+          "pct": 12.37
+        },
+        "white": {
+          "vap": 266430,
+          "pct": 58.28
+        },
+        "asian": {
+          "vap": 18764,
+          "pct": 4.1
+        }
+      }
+    },
+    {
+      "district": 7,
+      "total_vap": 409783,
+      "groups": {
+        "hispanic": {
+          "vap": 125447,
+          "pct": 30.61
+        },
+        "black": {
+          "vap": 66071,
+          "pct": 16.12
+        },
+        "white": {
+          "vap": 158852,
+          "pct": 38.76
+        },
+        "asian": {
+          "vap": 76146,
+          "pct": 18.58
+        }
+      }
+    },
+    {
+      "district": 8,
+      "total_vap": 404703,
+      "groups": {
+        "hispanic": {
+          "vap": 99826,
+          "pct": 24.67
+        },
+        "black": {
+          "vap": 45633,
+          "pct": 11.28
+        },
+        "white": {
+          "vap": 239083,
+          "pct": 59.08
+        },
+        "asian": {
+          "vap": 31909,
+          "pct": 7.88
+        }
+      }
+    },
+    {
+      "district": 9,
+      "total_vap": 492061,
+      "groups": {
+        "hispanic": {
+          "vap": 163714,
+          "pct": 33.27
+        },
+        "black": {
+          "vap": 194598,
+          "pct": 39.55
+        },
+        "white": {
+          "vap": 86835,
+          "pct": 17.65
+        },
+        "asian": {
+          "vap": 60739,
+          "pct": 12.34
+        }
+      }
+    },
+    {
+      "district": 10,
+      "total_vap": 465565,
+      "groups": {
+        "hispanic": {
+          "vap": 93857,
+          "pct": 20.16
+        },
+        "black": {
+          "vap": 52817,
+          "pct": 11.34
+        },
+        "white": {
+          "vap": 298725,
+          "pct": 64.16
+        },
+        "asian": {
+          "vap": 27626,
+          "pct": 5.93
+        }
+      }
+    },
+    {
+      "district": 11,
+      "total_vap": 532167,
+      "groups": {
+        "hispanic": {
+          "vap": 149071,
+          "pct": 28.01
+        },
+        "black": {
+          "vap": 49325,
+          "pct": 9.27
+        },
+        "white": {
+          "vap": 320217,
+          "pct": 60.17
+        },
+        "asian": {
+          "vap": 12305,
+          "pct": 2.31
+        }
+      }
+    },
+    {
+      "district": 12,
+      "total_vap": 460314,
+      "groups": {
+        "hispanic": {
+          "vap": 82026,
+          "pct": 17.82
+        },
+        "black": {
+          "vap": 40390,
+          "pct": 8.77
+        },
+        "white": {
+          "vap": 317276,
+          "pct": 68.93
+        },
+        "asian": {
+          "vap": 22551,
+          "pct": 4.9
+        }
+      }
+    },
+    {
+      "district": 13,
+      "total_vap": 483202,
+      "groups": {
+        "hispanic": {
+          "vap": 99143,
+          "pct": 20.52
+        },
+        "black": {
+          "vap": 28253,
+          "pct": 5.85
+        },
+        "white": {
+          "vap": 341257,
+          "pct": 70.62
+        },
+        "asian": {
+          "vap": 10422,
+          "pct": 2.16
+        }
+      }
+    },
+    {
+      "district": 14,
+      "total_vap": 523316,
+      "groups": {
+        "hispanic": {
+          "vap": 95465,
+          "pct": 18.24
+        },
+        "black": {
+          "vap": 87596,
+          "pct": 16.74
+        },
+        "white": {
+          "vap": 322596,
+          "pct": 61.64
+        },
+        "asian": {
+          "vap": 17671,
+          "pct": 3.38
+        }
+      }
+    },
+    {
+      "district": 15,
+      "total_vap": 463912,
+      "groups": {
+        "hispanic": {
+          "vap": 350729,
+          "pct": 75.6
+        },
+        "black": {
+          "vap": 8135,
+          "pct": 1.75
+        },
+        "white": {
+          "vap": 98835,
+          "pct": 21.3
+        },
+        "asian": {
+          "vap": 7193,
+          "pct": 1.55
+        }
+      }
+    },
+    {
+      "district": 16,
+      "total_vap": 497817,
+      "groups": {
+        "hispanic": {
+          "vap": 389856,
+          "pct": 78.31
+        },
+        "black": {
+          "vap": 18245,
+          "pct": 3.67
+        },
+        "white": {
+          "vap": 82329,
+          "pct": 16.54
+        },
+        "asian": {
+          "vap": 7405,
+          "pct": 1.49
+        }
+      }
+    },
+    {
+      "district": 17,
+      "total_vap": 513283,
+      "groups": {
+        "hispanic": {
+          "vap": 100420,
+          "pct": 19.56
+        },
+        "black": {
+          "vap": 81193,
+          "pct": 15.82
+        },
+        "white": {
+          "vap": 319506,
+          "pct": 62.25
+        },
+        "asian": {
+          "vap": 12867,
+          "pct": 2.51
+        }
+      }
+    },
+    {
+      "district": 18,
+      "total_vap": 483010,
+      "groups": {
+        "hispanic": {
+          "vap": 175358,
+          "pct": 36.31
+        },
+        "black": {
+          "vap": 180742,
+          "pct": 37.42
+        },
+        "white": {
+          "vap": 105117,
+          "pct": 21.76
+        },
+        "asian": {
+          "vap": 31663,
+          "pct": 6.56
+        }
+      }
+    },
+    {
+      "district": 19,
+      "total_vap": 545119,
+      "groups": {
+        "hispanic": {
+          "vap": 166401,
+          "pct": 30.53
+        },
+        "black": {
+          "vap": 34021,
+          "pct": 6.24
+        },
+        "white": {
+          "vap": 333067,
+          "pct": 61.1
+        },
+        "asian": {
+          "vap": 11387,
+          "pct": 2.09
+        }
+      }
+    },
+    {
+      "district": 20,
+      "total_vap": 471361,
+      "groups": {
+        "hispanic": {
+          "vap": 327599,
+          "pct": 69.5
+        },
+        "black": {
+          "vap": 26464,
+          "pct": 5.61
+        },
+        "white": {
+          "vap": 103527,
+          "pct": 21.96
+        },
+        "asian": {
+          "vap": 16852,
+          "pct": 3.58
+        }
+      }
+    },
+    {
+      "district": 21,
+      "total_vap": 516923,
+      "groups": {
+        "hispanic": {
+          "vap": 125183,
+          "pct": 24.22
+        },
+        "black": {
+          "vap": 18801,
+          "pct": 3.64
+        },
+        "white": {
+          "vap": 354378,
+          "pct": 68.56
+        },
+        "asian": {
+          "vap": 19737,
+          "pct": 3.82
+        }
+      }
+    },
+    {
+      "district": 22,
+      "total_vap": 472435,
+      "groups": {
+        "hispanic": {
+          "vap": 110332,
+          "pct": 23.35
+        },
+        "black": {
+          "vap": 53264,
+          "pct": 11.27
+        },
+        "white": {
+          "vap": 241277,
+          "pct": 51.07
+        },
+        "asian": {
+          "vap": 110505,
+          "pct": 23.39
+        }
+      }
+    },
+    {
+      "district": 23,
+      "total_vap": 470327,
+      "groups": {
+        "hispanic": {
+          "vap": 285926,
+          "pct": 60.79
+        },
+        "black": {
+          "vap": 14867,
+          "pct": 3.16
+        },
+        "white": {
+          "vap": 157815,
+          "pct": 33.55
+        },
+        "asian": {
+          "vap": 13821,
+          "pct": 2.94
+        }
+      }
+    },
+    {
+      "district": 24,
+      "total_vap": 588524,
+      "groups": {
+        "hispanic": {
+          "vap": 81360,
+          "pct": 13.82
+        },
+        "black": {
+          "vap": 40596,
+          "pct": 6.9
+        },
+        "white": {
+          "vap": 415317,
+          "pct": 70.57
+        },
+        "asian": {
+          "vap": 76694,
+          "pct": 13.03
+        }
+      }
+    },
+    {
+      "district": 25,
+      "total_vap": 523400,
+      "groups": {
+        "hispanic": {
+          "vap": 80769,
+          "pct": 15.43
+        },
+        "black": {
+          "vap": 53236,
+          "pct": 10.17
+        },
+        "white": {
+          "vap": 363859,
+          "pct": 69.52
+        },
+        "asian": {
+          "vap": 27709,
+          "pct": 5.29
+        }
+      }
+    },
+    {
+      "district": 26,
+      "total_vap": 401178,
+      "groups": {
+        "hispanic": {
+          "vap": 62166,
+          "pct": 15.5
+        },
+        "black": {
+          "vap": 28983,
+          "pct": 7.22
+        },
+        "white": {
+          "vap": 286130,
+          "pct": 71.32
+        },
+        "asian": {
+          "vap": 33240,
+          "pct": 8.29
+        }
+      }
+    },
+    {
+      "district": 27,
+      "total_vap": 540452,
+      "groups": {
+        "hispanic": {
+          "vap": 252180,
+          "pct": 46.66
+        },
+        "black": {
+          "vap": 27232,
+          "pct": 5.04
+        },
+        "white": {
+          "vap": 250424,
+          "pct": 46.34
+        },
+        "asian": {
+          "vap": 9983,
+          "pct": 1.85
+        }
+      }
+    },
+    {
+      "district": 28,
+      "total_vap": 461208,
+      "groups": {
+        "hispanic": {
+          "vap": 335349,
+          "pct": 72.71
+        },
+        "black": {
+          "vap": 24155,
+          "pct": 5.24
+        },
+        "white": {
+          "vap": 97262,
+          "pct": 21.09
+        },
+        "asian": {
+          "vap": 4808,
+          "pct": 1.04
+        }
+      }
+    },
+    {
+      "district": 29,
+      "total_vap": 498714,
+      "groups": {
+        "hispanic": {
+          "vap": 351556,
+          "pct": 70.49
+        },
+        "black": {
+          "vap": 67330,
+          "pct": 13.5
+        },
+        "white": {
+          "vap": 69337,
+          "pct": 13.9
+        },
+        "asian": {
+          "vap": 14283,
+          "pct": 2.86
+        }
+      }
+    },
+    {
+      "district": 30,
+      "total_vap": 485374,
+      "groups": {
+        "hispanic": {
+          "vap": 133770,
+          "pct": 27.56
+        },
+        "black": {
+          "vap": 221990,
+          "pct": 45.74
+        },
+        "white": {
+          "vap": 114714,
+          "pct": 23.63
+        },
+        "asian": {
+          "vap": 19469,
+          "pct": 4.01
+        }
+      }
+    },
+    {
+      "district": 31,
+      "total_vap": 481070,
+      "groups": {
+        "hispanic": {
+          "vap": 86754,
+          "pct": 18.03
+        },
+        "black": {
+          "vap": 41637,
+          "pct": 8.66
+        },
+        "white": {
+          "vap": 332293,
+          "pct": 69.07
+        },
+        "asian": {
+          "vap": 32009,
+          "pct": 6.65
+        }
+      }
+    },
+    {
+      "district": 32,
+      "total_vap": 545955,
+      "groups": {
+        "hispanic": {
+          "vap": 150049,
+          "pct": 27.48
+        },
+        "black": {
+          "vap": 86779,
+          "pct": 15.89
+        },
+        "white": {
+          "vap": 260210,
+          "pct": 47.66
+        },
+        "asian": {
+          "vap": 64653,
+          "pct": 11.84
+        }
+      }
+    },
+    {
+      "district": 33,
+      "total_vap": 473819,
+      "groups": {
+        "hispanic": {
+          "vap": 266593,
+          "pct": 56.26
+        },
+        "black": {
+          "vap": 94395,
+          "pct": 19.92
+        },
+        "white": {
+          "vap": 89592,
+          "pct": 18.91
+        },
+        "asian": {
+          "vap": 34878,
+          "pct": 7.36
+        }
+      }
+    },
+    {
+      "district": 34,
+      "total_vap": 489398,
+      "groups": {
+        "hispanic": {
+          "vap": 422491,
+          "pct": 86.33
+        },
+        "black": {
+          "vap": 3829,
+          "pct": 0.78
+        },
+        "white": {
+          "vap": 59638,
+          "pct": 12.19
+        },
+        "asian": {
+          "vap": 3913,
+          "pct": 0.8
+        }
+      }
+    },
+    {
+      "district": 35,
+      "total_vap": 460664,
+      "groups": {
+        "hispanic": {
+          "vap": 235905,
+          "pct": 51.21
+        },
+        "black": {
+          "vap": 60324,
+          "pct": 13.1
+        },
+        "white": {
+          "vap": 150615,
+          "pct": 32.7
+        },
+        "asian": {
+          "vap": 19362,
+          "pct": 4.2
+        }
+      }
+    },
+    {
+      "district": 36,
+      "total_vap": 518139,
+      "groups": {
+        "hispanic": {
+          "vap": 106132,
+          "pct": 20.48
+        },
+        "black": {
+          "vap": 63693,
+          "pct": 12.29
+        },
+        "white": {
+          "vap": 324388,
+          "pct": 62.61
+        },
+        "asian": {
+          "vap": 24615,
+          "pct": 4.75
+        }
+      }
+    },
+    {
+      "district": 37,
+      "total_vap": 392483,
+      "groups": {
+        "hispanic": {
+          "vap": 94997,
+          "pct": 24.2
+        },
+        "black": {
+          "vap": 24199,
+          "pct": 6.17
+        },
+        "white": {
+          "vap": 242429,
+          "pct": 61.77
+        },
+        "asian": {
+          "vap": 48402,
+          "pct": 12.33
+        }
+      }
+    },
+    {
+      "district": 38,
+      "total_vap": 472712,
+      "groups": {
+        "hispanic": {
+          "vap": 91726,
+          "pct": 19.4
+        },
+        "black": {
+          "vap": 37076,
+          "pct": 7.84
+        },
+        "white": {
+          "vap": 300314,
+          "pct": 63.53
+        },
+        "asian": {
+          "vap": 59847,
+          "pct": 12.66
+        }
+      }
+    }
+  ]
+}
