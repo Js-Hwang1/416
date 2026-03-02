@@ -792,7 +792,12 @@ export default function StatePage() {
                           checked={ginglesGroup === g}
                           onChange={(e) => setGinglesGroup(e.target.value)}
                         />
-                        <span>{g.replace("_pct", "").replace(/_/g, " ")}</span>
+                        <span>
+                          {g
+                            .replace("_pct", "")
+                            .replace(/_/g, " ")
+                            .replace(/^./, (c) => c.toUpperCase())}
+                        </span>
                       </label>
                     ))}
                   </fieldset>
