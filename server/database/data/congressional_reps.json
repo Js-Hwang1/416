@@ -2,62 +2,491 @@
   "MA": {
     "state": "Massachusetts",
     "total_districts": 9,
-    "party_split": { "Democrat": 9, "Republican": 0 },
+    "party_split": {
+      "Democrat": 9,
+      "Republican": 0
+    },
     "representatives": [
-      { "district": 1, "name": "Richard Neal", "party": "Democrat", "race_ethnicity": "White" },
-      { "district": 2, "name": "James P. McGovern", "party": "Democrat", "race_ethnicity": "White" },
-      { "district": 3, "name": "Lori Trahan", "party": "Democrat", "race_ethnicity": "White" },
-      { "district": 4, "name": "Jake Auchincloss", "party": "Democrat", "race_ethnicity": "White" },
-      { "district": 5, "name": "Katherine Clark", "party": "Democrat", "race_ethnicity": "White" },
-      { "district": 6, "name": "Seth Moulton", "party": "Democrat", "race_ethnicity": "White" },
-      { "district": 7, "name": "Ayanna Pressley", "party": "Democrat", "race_ethnicity": "Black" },
-      { "district": 8, "name": "Stephen F. Lynch", "party": "Democrat", "race_ethnicity": "White" },
-      { "district": 9, "name": "William R. Keating", "party": "Democrat", "race_ethnicity": "White" }
+      {
+        "district": 1,
+        "name": "Richard Neal",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 218016,
+        "rep_votes": 0,
+        "total_votes": 218016,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 2,
+        "name": "James P. McGovern",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 235900,
+        "rep_votes": 0,
+        "total_votes": 235900,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 3,
+        "name": "Lori Trahan",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 248065,
+        "rep_votes": 0,
+        "total_votes": 248065,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 4,
+        "name": "Jake Auchincloss",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 276718,
+        "rep_votes": 0,
+        "total_votes": 276718,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 5,
+        "name": "Katherine Clark",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 265426,
+        "rep_votes": 0,
+        "total_votes": 265426,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 6,
+        "name": "Seth Moulton",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 314613,
+        "rep_votes": 0,
+        "total_votes": 314613,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 7,
+        "name": "Ayanna Pressley",
+        "party": "Democrat",
+        "race_ethnicity": "Black",
+        "dem_votes": 210624,
+        "rep_votes": 0,
+        "total_votes": 210624,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 8,
+        "name": "Stephen F. Lynch",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 250167,
+        "rep_votes": 104332,
+        "total_votes": 354499,
+        "vote_margin_pct": 41.1
+      },
+      {
+        "district": 9,
+        "name": "William R. Keating",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 237881,
+        "rep_votes": 182674,
+        "total_votes": 420555,
+        "vote_margin_pct": 13.1
+      }
     ]
   },
   "TX": {
     "state": "Texas",
     "total_districts": 38,
-    "party_split": { "Democrat": 13, "Republican": 25 },
+    "party_split": {
+      "Democrat": 13,
+      "Republican": 25
+    },
     "representatives": [
-      { "district": 1, "name": "Nathaniel Moran", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 2, "name": "Dan Crenshaw", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 3, "name": "Keith Self", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 4, "name": "Pat Fallon", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 5, "name": "Lance Gooden", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 6, "name": "Jake Ellzey", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 7, "name": "Lizzie Fletcher", "party": "Democrat", "race_ethnicity": "White" },
-      { "district": 8, "name": "Morgan Luttrell", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 9, "name": "Al Green", "party": "Democrat", "race_ethnicity": "Black" },
-      { "district": 10, "name": "Michael McCaul", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 11, "name": "August Pfluger", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 12, "name": "Craig Goldman", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 13, "name": "Ronny Jackson", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 14, "name": "Randy Weber", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 15, "name": "Monica De La Cruz", "party": "Republican", "race_ethnicity": "Hispanic" },
-      { "district": 16, "name": "Veronica Escobar", "party": "Democrat", "race_ethnicity": "Hispanic" },
-      { "district": 17, "name": "Pete Sessions", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 18, "name": "Christian Menefee", "party": "Democrat", "race_ethnicity": "Black" },
-      { "district": 19, "name": "Jodey Arrington", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 20, "name": "Joaquin Castro", "party": "Democrat", "race_ethnicity": "Hispanic" },
-      { "district": 21, "name": "Chip Roy", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 22, "name": "Troy Nehls", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 23, "name": "Tony Gonzales", "party": "Republican", "race_ethnicity": "Hispanic" },
-      { "district": 24, "name": "Beth Van Duyne", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 25, "name": "Roger Williams", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 26, "name": "Brandon Gill", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 27, "name": "Michael Cloud", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 28, "name": "Henry Cuellar", "party": "Democrat", "race_ethnicity": "Hispanic" },
-      { "district": 29, "name": "Sylvia Garcia", "party": "Democrat", "race_ethnicity": "Hispanic" },
-      { "district": 30, "name": "Jasmine Crockett", "party": "Democrat", "race_ethnicity": "Black" },
-      { "district": 31, "name": "John Carter", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 32, "name": "Julie Johnson", "party": "Democrat", "race_ethnicity": "White" },
-      { "district": 33, "name": "Marc Veasey", "party": "Democrat", "race_ethnicity": "Black" },
-      { "district": 34, "name": "Vicente Gonzalez", "party": "Democrat", "race_ethnicity": "Hispanic" },
-      { "district": 35, "name": "Greg Casar", "party": "Democrat", "race_ethnicity": "Hispanic" },
-      { "district": 36, "name": "Brian Babin", "party": "Republican", "race_ethnicity": "White" },
-      { "district": 37, "name": "Lloyd Doggett", "party": "Democrat", "race_ethnicity": "White" },
-      { "district": 38, "name": "Wesley Hunt", "party": "Republican", "race_ethnicity": "Black" }
+      {
+        "district": 1,
+        "name": "Nathaniel Moran",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 0,
+        "rep_votes": 0,
+        "total_votes": 0,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 2,
+        "name": "Dan Crenshaw",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 90406,
+        "rep_votes": 179914,
+        "total_votes": 270320,
+        "vote_margin_pct": 33.1
+      },
+      {
+        "district": 3,
+        "name": "Keith Self",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 115306,
+        "rep_votes": 193517,
+        "total_votes": 308823,
+        "vote_margin_pct": 25.3
+      },
+      {
+        "district": 4,
+        "name": "Pat Fallon",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 99724,
+        "rep_votes": 222554,
+        "total_votes": 322278,
+        "vote_margin_pct": 38.1
+      },
+      {
+        "district": 5,
+        "name": "Lance Gooden",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 95509,
+        "rep_votes": 178024,
+        "total_votes": 273533,
+        "vote_margin_pct": 30.2
+      },
+      {
+        "district": 6,
+        "name": "Jake Ellzey",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 88696,
+        "rep_votes": 190350,
+        "total_votes": 279046,
+        "vote_margin_pct": 36.4
+      },
+      {
+        "district": 7,
+        "name": "Lizzie Fletcher",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 138869,
+        "rep_votes": 87564,
+        "total_votes": 226433,
+        "vote_margin_pct": 22.7
+      },
+      {
+        "district": 8,
+        "name": "Morgan Luttrell",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 95399,
+        "rep_votes": 207788,
+        "total_votes": 303187,
+        "vote_margin_pct": 37.1
+      },
+      {
+        "district": 9,
+        "name": "Al Green",
+        "party": "Democrat",
+        "race_ethnicity": "Black",
+        "dem_votes": 0,
+        "rep_votes": 0,
+        "total_votes": 0,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 10,
+        "name": "Michael McCaul",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 90318,
+        "rep_votes": 202035,
+        "total_votes": 292353,
+        "vote_margin_pct": 38.2
+      },
+      {
+        "district": 11,
+        "name": "August Pfluger",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 0,
+        "rep_votes": 0,
+        "total_votes": 0,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 12,
+        "name": "Craig Goldman",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 102862,
+        "rep_votes": 188178,
+        "total_votes": 291040,
+        "vote_margin_pct": 29.3
+      },
+      {
+        "district": 13,
+        "name": "Ronny Jackson",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 0,
+        "rep_votes": 0,
+        "total_votes": 0,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 14,
+        "name": "Randy Weber",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 95871,
+        "rep_votes": 200310,
+        "total_votes": 296181,
+        "vote_margin_pct": 35.3
+      },
+      {
+        "district": 15,
+        "name": "Monica De La Cruz",
+        "party": "Republican",
+        "race_ethnicity": "Hispanic",
+        "dem_votes": 100755,
+        "rep_votes": 136704,
+        "total_votes": 237459,
+        "vote_margin_pct": 15.1
+      },
+      {
+        "district": 16,
+        "name": "Veronica Escobar",
+        "party": "Democrat",
+        "race_ethnicity": "Hispanic",
+        "dem_votes": 116707,
+        "rep_votes": 76565,
+        "total_votes": 193272,
+        "vote_margin_pct": 20.8
+      },
+      {
+        "district": 17,
+        "name": "Pete Sessions",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 91810,
+        "rep_votes": 194524,
+        "total_votes": 286334,
+        "vote_margin_pct": 35.9
+      },
+      {
+        "district": 18,
+        "name": "Christian Menefee",
+        "party": "Democrat",
+        "race_ethnicity": "Black",
+        "dem_votes": 147245,
+        "rep_votes": 65675,
+        "total_votes": 212920,
+        "vote_margin_pct": 38.3
+      },
+      {
+        "district": 19,
+        "name": "Jodey Arrington",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 0,
+        "rep_votes": 236232,
+        "total_votes": 236232,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 20,
+        "name": "Joaquin Castro",
+        "party": "Democrat",
+        "race_ethnicity": "Hispanic",
+        "dem_votes": 0,
+        "rep_votes": 0,
+        "total_votes": 0,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 21,
+        "name": "Chip Roy",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 133796,
+        "rep_votes": 226324,
+        "total_votes": 360120,
+        "vote_margin_pct": 25.7
+      },
+      {
+        "district": 22,
+        "name": "Troy Nehls",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 110236,
+        "rep_votes": 183940,
+        "total_votes": 294176,
+        "vote_margin_pct": 25.1
+      },
+      {
+        "district": 23,
+        "name": "Tony Gonzales",
+        "party": "Republican",
+        "race_ethnicity": "Hispanic",
+        "dem_votes": 100606,
+        "rep_votes": 171516,
+        "total_votes": 272122,
+        "vote_margin_pct": 26.1
+      },
+      {
+        "district": 24,
+        "name": "Beth Van Duyne",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 141979,
+        "rep_votes": 214768,
+        "total_votes": 356747,
+        "vote_margin_pct": 20.4
+      },
+      {
+        "district": 25,
+        "name": "Roger Williams",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 0,
+        "rep_votes": 244116,
+        "total_votes": 244116,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 26,
+        "name": "Brandon Gill",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 109244,
+        "rep_votes": 196496,
+        "total_votes": 305740,
+        "vote_margin_pct": 28.5
+      },
+      {
+        "district": 27,
+        "name": "Michael Cloud",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 102499,
+        "rep_votes": 203486,
+        "total_votes": 305985,
+        "vote_margin_pct": 33.0
+      },
+      {
+        "district": 28,
+        "name": "Henry Cuellar",
+        "party": "Democrat",
+        "race_ethnicity": "Hispanic",
+        "dem_votes": 114296,
+        "rep_votes": 101225,
+        "total_votes": 215521,
+        "vote_margin_pct": 6.1
+      },
+      {
+        "district": 29,
+        "name": "Sylvia Garcia",
+        "party": "Democrat",
+        "race_ethnicity": "Hispanic",
+        "dem_votes": 98875,
+        "rep_votes": 51890,
+        "total_votes": 150765,
+        "vote_margin_pct": 31.2
+      },
+      {
+        "district": 30,
+        "name": "Jasmine Crockett",
+        "party": "Democrat",
+        "race_ethnicity": "Black",
+        "dem_votes": 190753,
+        "rep_votes": 0,
+        "total_votes": 190753,
+        "vote_margin_pct": 100.0
+      },
+      {
+        "district": 31,
+        "name": "John Carter",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 83929,
+        "rep_votes": 160420,
+        "total_votes": 244349,
+        "vote_margin_pct": 31.3
+      },
+      {
+        "district": 32,
+        "name": "Julie Johnson",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 143407,
+        "rep_votes": 86257,
+        "total_votes": 229664,
+        "vote_margin_pct": 24.9
+      },
+      {
+        "district": 33,
+        "name": "Marc Veasey",
+        "party": "Democrat",
+        "race_ethnicity": "Black",
+        "dem_votes": 115664,
+        "rep_votes": 52442,
+        "total_votes": 168106,
+        "vote_margin_pct": 37.6
+      },
+      {
+        "district": 34,
+        "name": "Vicente Gonzalez",
+        "party": "Democrat",
+        "race_ethnicity": "Hispanic",
+        "dem_votes": 105221,
+        "rep_votes": 100079,
+        "total_votes": 205300,
+        "vote_margin_pct": 2.5
+      },
+      {
+        "district": 35,
+        "name": "Greg Casar",
+        "party": "Democrat",
+        "race_ethnicity": "Hispanic",
+        "dem_votes": 147854,
+        "rep_votes": 68547,
+        "total_votes": 216401,
+        "vote_margin_pct": 36.6
+      },
+      {
+        "district": 36,
+        "name": "Brian Babin",
+        "party": "Republican",
+        "race_ethnicity": "White",
+        "dem_votes": 83464,
+        "rep_votes": 198429,
+        "total_votes": 281893,
+        "vote_margin_pct": 40.8
+      },
+      {
+        "district": 37,
+        "name": "Lloyd Doggett",
+        "party": "Democrat",
+        "race_ethnicity": "White",
+        "dem_votes": 258915,
+        "rep_votes": 78441,
+        "total_votes": 337356,
+        "vote_margin_pct": 53.5
+      },
+      {
+        "district": 38,
+        "name": "Wesley Hunt",
+        "party": "Republican",
+        "race_ethnicity": "Black",
+        "dem_votes": 121277,
+        "rep_votes": 203362,
+        "total_votes": 324639,
+        "vote_margin_pct": 25.3
+      }
     ]
   }
 }
