@@ -17,6 +17,13 @@
     "asian": 269089,
     "other": 124861
   },
+  "presidential_2024": {
+    "dem_votes": 2009257,
+    "rep_votes": 1188328,
+    "total_votes": 3197585,
+    "dem_pct": 62.8,
+    "rep_pct": 37.2
+  },
   "num_congressional_districts": 9,
   "party_split": {
     "Democrat": 9,

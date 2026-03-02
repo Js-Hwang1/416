@@ -3,7 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import BoxPlotChart from './box_and_whisker';
 import BarChart from "./bar_chart";
 import ProbabilityChart from "./probability_curve";
+import GinglessScatterPlot from "./gingles_scatter";
 import box_data from "./dummy_data/dummy_box_and_whisker.json";
+import dummy_scatter from "./dummy_data/dummy_scatter.json";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 
@@ -28,7 +30,7 @@ const STATE_DATA = {  // this is dummy data
     fips: 48,
     districts: 38,
     population: "25,145,561",
-    geojson: "/data/tx_districts.geojson",
+    geojson: `${process.env.PUBLIC_URL}/data/tx_districts.geojson`,
     mapView: {
       fitPadding: [18, 18],
       zoomOffset: 0,
@@ -76,7 +78,7 @@ const STATE_DATA = {  // this is dummy data
     fips: 25,
     districts: 9,
     population: "6,547,629",
-    geojson: "/data/ma_districts.geojson",
+    geojson: `${process.env.PUBLIC_URL}/data/ma_districts.geojson`,
     mapView: {
       fitPadding: [18, 18],
       zoomOffset: 0,
@@ -346,6 +348,16 @@ export default function StatePage() {
   const [activeEnsemblesSubtab, setActiveEnsemblesSubtab] = useState("seatSplits");
   const [activeDemographicsSubtab, setActiveDemographicsSubtab] = useState("precinct");
   const [activeEcologicalSubtab, setActiveEcologicalSubtab] = useState("probabilityCurves");
+  const [ginglesGroup, setGinglesGroup] = useState("latino_pct");
+  const ginglesGroups = ["latino_pct", "black_pct", "asian_pct"];
+  const GINGLES_PAGE_SIZE = 10;
+  const [ginglesPage, setGinglesPage] = useState(0);
+  const ginglesRows = dummy_scatter?.precint_data || [];
+  const ginglesTotalPages = Math.ceil(ginglesRows.length / GINGLES_PAGE_SIZE);
+  const ginglesPageRows = ginglesRows.slice(
+    ginglesPage * GINGLES_PAGE_SIZE,
+    (ginglesPage + 1) * GINGLES_PAGE_SIZE
+  );
   const [selectedInterestingPlan, setSelectedInterestingPlan] = useState("enacted");
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
@@ -445,7 +457,7 @@ export default function StatePage() {
         </div>
       </nav>
 
-      <main className={`state-content${activeView === "planExplorer" ? " plan-explorer-content" : ""}`}>
+      <main className={`state-content${activeView === "planExplorer" ? " plan-explorer-content" : ""}${activeView === "ginglesAnalysis" ? " gingles-content" : ""}`}>
         {activeView === "planExplorer" && (
           <div className="state-layout">
             <div className="state-map-panel">
@@ -766,19 +778,91 @@ export default function StatePage() {
         )}
 
         {activeView === "ginglesAnalysis" && (
-          <div className="chart-view">
-            <div className="chart-toolbar">
-              <span className="chart-toolbar-subtitle">
-                Gingles analysis visualizations will appear here
-              </span>
+          <div className="state-layout gingles-layout">
+            <div className="state-map-panel">
+              <div className="gingles-scatter-section">
+                <div className="gingles-scatter-toolbar">
+                  <fieldset className="ensembles-subtab-group" aria-label="Gingles group selector">
+                    {ginglesGroups.map((g) => (
+                      <label key={g} className="ensembles-subtab-option">
+                        <input
+                          type="radio"
+                          name="gingles-group"
+                          value={g}
+                          checked={ginglesGroup === g}
+                          onChange={(e) => setGinglesGroup(e.target.value)}
+                        />
+                        <span>{g.replace("_pct", "").replace(/_/g, " ")}</span>
+                      </label>
+                    ))}
+                  </fieldset>
+                  <span className="chart-toolbar-subtitle">
+                    Vote share vs. % {ginglesGroup.replace("_pct", "").replace(/_/g, " ")} by precinct
+                  </span>
+                </div>
+                <div className="gingles-scatter-body">
+                  <GinglessScatterPlot data={dummy_scatter} group={ginglesGroup} />
+                </div>
+              </div>
             </div>
-            <div className="chart-body">
-              <div className="placeholder-card">
-                <div>Coming soon</div>
-                <div className="demographics-placeholder-label">GUI-8</div>
-                <div className="demographics-placeholder-label">GUI-9</div>
-                <div className="demographics-placeholder-label">GUI-10</div>
-                <div className="demographics-placeholder-label">Layout is identical to District Detail</div>
+
+            <div className="state-info-panel gingles-info-panel">
+              <div className="gingles-table-section">
+                <h2 className="section-title">Precinct Data</h2>
+                <table className="district-table" aria-label="Precinct data table">
+                  <colgroup>
+                    <col style={{ width: "20%" }} />
+                    <col style={{ width: "20%" }} />
+                    <col style={{ width: "20%" }} />
+                    <col style={{ width: "20%" }} />
+                    <col style={{ width: "20%" }} />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>Precinct</th>
+                      <th>Total Pop.</th>
+                      <th>Minority Pop.</th>
+                      <th>Rep. Votes</th>
+                      <th>Dem. Votes</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ginglesPageRows.map((row) => (
+                      <tr key={row.precinct}>
+                        <td>{row.precinct}</td>
+                        <td>{formatNumber(row.total_population)}</td>
+                        <td>{formatNumber(row.minority_population)}</td>
+                        <td>{formatNumber(row.rep_votes)}</td>
+                        <td>{formatNumber(row.dem_votes)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="gingles-pagination">
+                  <button
+                    className="gingles-page-btn"
+                    onClick={() => setGinglesPage((p) => p - 1)}
+                    disabled={ginglesPage === 0}
+                  >
+                    ‹
+                  </button>
+                  {Array.from({ length: ginglesTotalPages }, (_, i) => (
+                    <button
+                      key={i}
+                      className={`gingles-page-btn${ginglesPage === i ? " active" : ""}`}
+                      onClick={() => setGinglesPage(i)}
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                  <button
+                    className="gingles-page-btn"
+                    onClick={() => setGinglesPage((p) => p + 1)}
+                    disabled={ginglesPage === ginglesTotalPages - 1}
+                  >
+                    ›
+                  </button>
+                </div>
               </div>
             </div>
           </div>

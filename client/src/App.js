@@ -3,6 +3,8 @@ import "leaflet/dist/leaflet.css";
 import "./App.css";
 import SplashPage from "./SplashPage";
 import StatePage from "./StatePage";
+import GinglessScatterPlot from "./gingles_scatter";
+import dummy_scatter from "./dummy_data/dummy_scatter.json"
 
 function AppHeader() {
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ function AppHeader() {
 
 function App() {
   return (
-    <Router>
+    <Router basename={process.env.PUBLIC_URL}>
       <div className="App">
         <AppHeader />
         <Routes>
@@ -36,6 +38,8 @@ function App() {
         </Routes>
       </div>
     </Router>
+    // <GinglessScatterPlot data={dummy_scatter} />
+    
   );
 }
 
