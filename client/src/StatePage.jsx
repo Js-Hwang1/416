@@ -30,7 +30,7 @@ const STATE_DATA = {  // this is dummy data
     fips: 48,
     districts: 38,
     population: "25,145,561",
-    geojson: "/data/tx_districts.geojson",
+    geojson: `${process.env.PUBLIC_URL}/data/tx_districts.geojson`,
     mapView: {
       fitPadding: [18, 18],
       zoomOffset: 0,
@@ -78,7 +78,7 @@ const STATE_DATA = {  // this is dummy data
     fips: 25,
     districts: 9,
     population: "6,547,629",
-    geojson: "/data/ma_districts.geojson",
+    geojson: `${process.env.PUBLIC_URL}/data/ma_districts.geojson`,
     mapView: {
       fitPadding: [18, 18],
       zoomOffset: 0,
