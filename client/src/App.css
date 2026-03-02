@@ -248,8 +248,9 @@
 }
 
 .nav-view-btn.active {
-  color: #fff;
+  color: #ffffff;
   border-bottom-color: #fff;
+  font-size: .9rem;
 }
 
 .nav-title {
@@ -282,7 +283,7 @@
   font-family: "Inter", sans-serif;
   font-size: 0.6rem;
   font-weight: 600;
-  color: #888;
+  color: #ffffff;
   border: 1px solid #555;
   padding: 2px 10px;
   letter-spacing: 2px;
