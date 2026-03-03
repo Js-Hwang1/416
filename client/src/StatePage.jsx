@@ -267,6 +267,7 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
         const paddingPoint = L.point(fitPadding[0], fitPadding[1]);
 
         map.setMinZoom(0);
+        map.setMaxBounds(null);
 
         const fittedZoom = map.getBoundsZoom(bounds, false, paddingPoint);
         const targetZoom = fittedZoom + zoomOffset;
@@ -283,6 +284,7 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
 
   return (
     <MapContainer
+      key={geojsonPath}
       className="leaflet-map"
       center={[37.8, -96]}
       zoom={4}
