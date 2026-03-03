@@ -3,8 +3,6 @@ import "leaflet/dist/leaflet.css";
 import "./App.css";
 import SplashPage from "./SplashPage";
 import StatePage from "./StatePage";
-import GinglessScatterPlot from "./gingles_scatter";
-import dummy_scatter from "./dummy_data/dummy_scatter.json"
 
 function AppHeader() {
   const navigate = useNavigate();

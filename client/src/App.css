@@ -1224,9 +1224,141 @@
   cursor: default;
 }
 
+.gingles-page-info {
+  font-size: 12px;
+  color: #888;
+  min-width: 60px;
+  text-align: center;
+}
 
+.party-badge {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  line-height: 22px;
+  border-radius: 50%;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  background: #999;
+}
 
+.party-badge.party-democrat {
+  background: #3b82d4;
+}
 
+.party-badge.party-republican {
+  background: #d44040;
+}
 
+/* ── Demographic Heat Map ────────────────────────── */
+.chart-body-map {
+  padding: 0;
+  position: relative;
+}
 
+.heatmap-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+}
+
+.heatmap-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  background: #f7f8fa;
+  border-bottom: 1px solid #e0e0e0;
+  flex-shrink: 0;
+}
+
+.heatmap-controls-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  color: #555;
+  white-space: nowrap;
+}
+
+.heatmap-group-select {
+  background: #fff;
+  color: #333;
+  border: 1px solid #ccc;
+  border-radius: 0;
+  padding: 5px 28px 5px 10px;
+  font-family: "Inter", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+
+.heatmap-group-select:hover,
+.heatmap-group-select:focus {
+  border-color: #888;
+}
+
+.heatmap-map-wrapper {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+}
+
+.heatmap-map-wrapper .leaflet-map,
+.heatmap-map-wrapper .leaflet-container {
+  height: 100%;
+  width: 100%;
+}
+
+.heatmap-legend {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid #ccc;
+  padding: 8px 10px;
+  z-index: 800;
+  min-width: 100px;
+}
+
+.heatmap-legend-title {
+  font-family: "Inter", sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #222;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #ddd;
+}
+
+.heatmap-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.heatmap-legend-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 12px;
+  border: 1px solid #bbb;
+  flex-shrink: 0;
+}
+
+.heatmap-legend-label {
+  font-family: "Inter", sans-serif;
+  font-size: 0.65rem;
+  color: #444;
+}
 

@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 
-export default function BoxPlotChart({ districts }) {
+export default function BoxPlotChart({ districts, enactedData }) {
   const svgRef = useRef();
   const [selectedGroup, setSelectedGroup] = useState("Hispanic");
   
@@ -96,12 +96,32 @@ export default function BoxPlotChart({ districts }) {
       .attr("stroke", "#1a1a1a")
       .attr("stroke-width", 1.8);
 
-    // Enacted plan dots (dummy: use median * 1.05 as placeholder)
+    // Enacted plan dots — use real enacted demographics if available
+    const groupKey = selectedGroup.toLowerCase().replace(" ", "_");
+    const enactedDistricts = enactedData?.districts;
+    let enactedDots = districts.map(d => ({
+      district: d.district,
+      value: d.median * 1.05, // fallback
+    }));
+    if (enactedDistricts) {
+      // Sort enacted districts by ascending minority % for this group
+      const sorted = [...enactedDistricts]
+        .map(ed => ({
+          district: ed.district,
+          pct: ed.groups?.[groupKey]?.pct ?? ed.groups?.[selectedGroup.toLowerCase()]?.pct ?? 0,
+        }))
+        .sort((a, b) => a.pct - b.pct);
+      // Map sorted enacted values onto the box plot district slots
+      enactedDots = districts.map((d, i) => ({
+        district: d.district,
+        value: i < sorted.length ? sorted[i].pct : d.median * 1.05,
+      }));
+    }
     g.selectAll(".enacted-dot")
-      .data(districts)
+      .data(enactedDots)
       .join("circle")
       .attr("cx", d => x(d.district) + x.bandwidth() / 2)
-      .attr("cy", d => y(d.median * 1.05))
+      .attr("cy", d => y(d.value))
       .attr("r", 3.5)
       .attr("fill", "#c0392b")
       .attr("stroke", "#fff")
@@ -157,7 +177,7 @@ export default function BoxPlotChart({ districts }) {
       .style("fill", "#888")
       .text(`${selectedGroup} Population %`);
 
-  }, [districts, selectedGroup]);
+  }, [districts, selectedGroup, enactedData]);
 
   return (
     <div style={{ width: "100%" }}>

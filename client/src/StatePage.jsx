@@ -4,8 +4,8 @@ import BoxPlotChart from './box_and_whisker';
 import BarChart from "./bar_chart";
 import ProbabilityChart from "./probability_curve";
 import GinglessScatterPlot from "./gingles_scatter";
+import DemographicHeatMap from "./DemographicHeatMap";
 import box_data from "./dummy_data/dummy_box_and_whisker.json";
-import dummy_scatter from "./dummy_data/dummy_scatter.json";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 
@@ -22,103 +22,54 @@ const DISTRICT_COLORS = [
   "#c4c0b8", "#b0aca4",
 ];
 
-
-const STATE_DATA = {  // this is dummy data
+const STATE_CONFIG = {
   texas: {
     name: "Texas",
     abbr: "TX",
     fips: 48,
     districts: 38,
-    population: "25,145,561",
     geojson: `${process.env.PUBLIC_URL}/data/tx_districts.geojson`,
+    summaryFile: `${process.env.PUBLIC_URL}/data/tx_state_summary.json`,
+    repsFile: `${process.env.PUBLIC_URL}/data/congressional_reps.json`,
+    ginglesFile: `${process.env.PUBLIC_URL}/data/tx_gingles_precinct.json`,
+    regressionFile: `${process.env.PUBLIC_URL}/data/tx_gingles_regression.json`,
+    enactedDemoFile: `${process.env.PUBLIC_URL}/data/tx_enacted_demographics.json`,
+    heatmapGeojson: `${process.env.PUBLIC_URL}/data/tx_vtds_heatmap.geojson`,
+    repsKey: "TX",
     mapView: {
       fitPadding: [18, 18],
       zoomOffset: 0,
       panBoundsPad: 0.08,
     },
+    redistrictingAuthority: "Republican Legislature",
     ensembles: [
-      {
-        id: 1,
-        type: "Race-Blind",
-        plans: 5000,
-        populationThreshold: "2.0%",
-      },
-      {
-        id: 2,
-        type: "VRA-Constrained",
-        plans: 5000,
-        populationThreshold: "2.0%",
-      },
+      { id: 1, type: "Race-Blind", plans: 5000, populationThreshold: "2.0%" },
+      { id: 2, type: "VRA-Constrained", plans: 5000, populationThreshold: "2.0%" },
     ],
-    overview: {
-      totalPopulation: 25145561,
-      votingAgePopulation: 18279737,
-      populationByGroup: {
-        White: 11397345,
-        Black: 3168469,
-        "Hispanic / Latino": 9460921,
-        Asian: 0,
-        Other: 1118826,
-      },
-      voterShare: {
-        democratic: 46.5,
-        republican: 52.1,
-        other: 1.4,
-      },
-      redistrictingAuthority: "Republican Legislature",
-      congressionalByParty: {
-        Democrat: 13,
-        Republican: 25,
-      },
-    },
   },
   massachusetts: {
     name: "Massachusetts",
     abbr: "MA",
     fips: 25,
     districts: 9,
-    population: "6,547,629",
     geojson: `${process.env.PUBLIC_URL}/data/ma_districts.geojson`,
+    summaryFile: `${process.env.PUBLIC_URL}/data/ma_state_summary.json`,
+    repsFile: `${process.env.PUBLIC_URL}/data/congressional_reps.json`,
+    ginglesFile: `${process.env.PUBLIC_URL}/data/ma_gingles_precinct.json`,
+    regressionFile: `${process.env.PUBLIC_URL}/data/ma_gingles_regression.json`,
+    enactedDemoFile: `${process.env.PUBLIC_URL}/data/ma_enacted_demographics.json`,
+    heatmapGeojson: `${process.env.PUBLIC_URL}/data/ma_precincts_heatmap.geojson`,
+    repsKey: "MA",
     mapView: {
       fitPadding: [18, 18],
       zoomOffset: 0,
       panBoundsPad: 0.08,
     },
+    redistrictingAuthority: "Democratic Legislature",
     ensembles: [
-      {
-        id: 1,
-        type: "Race-Blind",
-        plans: 5000,
-        populationThreshold: "2.0%",
-      },
-      {
-        id: 2,
-        type: "VRA-Constrained",
-        plans: 5000,
-        populationThreshold: "2.0%",
-      },
+      { id: 1, type: "Race-Blind", plans: 5000, populationThreshold: "2.0%" },
+      { id: 2, type: "VRA-Constrained", plans: 5000, populationThreshold: "2.0%" },
     ],
-    overview: {
-      totalPopulation: 6547629,
-      votingAgePopulation: 5128706,
-      populationByGroup: {
-        White: 4984800,
-        Black: 391693,
-        "Hispanic / Latino": 627654,
-        Asian: 347495,
-        Other: 195987,
-      },
-      voterShare: {
-        democratic: 65.6,
-        republican: 32.1,
-        other: 2.3,
-      },
-      redistrictingAuthority: "Democratic Legislature",
-      congressionalByParty: {
-        Democrat: 9,
-        Republican: 0,
-      },
-    },
   },
 };
 
@@ -161,6 +112,12 @@ const ECOLOGICAL_INFERENCE_SUBTABS = [
   { id: "groupComparison", label: "Group Comparison" },
 ];
 
+const GINGLES_GROUPS = [
+  { key: "hispanic", label: "Hispanic" },
+  { key: "black", label: "Black" },
+  { key: "asian", label: "Asian" },
+];
+
 function formatNumber(value) {
   return Number(value).toLocaleString();
 }
@@ -184,6 +141,25 @@ function parseDistrictNumber(feature) {
   return Number.isFinite(districtNumber) ? districtNumber : null;
 }
 
+/* ---------- helper: fetch JSON with abort support ---------- */
+function useFetchJson(url) {
+  const [data, setData] = useState(null);
+  useEffect(() => {
+    setData(null);              // reset immediately so stale data is cleared
+    if (!url) return;
+    const controller = new AbortController();
+    fetch(url, { signal: controller.signal })
+      .then((r) => r.json())
+      .then(setData)
+      .catch((err) => {
+        if (err.name !== "AbortError") console.error("fetch error", url, err);
+      });
+    return () => controller.abort();
+  }, [url]);
+  return data;
+}
+
+/* ---------- StateMap ---------- */
 function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) {
   const [geojson, setGeojson] = useState(null);
   const hasFittedBoundsRef = useRef(false);
@@ -218,6 +194,7 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
       color: "#1a1a1a",
       fillColor: DISTRICT_COLORS[colorIndex],
       fillOpacity: 0.82,
+      smoothFactor: 0,
     };
   };
 
@@ -232,10 +209,14 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
       color: "#999",
       fillColor: DISTRICT_COLORS[colorIndex],
       fillOpacity: 0.82,
+      smoothFactor: 0,
     };
   };
 
   const onEachFeature = (feature, layer) => {
+    /* Disable Leaflet's built-in rendering simplification */
+    if (layer.options) layer.options.smoothFactor = 0;
+
     layer.on({
       mouseover: () => {
         layer.setStyle({ weight: 2.5 });
@@ -285,16 +266,13 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
         const panBoundsPad = view?.panBoundsPad ?? 0.08;
         const paddingPoint = L.point(fitPadding[0], fitPadding[1]);
 
-        // Reset min zoom before fitting in case previous state had a higher lock.
         map.setMinZoom(0);
 
         const fittedZoom = map.getBoundsZoom(bounds, false, paddingPoint);
         const targetZoom = fittedZoom + zoomOffset;
         map.setView(bounds.getCenter(), targetZoom, { animate: false });
 
-        // Lock zoom-out so the initial fitted/offset view is the maximum zoom-out.
         map.setMinZoom(targetZoom);
-        // Keep panning near the selected state's extent.
         map.setMaxBounds(bounds.pad(panBoundsPad));
         hasFittedBoundsRef.current = true;
       }
@@ -323,6 +301,7 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
             data={geojson}
             style={styleFeature}
             onEachFeature={onEachFeature}
+            smoothFactor={0}
           />
           {selectedDistrictGeojson && (
             <GeoJSON
@@ -330,6 +309,7 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
               data={selectedDistrictGeojson}
               style={selectedDistrictStyle}
               interactive={false}
+              smoothFactor={0}
             />
           )}
           <FitGeoJsonBounds data={geojson} view={mapView} />
@@ -339,44 +319,117 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
   );
 }
 
+/* =================================================================== */
+/* StatePage                                                           */
+/* =================================================================== */
 export default function StatePage() {
   const { stateSlug } = useParams();
   const navigate = useNavigate();
-  const stateInfo = STATE_DATA[stateSlug];
+  const cfg = STATE_CONFIG[stateSlug];
+
+  /* ---- view / UI state ---- */
   const [activeView, setActiveView] = useState("planExplorer");
   const [activeDetailPanel, setActiveDetailPanel] = useState("stateOverview");
   const [activeEnsemblesSubtab, setActiveEnsemblesSubtab] = useState("seatSplits");
   const [activeDemographicsSubtab, setActiveDemographicsSubtab] = useState("precinct");
   const [activeEcologicalSubtab, setActiveEcologicalSubtab] = useState("probabilityCurves");
-  const [ginglesGroup, setGinglesGroup] = useState("latino_pct");
-  const ginglesGroups = ["latino_pct", "black_pct", "asian_pct"];
-  const GINGLES_PAGE_SIZE = 10;
-  const [ginglesPage, setGinglesPage] = useState(0);
-  const ginglesRows = dummy_scatter?.precint_data || [];
-  const ginglesTotalPages = Math.ceil(ginglesRows.length / GINGLES_PAGE_SIZE);
-  const ginglesPageRows = ginglesRows.slice(
-    ginglesPage * GINGLES_PAGE_SIZE,
-    (ginglesPage + 1) * GINGLES_PAGE_SIZE
-  );
   const [selectedInterestingPlan, setSelectedInterestingPlan] = useState("enacted");
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
+  const [ginglesGroup, setGinglesGroup] = useState("hispanic");
+  const [ginglesPage, setGinglesPage] = useState(0);
+  const GINGLES_PAGE_SIZE = 10;
+
   const interestingPlanRef = useRef(null);
   const districtTableWrapperRef = useRef(null);
   const districtRowRefs = useRef(new Map());
   const isStateOverviewPanel = activeDetailPanel === "stateOverview";
-  const districtTableRows = useMemo(
-    () =>
-      Array.from({ length: stateInfo?.districts ?? 0 }, (_, index) => ({
-        districtNumber: String(index + 1),
-        representative: "TBD",
+
+  /* ---- fetch real data ---- */
+  const summary = useFetchJson(cfg?.summaryFile);
+  const allReps = useFetchJson(cfg?.repsFile);
+  const ginglesData = useFetchJson(cfg?.ginglesFile);
+  const regressionData = useFetchJson(cfg?.regressionFile);
+  const enactedDemo = useFetchJson(cfg?.enactedDemoFile);
+
+  const reps = allReps?.[cfg?.repsKey];
+
+  /* ---- minority groups available for heatmap dropdown ---- */
+  const heatmapMinorityGroups = useMemo(() => {
+    if (!summary?.population_by_group) return [];
+    const MINORITY_LABELS = {
+      hispanic: "Hispanic / Latino",
+      black: "Black",
+      asian: "Asian",
+    };
+    // Show all minority groups that have nonzero population
+    return Object.entries(summary.population_by_group)
+      .filter(([g, pop]) => g in MINORITY_LABELS && pop > 0)
+      .map(([g]) => ({ key: g, label: MINORITY_LABELS[g] }));
+  }, [summary]);
+
+  /* ---- build overview from fetched summary ---- */
+  const overview = useMemo(() => {
+    if (!summary) return null;
+    const pop = summary.population_by_group || {};
+    const pres = summary.presidential_2024 || {};
+    const otherPct = Math.max(0, 100 - (pres.dem_pct || 0) - (pres.rep_pct || 0));
+    return {
+      totalPopulation: summary.total_population,
+      votingAgePopulation: summary.voting_age_population,
+      populationByGroup: {
+        White: pop.white ?? 0,
+        Black: pop.black ?? 0,
+        "Hispanic / Latino": pop.hispanic ?? 0,
+        Asian: pop.asian ?? 0,
+        Other: pop.other ?? 0,
+      },
+      voterShare: {
+        democratic: pres.dem_pct ?? 0,
+        republican: pres.rep_pct ?? 0,
+        other: Math.round(otherPct * 10) / 10,
+      },
+      congressionalByParty: summary.party_split ?? {},
+    };
+  }, [summary]);
+
+  /* ---- build district table rows from fetched reps ---- */
+  const districtTableRows = useMemo(() => {
+    if (!reps?.representatives) {
+      return Array.from({ length: cfg?.districts ?? 0 }, (_, i) => ({
+        districtNumber: String(i + 1),
+        representative: "...",
         party: "--",
         racialEthnicGroup: "--",
         voteMargin: "--",
-      })),
-    [stateInfo]
+      }));
+    }
+    return reps.representatives.map((r) => ({
+      districtNumber: String(r.district),
+      representative: r.name,
+      party: r.party,
+      racialEthnicGroup: r.race_ethnicity,
+      voteMargin:
+        r.vote_margin_pct !== undefined
+          ? `${r.vote_margin_pct.toFixed(1)}%`
+          : "--",
+    }));
+  }, [reps, cfg]);
+
+  /* ---- gingles table data ---- */
+  const ginglesPoints = ginglesData?.[ginglesGroup] ?? [];
+  const ginglesTotalPages = Math.ceil(ginglesPoints.length / GINGLES_PAGE_SIZE);
+  const ginglesPageRows = ginglesPoints.slice(
+    ginglesPage * GINGLES_PAGE_SIZE,
+    (ginglesPage + 1) * GINGLES_PAGE_SIZE
   );
 
+  // Reset gingles page when group changes
+  useEffect(() => {
+    setGinglesPage(0);
+  }, [ginglesGroup]);
+
+  /* ---- close dropdown on outside click ---- */
   useEffect(() => {
     const onDocumentMouseDown = (event) => {
       if (!interestingPlanRef.current?.contains(event.target)) {
@@ -388,10 +441,12 @@ export default function StatePage() {
     return () => document.removeEventListener("mousedown", onDocumentMouseDown);
   }, []);
 
+  /* ---- reset district selection when switching state ---- */
   useEffect(() => {
     setSelectedDistrict(null);
   }, [stateSlug]);
 
+  /* ---- auto-scroll to selected district row ---- */
   useEffect(() => {
     if (selectedDistrict === null) return;
 
@@ -411,7 +466,7 @@ export default function StatePage() {
     }
   }, [selectedDistrict, isStateOverviewPanel]);
 
-  if (!stateInfo) {
+  if (!cfg) {
     return (
       <div className="state-page">
         <div className="state-page-inner">
@@ -423,6 +478,15 @@ export default function StatePage() {
       </div>
     );
   }
+
+  /* helper: use real overview or loading fallback */
+  const ov = overview || {
+    totalPopulation: 0,
+    votingAgePopulation: 0,
+    populationByGroup: {},
+    voterShare: { democratic: 0, republican: 0, other: 0 },
+    congressionalByParty: {},
+  };
 
   return (
     <div className="state-page fade-in">
@@ -464,8 +528,8 @@ export default function StatePage() {
               <h2 className="section-title">Congressional Districts</h2>
               <div className="state-map-wrapper">
                 <StateMap
-                  geojsonPath={stateInfo.geojson}
-                  mapView={stateInfo.mapView}
+                  geojsonPath={cfg.geojson}
+                  mapView={cfg.mapView}
                   selectedDistrict={selectedDistrict}
                   onDistrictSelect={setSelectedDistrict}
                 />
@@ -534,11 +598,11 @@ export default function StatePage() {
                       <dl className="overview-kv-list">
                         <div className="overview-kv-row">
                           <dt>Total Population</dt>
-                          <dd>{formatNumber(stateInfo.overview.totalPopulation)}</dd>
+                          <dd>{formatNumber(ov.totalPopulation)}</dd>
                         </div>
                         <div className="overview-kv-row">
                           <dt>Voting Age Population</dt>
-                          <dd>{formatNumber(stateInfo.overview.votingAgePopulation)}</dd>
+                          <dd>{formatNumber(ov.votingAgePopulation)}</dd>
                         </div>
                       </dl>
                     </article>
@@ -548,15 +612,15 @@ export default function StatePage() {
                       <dl className="overview-kv-list">
                         <div className="overview-kv-row">
                           <dt>Democratic Vote Share</dt>
-                          <dd>{formatPct1(stateInfo.overview.voterShare.democratic)}</dd>
+                          <dd>{formatPct1(ov.voterShare.democratic)}</dd>
                         </div>
                         <div className="overview-kv-row">
                           <dt>Republican Vote Share</dt>
-                          <dd>{formatPct1(stateInfo.overview.voterShare.republican)}</dd>
+                          <dd>{formatPct1(ov.voterShare.republican)}</dd>
                         </div>
                         <div className="overview-kv-row">
                           <dt>Other</dt>
-                          <dd>{formatPct1(stateInfo.overview.voterShare.other)}</dd>
+                          <dd>{formatPct1(ov.voterShare.other)}</dd>
                         </div>
                       </dl>
                     </article>
@@ -564,11 +628,11 @@ export default function StatePage() {
                     <article className="overview-card">
                       <h3 className="overview-card-title">Racial/Ethnic Population Share</h3>
                       <dl className="overview-kv-list">
-                        {Object.entries(stateInfo.overview.populationByGroup).map(([group, value]) => (
+                        {Object.entries(ov.populationByGroup).map(([group, value]) => (
                           <div className="overview-kv-row" key={group}>
                             <dt>{group}</dt>
                             <dd>
-                              {formatPercent(value, stateInfo.overview.totalPopulation)} ({formatNumber(value)})
+                              {formatPercent(value, ov.totalPopulation)} ({formatNumber(value)})
                             </dd>
                           </div>
                         ))}
@@ -580,7 +644,7 @@ export default function StatePage() {
                       <dl className="overview-kv-list">
                         <div className="overview-kv-row">
                           <dt>Redistricting Authority</dt>
-                          <dd>{stateInfo.overview.redistrictingAuthority}</dd>
+                          <dd>{cfg.redistrictingAuthority}</dd>
                         </div>
                       </dl>
                     </article>
@@ -590,15 +654,15 @@ export default function StatePage() {
                       <dl className="overview-kv-list">
                         <div className="overview-kv-row">
                           <dt>Democrats</dt>
-                          <dd>{stateInfo.overview.congressionalByParty.Democrat}</dd>
+                          <dd>{ov.congressionalByParty.Democrat ?? 0}</dd>
                         </div>
                         <div className="overview-kv-row">
                           <dt>Republicans</dt>
-                          <dd>{stateInfo.overview.congressionalByParty.Republican}</dd>
+                          <dd>{ov.congressionalByParty.Republican ?? 0}</dd>
                         </div>
                         <div className="overview-kv-row">
                           <dt>Total Seats</dt>
-                          <dd>{stateInfo.overview.congressionalByParty.Democrat + stateInfo.overview.congressionalByParty.Republican}</dd>
+                          <dd>{(ov.congressionalByParty.Democrat ?? 0) + (ov.congressionalByParty.Republican ?? 0)}</dd>
                         </div>
                       </dl>
                     </article>
@@ -656,7 +720,11 @@ export default function StatePage() {
                             >
                               <td>{row.districtNumber}</td>
                               <td>{row.representative}</td>
-                              <td>{row.party}</td>
+                              <td>
+                                <span className={`party-badge party-${row.party?.toLowerCase()}`}>
+                                  {row.party === "Democrat" ? "D" : row.party === "Republican" ? "R" : row.party}
+                                </span>
+                              </td>
                               <td>{row.racialEthnicGroup}</td>
                               <td>{row.voteMargin}</td>
                             </tr>
@@ -690,7 +758,7 @@ export default function StatePage() {
               </fieldset>
               <span className="chart-toolbar-subtitle">
                 {activeEnsemblesSubtab === "seatSplits"
-                  ? `R/D split frequency across ${stateInfo.ensembles[0].plans.toLocaleString()} simulated plans`
+                  ? `R/D split frequency across ${cfg.ensembles[0].plans.toLocaleString()} simulated plans`
                   : "Minority group distribution across ensemble district plans"}
               </span>
             </div>
@@ -698,7 +766,7 @@ export default function StatePage() {
               {activeEnsemblesSubtab === "seatSplits" ? (
                 <BarChart />
               ) : (
-                <BoxPlotChart districts={box_data.districts} />
+                <BoxPlotChart districts={box_data.districts} enactedData={enactedDemo} />
               )}
             </div>
           </div>
@@ -722,19 +790,27 @@ export default function StatePage() {
                 ))}
               </fieldset>
               <span className="chart-toolbar-subtitle">
-                Minority group distribution across ensemble district plans
+                {activeDemographicsSubtab === "precinct"
+                  ? "Demographic distribution by precinct / VTD"
+                  : "Demographic distribution by census block"}
               </span>
               </div>
-              <div className="chart-body">
-                <div className="demographics-placeholder">
-                  <div className="demographics-placeholder-title">Coming Soon</div>
-                  <div className="demographics-placeholder-label">
-                    GUI-4: Demographic Heat Map by Precinct
+              <div className="chart-body chart-body-map">
+                {activeDemographicsSubtab === "precinct" ? (
+                  <DemographicHeatMap
+                    geojsonPath={cfg.heatmapGeojson}
+                    minorityGroups={heatmapMinorityGroups}
+                  />
+                ) : (
+                  <div className="demographics-placeholder">
+                    <div className="demographics-placeholder-title">Census Block Heat Map</div>
+                    <div className="demographics-placeholder-label">
+                      Census block data contains hundreds of thousands of features per state
+                      and requires server-side tile rendering. This preferred feature will be
+                      available once tile infrastructure is configured.
+                    </div>
                   </div>
-                  <div className="demographics-placeholder-label">
-                    GUI-5: Demographic Heat Map by Census Block
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}
@@ -783,62 +859,58 @@ export default function StatePage() {
               <div className="gingles-scatter-section">
                 <div className="gingles-scatter-toolbar">
                   <fieldset className="ensembles-subtab-group" aria-label="Gingles group selector">
-                    {ginglesGroups.map((g) => (
-                      <label key={g} className="ensembles-subtab-option">
+                    {GINGLES_GROUPS.map((g) => (
+                      <label key={g.key} className="ensembles-subtab-option">
                         <input
                           type="radio"
                           name="gingles-group"
-                          value={g}
-                          checked={ginglesGroup === g}
+                          value={g.key}
+                          checked={ginglesGroup === g.key}
                           onChange={(e) => setGinglesGroup(e.target.value)}
                         />
-                        <span>
-                          {g
-                            .replace("_pct", "")
-                            .replace(/_/g, " ")
-                            .replace(/^./, (c) => c.toUpperCase())}
-                        </span>
+                        <span>{g.label}</span>
                       </label>
                     ))}
                   </fieldset>
                   <span className="chart-toolbar-subtitle">
-                    Vote share vs. % {ginglesGroup.replace("_pct", "").replace(/_/g, " ")} by precinct
+                    Dem vote share vs. % {GINGLES_GROUPS.find(g => g.key === ginglesGroup)?.label} VAP by precinct
                   </span>
                 </div>
                 <div className="gingles-scatter-body">
-                  <GinglessScatterPlot data={dummy_scatter} group={ginglesGroup} />
+                  <GinglessScatterPlot
+                    points={ginglesPoints}
+                    regression={regressionData?.[ginglesGroup]}
+                    group={ginglesGroup}
+                  />
                 </div>
               </div>
             </div>
 
             <div className="state-info-panel gingles-info-panel">
               <div className="gingles-table-section">
-                <h2 className="section-title">Precinct Data</h2>
+                <h2 className="section-title">Precinct Data ({ginglesPoints.length.toLocaleString()} precincts)</h2>
                 <table className="district-table" aria-label="Precinct data table">
                   <colgroup>
-                    <col style={{ width: "20%" }} />
-                    <col style={{ width: "20%" }} />
-                    <col style={{ width: "20%" }} />
-                    <col style={{ width: "20%" }} />
-                    <col style={{ width: "20%" }} />
+                    <col style={{ width: "15%" }} />
+                    <col style={{ width: "30%" }} />
+                    <col style={{ width: "27.5%" }} />
+                    <col style={{ width: "27.5%" }} />
                   </colgroup>
                   <thead>
                     <tr>
-                      <th>Precinct</th>
-                      <th>Total Pop.</th>
-                      <th>Minority Pop.</th>
-                      <th>Rep. Votes</th>
-                      <th>Dem. Votes</th>
+                      <th>#</th>
+                      <th>{GINGLES_GROUPS.find(g => g.key === ginglesGroup)?.label} VAP %</th>
+                      <th>Dem Vote %</th>
+                      <th>Rep Vote %</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {ginglesPageRows.map((row) => (
-                      <tr key={row.precinct}>
-                        <td>{row.precinct}</td>
-                        <td>{formatNumber(row.total_population)}</td>
-                        <td>{formatNumber(row.minority_population)}</td>
-                        <td>{formatNumber(row.rep_votes)}</td>
-                        <td>{formatNumber(row.dem_votes)}</td>
+                    {ginglesPageRows.map((row, idx) => (
+                      <tr key={ginglesPage * GINGLES_PAGE_SIZE + idx}>
+                        <td>{(ginglesPage * GINGLES_PAGE_SIZE + idx + 1).toLocaleString()}</td>
+                        <td>{(row.minority_vap_pct * 100).toFixed(1)}%</td>
+                        <td>{(row.d_vote_share * 100).toFixed(1)}%</td>
+                        <td>{((1 - row.d_vote_share) * 100).toFixed(1)}%</td>
                       </tr>
                     ))}
                   </tbody>
@@ -851,15 +923,9 @@ export default function StatePage() {
                   >
                     ‹
                   </button>
-                  {Array.from({ length: ginglesTotalPages }, (_, i) => (
-                    <button
-                      key={i}
-                      className={`gingles-page-btn${ginglesPage === i ? " active" : ""}`}
-                      onClick={() => setGinglesPage(i)}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
+                  <span className="gingles-page-info">
+                    {ginglesPage + 1} / {ginglesTotalPages}
+                  </span>
                   <button
                     className="gingles-page-btn"
                     onClick={() => setGinglesPage((p) => p + 1)}
