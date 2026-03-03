@@ -92,10 +92,14 @@ function FitBounds({ data, pathKey }) {
   return null;
 }
 
-export default function DemographicHeatMap({ geojsonPath, minorityGroups }) {
-  const [geojson, setGeojson] = useState(null);
-  const [loading, setLoading] = useState(false);
+export default function DemographicHeatMap({ geojsonPath, geojson: geojsonProp, loading: loadingProp, minorityGroups }) {
+  const [geojsonInternal, setGeojsonInternal] = useState(null);
+  const [loadingInternal, setLoadingInternal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState("");
+
+  /* Use pre-fetched data when provided, otherwise fall back to internal fetch */
+  const geojson = geojsonProp !== undefined ? geojsonProp : geojsonInternal;
+  const loading = loadingProp !== undefined ? loadingProp : loadingInternal;
 
   /* Set initial group once groups are known */
   useEffect(() => {
@@ -107,26 +111,27 @@ export default function DemographicHeatMap({ geojsonPath, minorityGroups }) {
     }
   }, [minorityGroups, selectedGroup]);
 
-  /* Fetch GeoJSON (resets on path change = state switch) */
+  /* Fetch GeoJSON internally only when no pre-fetched data is provided */
   useEffect(() => {
-    setGeojson(null);
+    if (geojsonProp !== undefined) return;
+    setGeojsonInternal(null);
     if (!geojsonPath) return;
-    setLoading(true);
+    setLoadingInternal(true);
     const controller = new AbortController();
     fetch(geojsonPath, { signal: controller.signal })
       .then((r) => r.json())
       .then((data) => {
-        setGeojson(data);
-        setLoading(false);
+        setGeojsonInternal(data);
+        setLoadingInternal(false);
       })
       .catch((err) => {
         if (err.name !== "AbortError") {
           console.error("heatmap fetch error", err);
-          setLoading(false);
+          setLoadingInternal(false);
         }
       });
     return () => controller.abort();
-  }, [geojsonPath]);
+  }, [geojsonPath, geojsonProp]);
 
   /* Compute bins + color function for current group */
   const { bins, getColor } = useMemo(

@@ -353,6 +353,7 @@ export default function StatePage() {
   const ginglesData = useFetchJson(cfg?.ginglesFile);
   const regressionData = useFetchJson(cfg?.regressionFile);
   const enactedDemo = useFetchJson(cfg?.enactedDemoFile);
+  const heatmapGeojson = useFetchJson(cfg?.heatmapGeojson);
 
   const reps = allReps?.[cfg?.repsKey];
 
@@ -800,6 +801,8 @@ export default function StatePage() {
               <div className="chart-body chart-body-map">
                 {activeDemographicsSubtab === "precinct" ? (
                   <DemographicHeatMap
+                    geojson={heatmapGeojson}
+                    loading={heatmapGeojson === null && !!cfg?.heatmapGeojson}
                     geojsonPath={cfg.heatmapGeojson}
                     minorityGroups={heatmapMinorityGroups}
                   />
