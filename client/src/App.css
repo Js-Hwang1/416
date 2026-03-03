@@ -23,7 +23,7 @@
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-weight: 900;
   color: #eaeaea;
   font-size: .95rem;
@@ -47,7 +47,7 @@
   border: 1px solid #444;
   border-radius: 0;
   color: #aaa;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.68rem;
   font-weight: 500;
   letter-spacing: 0.5px;
@@ -92,7 +92,7 @@
   border: 1px solid #ccc;
   border-radius: 0;
   padding: 8px 32px 8px 12px;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.8rem;
   font-weight: 500;
   letter-spacing: 0.5px;
@@ -160,12 +160,14 @@
 }
 
 .state-map-wrapper .leaflet-map {
-  height: 420px;
+  height: 100%;
+  min-height: 300px;
   width: 100%;
 }
 
 .state-map-wrapper .leaflet-container {
-  height: 420px;
+  height: 100%;
+  min-height: 300px;
   width: 100%;
 }
 
@@ -203,7 +205,7 @@
   border: 1px solid #444;
   border-radius: 0;
   color: #ffffff;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.5px;
@@ -231,7 +233,7 @@
   border: none;
   border-bottom: 2px solid transparent;
   color: #ffffff;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: .85rem;
   font-weight: 500;
   letter-spacing: 0.6px;
@@ -254,7 +256,7 @@
 }
 
 .nav-title {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-weight: 500;
   color: #555;
   font-size: 0.7rem;
@@ -280,7 +282,7 @@
 
 .state-abbr-badge {
   display: inline-block;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.6rem;
   font-weight: 600;
   color: #ffffff;
@@ -292,7 +294,7 @@
 }
 
 .state-name {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Verdana", sans-serif;
   font-size: 1.3rem;
   font-weight: 700;
   color: #f0f0f0;
@@ -323,7 +325,7 @@
 }
 
 .meta-value {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.9rem;
   font-weight: 600;
   color: #e0e0e0;
@@ -344,7 +346,7 @@
   border: 1px solid #444;
   border-radius: 0;
   padding: 5px 28px 5px 10px;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.5px;
@@ -390,10 +392,10 @@
 }
 
 .interesting-plan-controls {
-  margin-top: 12px;
+  margin-top: 6px;
   display: flex;
   align-items: stretch;
-  gap: 10px;
+  gap: 8px;
 }
 
 .interesting-plan-dropdown .interesting-plan-select {
@@ -412,28 +414,13 @@
   overflow-y: auto;
   overscroll-behavior-y: contain;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
   box-sizing: border-box;
-  scrollbar-width: auto;
-  scrollbar-color: #666 #222;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .interesting-plan-menu::-webkit-scrollbar {
-  width: 10px;
-}
-
-.interesting-plan-menu::-webkit-scrollbar-track {
-  background: #222;
-}
-
-.interesting-plan-menu::-webkit-scrollbar-thumb {
-  background: #666;
-  border: 2px solid #222;
-  border-radius: 0;
-}
-
-.interesting-plan-menu::-webkit-scrollbar-thumb:hover {
-  background: #888;
+  display: none;
 }
 
 .interesting-plan-option {
@@ -447,7 +434,7 @@
   border: none;
   border-top: 1px solid #333;
   padding: 7px 10px;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.72rem;
   cursor: pointer;
 }
@@ -463,30 +450,68 @@
 
 /* ── State Content ───────────────────────────────── */
 .state-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px 32px;
+  margin: 0;
+  padding: 14px 24px;
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   width: 100%;
+  box-sizing: border-box;
 }
 
 .state-layout {
   display: grid;
   grid-template-columns: 3fr 2fr;
-  gap: 28px;
+  gap: 20px;
   align-items: start;
+  height: 100%;
 }
 
 .state-map-panel {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 .state-map-wrapper {
   background: #fff;
   border: 1px solid #ddd;
-  padding: 8px;
+  padding: 0;
   margin-top: 0;
+  flex: 1;
+  min-height: 0;
+}
+
+.state-map-wrapper.compare-maps {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+}
+
+.compare-map-half {
+  position: relative;
+}
+
+.compare-map-label {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 2px 10px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  font-family: "Verdana", sans-serif;
+  border-radius: 3px;
+  letter-spacing: 0.5px;
+}
+
+.compare-map-half .leaflet-map {
+  height: 380px !important;
 }
 
 .state-map-wrapper .leaflet-container svg {
@@ -503,6 +528,10 @@
 
 .state-info-panel {
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
 }
 
 .plan-explorer-content .state-layout {
@@ -516,9 +545,7 @@
 }
 
 .plan-explorer-content .state-map-panel {
-  position: sticky;
-  top: 0;
-  align-self: start;
+  align-self: stretch;
   margin: 0;
   padding-top: 0;
 }
@@ -536,7 +563,7 @@
   display: flex;
   flex-direction: column;
   margin: 0;
-  padding-top: 4px;
+  padding-top: 0;
 }
 
 .plan-explorer-content .overview-cards {
@@ -546,13 +573,12 @@
   overscroll-behavior-y: contain;
   overscroll-behavior: contain;
   padding-right: 4px;
-  -ms-overflow-style: none;
   scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .plan-explorer-content .overview-cards::-webkit-scrollbar {
-  width: 0;
-  height: 0;
+  display: none;
 }
 
 .plan-explorer-content .state-map-panel .section-title,
@@ -565,20 +591,26 @@
 }
 
 .state-section {
-  margin-bottom: 32px;
+  margin-bottom: 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
 .section-title {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.7rem;
   font-weight: 600;
   color: #333;
   margin: 0 0 8px;
   padding-bottom: 8px;
   border-bottom: 2px solid #1a1a1a;
-  display: inline-block;
+  display: block;
   /*text-transform: uppercase;*/
   letter-spacing: 1.5px;
+  flex-shrink: 0;
 }
 
 /* ── Ensemble Table ─────────────────────────────── */
@@ -593,7 +625,7 @@
 .ensemble-table th {
   background: #1a1a1a;
   color: #999;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.65rem;
   font-weight: 600;
   /*text-transform: uppercase;*/
@@ -608,7 +640,7 @@
 }
 
 .ensemble-table td {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.85rem;
   color: #222;
   padding: 10px 16px;
@@ -643,7 +675,7 @@
   color: #d0d0d0;
   border: 1px solid #444;
   border-radius: 0;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.75rem;
   font-weight: 500;
   letter-spacing: 0.8px;
@@ -682,6 +714,7 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  overflow: hidden;
 }
 
 .chart-toolbar {
@@ -696,7 +729,7 @@
 }
 
 .chart-toolbar-subtitle {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.75rem;
   color: #777;
   letter-spacing: 0.3px;
@@ -715,7 +748,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.75rem;
   color: #333;
   cursor: pointer;
@@ -731,8 +764,8 @@
   min-height: 0;
   background: #fff;
   border: 1px solid #ddd;
-  padding: 16px;
-  overflow: auto;
+  padding: 10px;
+  overflow: hidden;
 }
 
 .chart-body > div {
@@ -751,14 +784,14 @@
 }
 
 .demographics-placeholder-title {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 1.1rem;
   font-weight: 600;
   color: #222;
 }
 
 .demographics-placeholder-label {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.76rem;
   color: #666;
   letter-spacing: 0.2px;
@@ -777,7 +810,7 @@
 }
 
 .chart-controls-label {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.8px;
@@ -792,7 +825,7 @@
   color: #444;
   border: 1px solid #ccc;
   cursor: pointer;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.72rem;
   font-weight: 500;
   letter-spacing: 0.3px;
@@ -814,7 +847,7 @@
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.78rem;
   color: #444;
 }
@@ -845,7 +878,7 @@
   display: flex;
   align-items: center;
   gap: 5px;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.68rem;
   color: #555;
 }
@@ -885,19 +918,28 @@
 .overview-cards {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 12px;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.overview-cards::-webkit-scrollbar {
+  display: none;
 }
 
 .overview-card {
   background: #FAFAFA;
   border: 1px solid #ddd;
   padding: 0;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
 }
 
 .overview-card-title {
   margin: 0;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.72rem;
   font-weight: 600;
   color: #fff;
@@ -933,7 +975,7 @@
 
 .overview-kv-row dt {
   margin: 0;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.7rem;
   font-weight: 600;
   color: #232323;
@@ -941,11 +983,37 @@
 
 .overview-kv-row dd {
   margin: 0;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.76rem;
   font-weight: 500;
   color: #232323;
   text-align: right;
+}
+
+.overview-card-wide {
+  grid-column: 1 / -1;
+}
+
+.ensemble-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Verdana", sans-serif;
+  font-size: 0.72rem;
+}
+
+.ensemble-summary-table th {
+  background: #f5f5f5;
+  font-weight: 600;
+  color: #232323;
+  text-align: left;
+  padding: 6px 10px;
+  border-bottom: 1px solid #ddd;
+}
+
+.ensemble-summary-table td {
+  padding: 6px 10px;
+  color: #232323;
+  border-bottom: 1px solid #f0f0f0;
 }
 
 .panel-mode-toggle-btn {
@@ -958,14 +1026,18 @@
   width: 100%;
   padding: 0;
   overflow-x: hidden;
-  max-height: calc(var(--district-header-height) + (15 * var(--district-row-height)));
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overscroll-behavior-y: contain;
   overscroll-behavior: contain;
-  scrollbar-gutter: stable;
   box-sizing: border-box;
-  scrollbar-width: auto;
-  scrollbar-color: #aaa #eee;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.district-table-wrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .district-table {
@@ -1000,7 +1072,7 @@
 .district-table th {
   background: #1a1a1a;
   color: #d0d0d0;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.66rem;
   font-weight: 600;
   letter-spacing: 0.8px;
@@ -1017,7 +1089,7 @@
 }
 
 .district-table td {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.75rem;
   color: #111;
   padding: 8px 10px;
@@ -1072,6 +1144,12 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.plan-explorer-content .district-table-wrapper::-webkit-scrollbar {
+  display: none;
 }
 
 @media (max-width: 900px) {
@@ -1135,17 +1213,17 @@
 
 /* ── Gingles Analysis Layout ─────────────────────── */
 .gingles-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 16px 32px;
+  margin: 0;
+  padding: 14px 24px;
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   width: 100%;
   box-sizing: border-box;
 }
 
 .gingles-content .state-map-panel {
   min-width: 0;
+  height: 100%;
 }
 
 /* Scatter plot card on the left */
@@ -1154,6 +1232,9 @@
   flex-direction: column;
   border: 1px solid #ddd;
   background: #fff;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .gingles-scatter-toolbar {
@@ -1168,6 +1249,9 @@
 
 .gingles-scatter-body {
   padding: 12px 16px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Table panel on the right */
@@ -1175,6 +1259,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .gingles-info-panel .section-title {
@@ -1184,6 +1270,9 @@
 .gingles-table-section {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .gingles-pagination {
@@ -1200,7 +1289,7 @@
   padding: 0 6px;
   background: #fff;
   border: 1px solid #ddd;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.72rem;
   color: #444;
   cursor: pointer;
@@ -1276,7 +1365,7 @@
 }
 
 .heatmap-controls-label {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.8px;
@@ -1290,7 +1379,7 @@
   border: 1px solid #ccc;
   border-radius: 0;
   padding: 5px 28px 5px 10px;
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.75rem;
   font-weight: 500;
   cursor: pointer;
@@ -1331,7 +1420,7 @@
 }
 
 .heatmap-legend-title {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.65rem;
   font-weight: 700;
   color: #222;
@@ -1357,7 +1446,7 @@
 }
 
 .heatmap-legend-label {
-  font-family: "Inter", sans-serif;
+  font-family: "Verdana", sans-serif;
   font-size: 0.65rem;
   color: #444;
 }

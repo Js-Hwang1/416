@@ -1,12 +1,15 @@
 import React from "react";
-import electionData from "./dummy_data/dummy_bar_chart.json";
 import { Chart as ChartJS, BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend } from "chart.js";
 import { Bar } from "react-chartjs-2";
 
 ChartJS.register(BarElement, CategoryScale, LinearScale, Title, Tooltip, Legend);
 
-const BarChart = () => {
-  const { raceBlindData = [], vraData = [] } = electionData;
+const BarChart = ({ data }) => {
+  const { raceBlindData = [], vraData = [] } = data || {};
+
+  if (raceBlindData.length === 0 && vraData.length === 0) {
+    return <div className="placeholder-card">No ensemble data available</div>;
+  }
 
   // Combine all unique splits for x-axis
   const allSplits = Array.from(
@@ -14,12 +17,16 @@ const BarChart = () => {
       ...raceBlindData.map(d => `${d.republican}R / ${d.democrat}D`),
       ...vraData.map(d => `${d.republican}R / ${d.democrat}D`)
     ])
-  ).sort();
+  ).sort((a, b) => {
+    const aR = parseInt(a);
+    const bR = parseInt(b);
+    return aR - bR;
+  });
 
-  const mapData = (data) =>
+  const mapData = (arr) =>
     allSplits.map(split => {
       const [r, d] = split.replace(/[RD]/g, '').split('/').map(s => Number(s.trim()));
-      const item = data.find(datum => datum.republican === r && datum.democrat === d);
+      const item = arr.find(datum => datum.republican === r && datum.democrat === d);
       return item ? item.freq : 0;
     });
 
@@ -55,38 +62,38 @@ const BarChart = () => {
     aspectRatio: 1.8,
     plugins: {
       legend: { display: false },
-      title: { 
-        display: true, 
+      title: {
+        display: true,
         text: title,
-        font: { size: 12, weight: '600', family: "'Inter', sans-serif" },
+        font: { size: 12, weight: '600', family: "'Verdana', sans-serif" },
         color: '#333',
         padding: { bottom: 12 }
       }
     },
     scales: {
-      x: { 
-        title: { 
-          display: true, 
+      x: {
+        title: {
+          display: true,
           text: "Republican / Democrat Wins",
-          font: { size: 11, family: "'Inter', sans-serif" },
+          font: { size: 11, family: "'Verdana', sans-serif" },
           color: '#888'
         },
         ticks: {
-          font: { size: 10, family: "'Inter', sans-serif" },
+          font: { size: 10, family: "'Verdana', sans-serif" },
           color: '#666'
         },
         grid: { display: false }
       },
-      y: { 
-        beginAtZero: true, 
-        title: { 
-          display: true, 
+      y: {
+        beginAtZero: true,
+        title: {
+          display: true,
           text: "Frequency",
-          font: { size: 11, family: "'Inter', sans-serif" },
+          font: { size: 11, family: "'Verdana', sans-serif" },
           color: '#888'
         },
         ticks: {
-          font: { size: 10, family: "'Inter', sans-serif" },
+          font: { size: 10, family: "'Verdana', sans-serif" },
           color: '#666'
         },
         grid: { color: '#f0f0f0' }

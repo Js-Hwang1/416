@@ -1,11 +1,14 @@
 import { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 
-export default function BoxPlotChart({ districts, enactedData }) {
+export default function BoxPlotChart({ boxData, enactedData }) {
   const svgRef = useRef();
-  const [selectedGroup, setSelectedGroup] = useState("Hispanic");
-  
-  const minorityGroups = ["Hispanic", "Black", "Asian", "Native American"];
+  const [selectedGroup, setSelectedGroup] = useState("hispanic");
+
+  const minorityGroups = ["hispanic", "black", "asian"];
+  const GROUP_LABELS = { hispanic: "Hispanic", black: "Black", asian: "Asian" };
+
+  const districts = boxData?.[selectedGroup] ?? [];
 
   useEffect(() => {
     if (!districts || districts.length === 0) return;
@@ -36,8 +39,8 @@ export default function BoxPlotChart({ districts, enactedData }) {
     const y = d3
       .scaleLinear()
       .domain([
-        d3.min(districts, d => d.min),
-        d3.max(districts, d => d.max)
+        Math.max(0, d3.min(districts, d => d.min) - 2),
+        d3.max(districts, d => d.max) + 2
       ])
       .nice()
       .range([height - marginBottom, marginTop]);
@@ -80,7 +83,7 @@ export default function BoxPlotChart({ districts, enactedData }) {
       .attr("x", d => x(d.district))
       .attr("width", x.bandwidth())
       .attr("y", d => y(d.hqr))
-      .attr("height", d => y(d.lqr) - y(d.hqr))
+      .attr("height", d => Math.max(0, y(d.lqr) - y(d.hqr)))
       .attr("fill", "#c8d0da")
       .attr("stroke", "#667")
       .attr("stroke-width", 0.8);
@@ -96,27 +99,27 @@ export default function BoxPlotChart({ districts, enactedData }) {
       .attr("stroke", "#1a1a1a")
       .attr("stroke-width", 1.8);
 
-    // Enacted plan dots — use real enacted demographics if available
-    const groupKey = selectedGroup.toLowerCase().replace(" ", "_");
+    // Enacted plan dots — use real enacted demographics
     const enactedDistricts = enactedData?.districts;
-    let enactedDots = districts.map(d => ({
-      district: d.district,
-      value: d.median * 1.05, // fallback
-    }));
+    let enactedDots = [];
     if (enactedDistricts) {
-      // Sort enacted districts by ascending minority % for this group
       const sorted = [...enactedDistricts]
         .map(ed => ({
           district: ed.district,
-          pct: ed.groups?.[groupKey]?.pct ?? ed.groups?.[selectedGroup.toLowerCase()]?.pct ?? 0,
+          pct: ed.groups?.[selectedGroup]?.pct ?? 0,
         }))
         .sort((a, b) => a.pct - b.pct);
-      // Map sorted enacted values onto the box plot district slots
       enactedDots = districts.map((d, i) => ({
         district: d.district,
-        value: i < sorted.length ? sorted[i].pct : d.median * 1.05,
+        value: i < sorted.length ? sorted[i].pct : d.median,
+      }));
+    } else {
+      enactedDots = districts.map(d => ({
+        district: d.district,
+        value: d.median * 1.05,
       }));
     }
+
     g.selectAll(".enacted-dot")
       .data(enactedDots)
       .join("circle")
@@ -134,7 +137,7 @@ export default function BoxPlotChart({ districts, enactedData }) {
       .call(d3.axisBottom(x).tickSize(0))
       .call(g => g.select(".domain").attr("stroke", "#ccc"))
       .selectAll("text")
-      .style("font-family", "'Inter', sans-serif")
+      .style("font-family", "'Verdana', sans-serif")
       .style("font-size", "10px")
       .style("fill", "#666");
 
@@ -144,7 +147,7 @@ export default function BoxPlotChart({ districts, enactedData }) {
       .attr("x", width / 2)
       .attr("y", height - 8)
       .attr("text-anchor", "middle")
-      .style("font-family", "'Inter', sans-serif")
+      .style("font-family", "'Verdana', sans-serif")
       .style("font-size", "11px")
       .style("font-weight", "600")
       .style("fill", "#888")
@@ -154,12 +157,12 @@ export default function BoxPlotChart({ districts, enactedData }) {
     svg
       .append("g")
       .attr("transform", `translate(${marginLeft},0)`)
-      .call(d3.axisLeft(y).ticks(8).tickSize(-width + marginLeft + marginRight))
+      .call(d3.axisLeft(y).ticks(8).tickFormat(d => `${d}%`).tickSize(-width + marginLeft + marginRight))
       .call(g => {
         g.select(".domain").attr("stroke", "#ccc");
         g.selectAll(".tick line").attr("stroke", "#f0f0f0");
         g.selectAll(".tick text")
-          .style("font-family", "'Inter', sans-serif")
+          .style("font-family", "'Verdana', sans-serif")
           .style("font-size", "10px")
           .style("fill", "#666");
       });
@@ -171,11 +174,11 @@ export default function BoxPlotChart({ districts, enactedData }) {
       .attr("x", -(height / 2))
       .attr("y", 14)
       .attr("text-anchor", "middle")
-      .style("font-family", "'Inter', sans-serif")
+      .style("font-family", "'Verdana', sans-serif")
       .style("font-size", "11px")
       .style("font-weight", "600")
       .style("fill", "#888")
-      .text(`${selectedGroup} Population %`);
+      .text(`${GROUP_LABELS[selectedGroup] || selectedGroup} Population %`);
 
   }, [districts, selectedGroup, enactedData]);
 
@@ -189,14 +192,14 @@ export default function BoxPlotChart({ districts, enactedData }) {
             className={`chart-control-btn${selectedGroup === group ? " active" : ""}`}
             onClick={() => setSelectedGroup(group)}
           >
-            {group}
+            {GROUP_LABELS[group] || group}
           </button>
         ))}
       </div>
       <div className="chart-legend">
         <div className="chart-legend-item">
           <span className="chart-legend-box" style={{ background: "#c8d0da" }}></span>
-          IQR (25th–75th)
+          IQR (25th-75th)
         </div>
         <div className="chart-legend-item">
           <span className="chart-legend-line" style={{ background: "#1a1a1a" }}></span>

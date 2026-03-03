@@ -7,7 +7,7 @@ const GROUP_LABELS = {
   asian: "Asian",
 };
 
-const GinglessScatterPlot = ({ points, regression, group }) => {
+const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointClick }) => {
   const containerRef = useRef();
   const plotRef = useRef();
   const [width, setWidth] = useState(600);
@@ -53,6 +53,29 @@ const GinglessScatterPlot = ({ points, regression, group }) => {
       }),
     ];
 
+    // Highlight selected point
+    if (selectedIdx !== null && selectedIdx !== undefined && points[selectedIdx]) {
+      const sel = points[selectedIdx];
+      marks.push(
+        Plot.dot([sel], {
+          x: d => d.minority_vap_pct * 100,
+          y: d => d.d_vote_share * 100,
+          fill: "steelblue",
+          stroke: "#000",
+          strokeWidth: 2,
+          r: 6,
+        }),
+        Plot.dot([sel], {
+          x: d => d.minority_vap_pct * 100,
+          y: d => (1 - d.d_vote_share) * 100,
+          fill: "tomato",
+          stroke: "#000",
+          strokeWidth: 2,
+          r: 6,
+        })
+      );
+    }
+
     // Add regression curves if available
     if (regression && regression.length > 0) {
       marks.push(
@@ -86,7 +109,7 @@ const GinglessScatterPlot = ({ points, regression, group }) => {
       height: Math.round(width * 0.55),
       inset: 10,
       grid: true,
-      style: { fontFamily: "Inter, sans-serif", fontSize: "12px", background: "transparent" },
+      style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent" },
       x: {
         label: `% ${groupLabel} VAP in precinct`,
         tickFormat: d => `${d}%`,
@@ -100,7 +123,50 @@ const GinglessScatterPlot = ({ points, regression, group }) => {
     });
 
     plotRef.current.appendChild(plot);
-  }, [points, regression, group, width]);
+
+    // Add click handler to find nearest point
+    if (onPointClick && points.length > 0) {
+      const svg = plotRef.current.querySelector("svg");
+      if (svg) {
+        svg.style.cursor = "crosshair";
+        const handleClick = (e) => {
+          const rect = svg.getBoundingClientRect();
+          const svgX = e.clientX - rect.left;
+          const svgY = e.clientY - rect.top;
+
+          // Find all circle elements (dots) and measure distance
+          let bestIdx = -1;
+          let bestDist = Infinity;
+          // Use the plot's scales to convert data → pixel coords
+          const plotWidth = width;
+          const plotHeight = Math.round(width * 0.55);
+          const inset = 10;
+          // Approximate margins from Observable Plot defaults
+          const marginLeft = 40;
+          const marginRight = 20;
+          const marginTop = 20;
+          const marginBottom = 30;
+          const innerW = plotWidth - marginLeft - marginRight - 2 * inset;
+          const innerH = plotHeight - marginTop - marginBottom - 2 * inset;
+
+          for (let i = 0; i < points.length; i++) {
+            const px = marginLeft + inset + (points[i].minority_vap_pct * 100 / 100) * innerW;
+            const py = marginTop + inset + (1 - points[i].d_vote_share) * innerH;
+            const dist = Math.hypot(svgX - px, svgY - py);
+            if (dist < bestDist) {
+              bestDist = dist;
+              bestIdx = i;
+            }
+          }
+          // Only select if within 15px of a point
+          if (bestIdx >= 0 && bestDist < 15) {
+            onPointClick(bestIdx);
+          }
+        };
+        svg.addEventListener("click", handleClick);
+      }
+    }
+  }, [points, regression, group, width, selectedIdx, onPointClick]);
 
   return (
     <div ref={containerRef} style={{ width: "100%", height: "100%" }}>

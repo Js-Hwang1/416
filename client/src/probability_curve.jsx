@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import Plot from "react-plotly.js";
-import dataJson from "./dummy_data/dummy_probability_curve.json";
 
 const COLOR_MAP = {
   White: "rgba(60, 165, 165, 0.85)",
@@ -16,11 +15,16 @@ const FILL_MAP = {
   Asian: "rgba(120, 170, 100, 0.2)"
 };
 
-const ProbabilityChart = () => {
+const ProbabilityChart = ({ data }) => {
+  const dataJson = data || [];
   const allRaces = [...new Set(dataJson.map(d => d.race))];
-  const [selectedRaces, setSelectedRaces] = useState(["White", "Black"]);
+  const allCandidates = [...new Set(dataJson.map(d => d.candidate))];
+  const [selectedRaces, setSelectedRaces] = useState(() => allRaces.slice(0, 2));
+  const [selectedCandidate, setSelectedCandidate] = useState(() => allCandidates[0] || "");
 
-  const filteredData = dataJson.filter(d => selectedRaces.includes(d.race));
+  const filteredData = dataJson.filter(
+    d => selectedRaces.includes(d.race) && d.candidate === selectedCandidate
+  );
 
   const handleRaceToggle = (race) => {
     setSelectedRaces(prev =>
@@ -35,7 +39,7 @@ const ProbabilityChart = () => {
     y: d.data.map(point => point.probability),
     type: "scatter",
     mode: "lines",
-    name: `${d.candidate} – ${d.race}`,
+    name: `${d.race}`,
     fill: "tozeroy",
     line: {
       color: COLOR_MAP[d.race] || "rgba(128, 128, 128, 0.8)",
@@ -48,7 +52,17 @@ const ProbabilityChart = () => {
   return (
     <div style={{ width: "100%" }}>
       <div className="chart-controls">
-        <span className="chart-controls-label">Groups:</span>
+        <span className="chart-controls-label">Candidate:</span>
+        {allCandidates.map(cand => (
+          <button
+            key={cand}
+            className={`chart-control-btn${selectedCandidate === cand ? " active" : ""}`}
+            onClick={() => setSelectedCandidate(cand)}
+          >
+            {cand}
+          </button>
+        ))}
+        <span className="chart-controls-label" style={{ marginLeft: 16 }}>Groups:</span>
         {allRaces.map(race => (
           <label key={race} className="chart-control-checkbox">
             <input
@@ -70,7 +84,7 @@ const ProbabilityChart = () => {
           xaxis: {
             title: {
               text: "% of Group Voting for Candidate",
-              font: { family: "'Inter', sans-serif", size: 11, color: "#888" }
+              font: { family: "'Verdana', sans-serif", size: 11, color: "#888" }
             },
             gridcolor: "#f0f0f0",
             zeroline: false
@@ -78,7 +92,7 @@ const ProbabilityChart = () => {
           yaxis: {
             title: {
               text: "Probability Density",
-              font: { family: "'Inter', sans-serif", size: 11, color: "#888" }
+              font: { family: "'Verdana', sans-serif", size: 11, color: "#888" }
             },
             gridcolor: "#f0f0f0",
             zeroline: false
@@ -86,7 +100,7 @@ const ProbabilityChart = () => {
           hovermode: "x unified",
           showlegend: true,
           legend: {
-            font: { family: "'Inter', sans-serif", size: 10 },
+            font: { family: "'Verdana', sans-serif", size: 10 },
             orientation: "h",
             x: 0,
             y: -0.2
@@ -94,7 +108,7 @@ const ProbabilityChart = () => {
           plot_bgcolor: "#fff",
           paper_bgcolor: "#fff",
           margin: { l: 55, r: 20, t: 10, b: 70 },
-          font: { family: "'Inter', sans-serif" }
+          font: { family: "'Verdana', sans-serif" }
         }}
         style={{ width: "100%", height: "420px" }}
         config={{ responsive: true, displayModeBar: false }}
