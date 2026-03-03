@@ -505,7 +505,9 @@ def step5_congressional_districts():
         gdf = gdf.to_crs(epsg=4326)
 
         # Simplify geometry for web performance
-        gdf["geometry"] = gdf["geometry"].simplify(tolerance=0.001, preserve_topology=True)
+        # Only simplify TX districts; MA is small enough at full resolution (~1.1MB)
+        if state == "tx":
+            gdf["geometry"] = gdf["geometry"].simplify(tolerance=0.0003, preserve_topology=True)
 
         # Keep relevant columns
         gdf = gdf[["CD118FP", "NAMELSAD", "GEOID", "geometry"]].copy()
@@ -526,16 +528,9 @@ def step5_congressional_districts():
         gdf.to_file(out_path, driver="GeoJSON")
         report(f"{state.upper()} districts GeoJSON written: {out_path}")
 
-        # Copy simplified version to client/public/data/
-        os.makedirs(CLIENT_DATA_DIR, exist_ok=True)
-        client_filename = f"{state}_districts.geojson"
-        client_path = os.path.join(CLIENT_DATA_DIR, client_filename)
-
-        # Write client version with minimal properties
-        client_gdf = gdf[["district", "district_name", "geometry"]].copy()
-        client_gdf = client_gdf.rename(columns={"district_name": "name"})
-        client_gdf.to_file(client_path, driver="GeoJSON")
-        report(f"  -> copied to {client_path}")
+        # NOTE: client/public/data/{state}_districts.geojson is maintained
+        # separately (from a pre-simplified cartographic source).  Do NOT
+        # overwrite it from the TIGER/Line data here.
 
 
 # =========================================================================
@@ -646,7 +641,7 @@ def step7_state_summaries(ma, tx):
     tx_black = int(tx["BLACK"].sum())
     tx_hisp = int(tx["HISPANIC"].sum())
     tx_asian = int(tx["ASIAN"].sum()) if "ASIAN" in tx.columns else 0
-    tx_other = tx_pop - tx_white - tx_black - tx_hisp - tx_asian
+    tx_other = int(tx["OTHER"].sum()) if "OTHER" in tx.columns else 0
 
     tx_asian_vap = int(tx["ASIANVAP"].sum()) if "ASIANVAP" in tx.columns else 0
 
@@ -1236,6 +1231,57 @@ def main():
     step10_vote_margins(ma, tx)
     step11_adjacency(ma, tx)
     step12_enacted_demographics(ma, tx)
+
+    # --- Generate lightweight heatmap GeoJSON for client ---
+    print("\nGenerating heatmap GeoJSON for client...")
+    os.makedirs(CLIENT_DATA_DIR, exist_ok=True)
+    heatmap_configs = [
+        ("MA precincts", os.path.join(GEOJSON_DIR, "ma_precincts.geojson"),
+         "ma_precincts_heatmap.geojson",
+         {"hispanic": "HVAP", "black": "BVAP", "asian": "ASIANVAP", "white": "WVAP"},
+         "NAME"),
+        ("TX VTDs", os.path.join(GEOJSON_DIR, "tx_vtds.geojson"),
+         "tx_vtds_heatmap.geojson",
+         {"hispanic": "HISPVAP", "black": "BVAP", "asian": "ASIANVAP", "white": "WVAP"},
+         "COUNTY"),
+    ]
+    for label, src_path, out_name, group_cols, name_col in heatmap_configs:
+        with open(src_path) as f:
+            src_data = json.load(f)
+        new_feats = []
+        for feat in src_data["features"]:
+            props = feat["properties"]
+            vap = float(props.get("VAP", 0))
+            new_props = {"pop": int(props.get("TOTPOP", 0)), "vap": int(vap)}
+            if name_col and name_col in props:
+                new_props["name"] = props[name_col]
+            for gk, vc in group_cols.items():
+                gv = float(props.get(vc, 0))
+                new_props[gk] = round(gv / vap * 100, 1) if vap > 0 else 0
+            new_feats.append({"type": "Feature", "geometry": feat["geometry"],
+                              "properties": new_props})
+        out_path = os.path.join(CLIENT_DATA_DIR, out_name)
+        with open(out_path, "w") as f:
+            json.dump({"type": "FeatureCollection", "features": new_feats},
+                      f, separators=(",", ":"))
+        sz = os.path.getsize(out_path) / 1e6
+        report(f"{label} heatmap: {sz:.1f} MB -> {out_path}")
+
+    # --- Copy analysis data to client/public/data/ ---
+    print("\nCopying analysis data to client...")
+    for src_file in [
+        os.path.join(SUMMARY_DIR, "ma_state_summary.json"),
+        os.path.join(SUMMARY_DIR, "tx_state_summary.json"),
+        REPS_FILE,
+        os.path.join(ANALYSIS_DIR, "ma_gingles_precinct.json"),
+        os.path.join(ANALYSIS_DIR, "tx_gingles_precinct.json"),
+        os.path.join(ANALYSIS_DIR, "ma_gingles_regression.json"),
+        os.path.join(ANALYSIS_DIR, "tx_gingles_regression.json"),
+        os.path.join(ANALYSIS_DIR, "ma_enacted_demographics.json"),
+        os.path.join(ANALYSIS_DIR, "tx_enacted_demographics.json"),
+    ]:
+        shutil.copy2(src_file, CLIENT_DATA_DIR)
+        report(f"  -> {os.path.basename(src_file)}")
 
     # --- Verification ---
     step13_verify()
