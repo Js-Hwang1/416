@@ -26,7 +26,7 @@ export default function SplashPage() {
       (us) => {
         const svg = d3
           .select(svgRef.current)
-          .attr("viewBox", [-200, -100, width + 400, height + 200])
+          .attr("viewBox", [0, 0, width, height])
           .style("width", "100%")
           .style("height", "100%")
           .style("display", "block")
@@ -39,8 +39,8 @@ export default function SplashPage() {
 
         projection.fitExtent(
           [
-            [20, 20],
-            [width - 20, height - 20],
+            [0, 0],
+            [width, height],
           ],
           topojson.feature(us, us.objects.states)
         );
