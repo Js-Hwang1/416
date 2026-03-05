@@ -170,7 +170,7 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
 
   return (
     <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
-      <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "4px", fontSize: "11px" }}>
+      <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "14px", marginTop: "8px", fontSize: "11px" }}>
         <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "steelblue", marginRight: 4 }} />Dem Vote Share</span>
         <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "tomato", marginRight: 4 }} />Rep Vote Share</span>
         {regression && regression.length > 0 && (

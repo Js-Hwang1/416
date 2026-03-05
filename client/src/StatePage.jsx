@@ -75,9 +75,7 @@ const STATE_CONFIG = {
 
 const VIEWS = [
   { id: "planExplorer", label: "Plan Explorer" },
-  { id: "demographics", label: "Demographics" },
-  { id: "ensembles", label: "Ensembles" },
-  { id: "fairness", label: "Fairness" },
+  { id: "demographics", label: "Analysis" },
 ];
 
 const INTERESTING_PLAN_OPTIONS = [
@@ -93,16 +91,13 @@ const INTERESTING_PLAN_OPTIONS = [
   { value: "min_minority_districts", label: "Min Minority Districts" },
 ];
 
-const ENSEMBLES_SUBTABS = [
-  { id: "seatSplits", label: "Seat Splits" },
-  { id: "minorityDistribution", label: "Minority Distribution" },
-];
-
 const DEMO_CHART_OPTIONS = [
   { value: "gingles", label: "Gingles Scatter" },
   { value: "precinct", label: "Precinct Data" },
   { value: "boxwhisker", label: "Box & Whisker" },
   { value: "probability", label: "EI Curves" },
+  { value: "seatSplits", label: "Seat Splits" },
+  { value: "fairness", label: "Fairness" },
 ];
 
 const GINGLES_PAGE_SIZE = 10;
@@ -321,7 +316,6 @@ export default function StatePage() {
   /* ---- view / UI state ---- */
   const [activeView, setActiveView] = useState("planExplorer");
   const [activeDetailPanel, setActiveDetailPanel] = useState("stateOverview");
-  const [activeEnsemblesSubtab, setActiveEnsemblesSubtab] = useState("seatSplits");
   const [selectedInterestingPlan, setSelectedInterestingPlan] = useState("enacted");
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
@@ -742,39 +736,6 @@ export default function StatePage() {
           </div>
         )}
 
-        {activeView === "ensembles" && (
-          <div className="chart-view">
-            <div className="chart-toolbar">
-              <fieldset className="ensembles-subtab-group" aria-label="Ensembles sub-tabs">
-                {ENSEMBLES_SUBTABS.map((subtab) => (
-                  <label key={subtab.id} className="ensembles-subtab-option">
-                    <input
-                      type="radio"
-                      name="ensembles-subtab"
-                      value={subtab.id}
-                      checked={activeEnsemblesSubtab === subtab.id}
-                      onChange={(e) => setActiveEnsemblesSubtab(e.target.value)}
-                    />
-                    <span>{subtab.label}</span>
-                  </label>
-                ))}
-              </fieldset>
-              <span className="chart-toolbar-subtitle">
-                {activeEnsemblesSubtab === "seatSplits"
-                  ? `R/D split frequency across ${cfg.ensembles[0].plans.toLocaleString()} simulated plans`
-                  : "Minority group distribution across ensemble district plans"}
-              </span>
-            </div>
-            <div className="chart-body">
-              {activeEnsemblesSubtab === "seatSplits" ? (
-                <BarChart />
-              ) : (
-                <BoxPlotChart districts={box_data.districts} enactedData={enactedDemo} />
-              )}
-            </div>
-          </div>
-        )}
-
         {activeView === "demographics" && (
           <div className="state-layout demographics-layout">
 
@@ -821,9 +782,6 @@ export default function StatePage() {
                     {opt.label}
                   </button>
                 ))}
-                <span className="demo-tab-group-label">
-                  {heatmapMinorityGroups.find((g) => g.key === demoGroup)?.label}
-                </span>
               </div>
 
               <div className="demo-chart-body">
@@ -869,9 +827,23 @@ export default function StatePage() {
                         onClick={() => setGinglesPage((p) => p - 1)}
                         disabled={ginglesPage === 0}
                       >‹</button>
-                      <span className="gingles-page-info">
-                        {ginglesPage + 1} / {ginglesTotalPages || 1}
-                      </span>
+                      <input
+                        type="number"
+                        className="gingles-page-input"
+                        min={1}
+                        max={ginglesTotalPages || 1}
+                        defaultValue={ginglesPage + 1}
+                        key={ginglesPage}
+                        onBlur={(e) => {
+                          const v = Number(e.target.value) - 1;
+                          if (v >= 0 && v < (ginglesTotalPages || 1)) setGinglesPage(v);
+                          else e.target.value = ginglesPage + 1;
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") e.target.blur();
+                        }}
+                      />
+                      <span className="gingles-page-info">/ {ginglesTotalPages || 1}</span>
                       <button
                         className="gingles-page-btn"
                         onClick={() => setGinglesPage((p) => p + 1)}
@@ -882,23 +854,17 @@ export default function StatePage() {
                 )}
 
                 {demoPanelChart === "boxwhisker" && (
-                  <BoxPlotChart districts={box_data.districts} enactedData={enactedDemo} />
+                  <BoxPlotChart boxData={box_data} enactedData={enactedDemo} selectedGroup={demoGroup} />
                 )}
                 {demoPanelChart === "probability" && <ProbabilityChart />}
+                {demoPanelChart === "seatSplits" && <BarChart />}
+                {demoPanelChart === "fairness" && (
+                  <div className="demographics-placeholder">
+                    <div className="demographics-placeholder-title">Fairness Analysis</div>
+                    <div className="demographics-placeholder-label">Coming soon</div>
+                  </div>
+                )}
               </div>
-            </div>
-          </div>
-        )}
-
-        {activeView === "fairness" && (
-          <div className="chart-view">
-            <div className="chart-toolbar">
-              <span className="chart-toolbar-subtitle">
-                Fairness analysis visualizations will appear here
-              </span>
-            </div>
-            <div className="chart-body">
-              <div className="placeholder-card">Coming soon</div>
             </div>
           </div>
         )}

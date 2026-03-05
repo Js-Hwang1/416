@@ -1,11 +1,9 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect } from "react";
 import * as d3 from "d3";
 
-export default function BoxPlotChart({ boxData, enactedData }) {
+export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hispanic" }) {
   const svgRef = useRef();
-  const [selectedGroup, setSelectedGroup] = useState("hispanic");
 
-  const minorityGroups = ["hispanic", "black", "asian"];
   const GROUP_LABELS = { hispanic: "Hispanic", black: "Black", asian: "Asian" };
 
   const districts = boxData?.[selectedGroup] ?? [];
@@ -184,18 +182,6 @@ export default function BoxPlotChart({ boxData, enactedData }) {
 
   return (
     <div style={{ width: "100%" }}>
-      <div className="chart-controls">
-        <span className="chart-controls-label">Group:</span>
-        {minorityGroups.map(group => (
-          <button
-            key={group}
-            className={`chart-control-btn${selectedGroup === group ? " active" : ""}`}
-            onClick={() => setSelectedGroup(group)}
-          >
-            {GROUP_LABELS[group] || group}
-          </button>
-        ))}
-      </div>
       <div className="chart-legend">
         <div className="chart-legend-item">
           <span className="chart-legend-box" style={{ background: "#c8d0da" }}></span>
