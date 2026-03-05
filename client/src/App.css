@@ -190,11 +190,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1;
 }
 
 .nav-right {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex: 1;
 }
 
 .back-button {

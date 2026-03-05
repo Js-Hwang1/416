@@ -189,10 +189,10 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
       : 0;
 
     return {
-      weight: 2.5,
-      color: "#999",
+      weight: 4,
+      color: "#f97316",
       fillColor: DISTRICT_COLORS[colorIndex],
-      fillOpacity: 0.82,
+      fillOpacity: 0.95,
       smoothFactor: 0,
     };
   };
