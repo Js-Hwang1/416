@@ -1025,8 +1025,8 @@
 }
 
 .district-table-wrapper {
-  --district-header-height: 34px;
-  --district-row-height: 34px;
+  --district-header-height: 38px;
+  --district-row-height: 52px;
   width: 100%;
   padding: 0;
   overflow-x: hidden;

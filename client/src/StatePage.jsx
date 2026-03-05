@@ -94,13 +94,14 @@ const INTERESTING_PLAN_OPTIONS = [
 const DEMO_CHART_OPTIONS = [
   { value: "gingles", label: "Gingles Scatter" },
   { value: "precinct", label: "Precinct Data" },
-  { value: "boxwhisker", label: "Box & Whisker" },
+  { value: "boxwhisker", label: "Minority Distribution" },
   { value: "probability", label: "EI Curves" },
   { value: "seatSplits", label: "Seat Splits" },
   { value: "fairness", label: "Fairness" },
 ];
 
 const GINGLES_PAGE_SIZE = 10;
+const DISTRICT_PAGE_SIZE = 10;
 
 function formatNumber(value) {
   return Number(value).toLocaleString();
@@ -322,6 +323,7 @@ export default function StatePage() {
   const [demoGroup, setDemoGroup] = useState("hispanic");
   const [demoPanelChart, setDemoPanelChart] = useState("gingles");
   const [ginglesPage, setGinglesPage] = useState(0);
+  const [districtPage, setDistrictPage] = useState(0);
 
   const interestingPlanRef = useRef(null);
   const districtTableWrapperRef = useRef(null);
@@ -410,6 +412,15 @@ export default function StatePage() {
 
   useEffect(() => { setGinglesPage(0); }, [demoGroup]);
 
+  /* ---- district table pagination ---- */
+  const districtTotalPages = Math.ceil(districtTableRows.length / DISTRICT_PAGE_SIZE);
+  const districtPageRows = districtTableRows.slice(
+    districtPage * DISTRICT_PAGE_SIZE,
+    (districtPage + 1) * DISTRICT_PAGE_SIZE
+  );
+
+  useEffect(() => { setDistrictPage(0); }, [stateSlug]);
+
   /* ---- close dropdown on outside click ---- */
   useEffect(() => {
     const onDocumentMouseDown = (event) => {
@@ -430,6 +441,13 @@ export default function StatePage() {
   /* ---- auto-scroll to selected district row ---- */
   useEffect(() => {
     if (selectedDistrict === null) return;
+
+    const rowIndex = districtTableRows.findIndex(
+      (r) => Number.parseInt(r.districtNumber, 10) === selectedDistrict
+    );
+    if (rowIndex !== -1) {
+      setDistrictPage(Math.floor(rowIndex / DISTRICT_PAGE_SIZE));
+    }
 
     const wrapper = districtTableWrapperRef.current;
     const row = districtRowRefs.current.get(selectedDistrict);
@@ -684,7 +702,7 @@ export default function StatePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {districtTableRows.map((row) => {
+                        {districtPageRows.map((row) => {
                           const districtNumber = Number.parseInt(row.districtNumber, 10);
                           const isSelected = selectedDistrict === districtNumber;
                           return (
@@ -729,6 +747,37 @@ export default function StatePage() {
                         })}
                       </tbody>
                     </table>
+                    {districtTotalPages > 1 && (
+                      <div className="gingles-pagination">
+                        <button
+                          className="gingles-page-btn"
+                          onClick={() => setDistrictPage((p) => p - 1)}
+                          disabled={districtPage === 0}
+                        >‹</button>
+                        <input
+                          type="number"
+                          className="gingles-page-input"
+                          min={1}
+                          max={districtTotalPages}
+                          defaultValue={districtPage + 1}
+                          key={districtPage}
+                          onBlur={(e) => {
+                            const v = Number(e.target.value) - 1;
+                            if (v >= 0 && v < districtTotalPages) setDistrictPage(v);
+                            else e.target.value = districtPage + 1;
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.target.blur();
+                          }}
+                        />
+                        <span className="gingles-page-info">/ {districtTotalPages}</span>
+                        <button
+                          className="gingles-page-btn"
+                          onClick={() => setDistrictPage((p) => p + 1)}
+                          disabled={districtPage >= districtTotalPages - 1}
+                        >›</button>
+                      </div>
+                    )}
                   </div>
                 )}
               </section>
