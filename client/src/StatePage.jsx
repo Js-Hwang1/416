@@ -603,10 +603,10 @@ export default function StatePage() {
                           <dt>Total Population</dt>
                           <dd>{formatNumber(ov.totalPopulation)}</dd>
                         </div>
-                        <div className="overview-kv-row">
+                        {/* <div className="overview-kv-row">
                           <dt>Voting Age Population</dt>
                           <dd>{formatNumber(ov.votingAgePopulation)}</dd>
-                        </div>
+                        </div>*/}
                       </dl>
                     </article>
 
@@ -621,10 +621,10 @@ export default function StatePage() {
                           <dt>Republican Vote Share</dt>
                           <dd>{formatPct1(ov.voterShare.republican)}</dd>
                         </div>
-                        <div className="overview-kv-row">
+                        {/* <div className="overview-kv-row">
                           <dt>Other</dt>
                           <dd>{formatPct1(ov.voterShare.other)}</dd>
-                        </div>
+                        </div>*/}
                       </dl>
                     </article>
 
@@ -667,6 +667,28 @@ export default function StatePage() {
                           <dt>Total Seats</dt>
                           <dd>{(ov.congressionalByParty.Democrat ?? 0) + (ov.congressionalByParty.Republican ?? 0)}</dd>
                         </div>
+                      </dl>
+                    </article>
+
+                    <article className="overview-card">
+                      <h3 className="overview-card-title">Available Ensembles</h3>
+                      <dl className="overview-kv-list">
+                        {cfg.ensembles.map((ensemble) => (
+                          <React.Fragment key={ensemble.id}>
+                            <div className="overview-kv-row">
+                              <dt style={{ fontWeight: 600 }}>{ensemble.type}</dt>
+                              <dd>—</dd>
+                            </div>
+                            <div className="overview-kv-row">
+                              <dt style={{ paddingLeft: "1em" }}>District Plans</dt>
+                              <dd>{ensemble.plans.toLocaleString()} <span style={{ color: "#aaa", fontSize: "0.85em" }}></span></dd>
+                            </div>
+                            <div className="overview-kv-row">
+                              <dt style={{ paddingLeft: "1em" }}>Population Threshold</dt>
+                              <dd>{ensemble.populationThreshold}</dd>
+                            </div>
+                          </React.Fragment>
+                        ))}
                       </dl>
                     </article>
                   </div>
