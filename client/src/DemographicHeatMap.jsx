@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 
 const GROUP_LABELS = {
-  hispanic: "Hispanic / Latino",
+  hispanic: "Latino",
   black: "Black",
   asian: "Asian",
 };
@@ -92,24 +92,28 @@ function FitBounds({ data, pathKey }) {
   return null;
 }
 
-export default function DemographicHeatMap({ geojsonPath, geojson: geojsonProp, loading: loadingProp, minorityGroups }) {
+export default function DemographicHeatMap({ geojsonPath, geojson: geojsonProp, loading: loadingProp, minorityGroups, selectedGroup: selectedGroupProp }) {
   const [geojsonInternal, setGeojsonInternal] = useState(null);
   const [loadingInternal, setLoadingInternal] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState("");
+  const [selectedGroupInternal, setSelectedGroupInternal] = useState("");
 
   /* Use pre-fetched data when provided, otherwise fall back to internal fetch */
   const geojson = geojsonProp !== undefined ? geojsonProp : geojsonInternal;
   const loading = loadingProp !== undefined ? loadingProp : loadingInternal;
 
-  /* Set initial group once groups are known */
+  /* Controlled vs uncontrolled group selection */
+  const selectedGroup = selectedGroupProp !== undefined ? selectedGroupProp : selectedGroupInternal;
+
+  /* Set initial group once groups are known (uncontrolled mode only) */
   useEffect(() => {
+    if (selectedGroupProp !== undefined) return;
     if (
       minorityGroups.length > 0 &&
-      !minorityGroups.find((g) => g.key === selectedGroup)
+      !minorityGroups.find((g) => g.key === selectedGroupInternal)
     ) {
-      setSelectedGroup(minorityGroups[0].key);
+      setSelectedGroupInternal(minorityGroups[0].key);
     }
-  }, [minorityGroups, selectedGroup]);
+  }, [minorityGroups, selectedGroupInternal, selectedGroupProp]);
 
   /* Fetch GeoJSON internally only when no pre-fetched data is provided */
   useEffect(() => {
@@ -188,21 +192,6 @@ export default function DemographicHeatMap({ geojsonPath, geojson: geojsonProp, 
 
   return (
     <div className="heatmap-container">
-      <div className="heatmap-controls">
-        <span className="heatmap-controls-label">Minority Group:</span>
-        <select
-          className="heatmap-group-select"
-          value={selectedGroup}
-          onChange={(e) => setSelectedGroup(e.target.value)}
-        >
-          {minorityGroups.map((g) => (
-            <option key={g.key} value={g.key}>
-              {g.label}
-            </option>
-          ))}
-        </select>
-      </div>
-
       <div className="heatmap-map-wrapper">
         <MapContainer
           className="leaflet-map heatmap-leaflet"
