@@ -320,7 +320,7 @@ export default function StatePage() {
   const [selectedInterestingPlan, setSelectedInterestingPlan] = useState("enacted");
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
-  const [demoGroup, setDemoGroup] = useState("hispanic");
+  const [demoGroup, setDemoGroup] = useState("black");
   const [demoPanelChart, setDemoPanelChart] = useState("gingles");
   const [ginglesPage, setGinglesPage] = useState(0);
   const [districtPage, setDistrictPage] = useState(0);
