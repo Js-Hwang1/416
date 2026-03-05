@@ -634,9 +634,7 @@ export default function StatePage() {
                         {Object.entries(ov.populationByGroup).map(([group, value]) => (
                           <div className="overview-kv-row" key={group}>
                             <dt>{group}</dt>
-                            <dd>
-                              {formatPercent(value, ov.totalPopulation)} ({formatNumber(value)})
-                            </dd>
+                            <dd>{formatNumber(value)}</dd>
                           </div>
                         ))}
                       </dl>
@@ -676,15 +674,11 @@ export default function StatePage() {
                         {cfg.ensembles.map((ensemble) => (
                           <React.Fragment key={ensemble.id}>
                             <div className="overview-kv-row">
-                              <dt style={{ fontWeight: 600 }}>{ensemble.type}</dt>
-                              <dd>—</dd>
-                            </div>
-                            <div className="overview-kv-row">
-                              <dt style={{ paddingLeft: "1em" }}>District Plans</dt>
+                              <dt>{ensemble.type} Plans</dt>
                               <dd>{ensemble.plans.toLocaleString()} <span style={{ color: "#aaa", fontSize: "0.85em" }}></span></dd>
                             </div>
                             <div className="overview-kv-row">
-                              <dt style={{ paddingLeft: "1em" }}>Population Threshold</dt>
+                              <dt>{ensemble.type} Threshold</dt>
                               <dd>{ensemble.populationThreshold}</dd>
                             </div>
                           </React.Fragment>
