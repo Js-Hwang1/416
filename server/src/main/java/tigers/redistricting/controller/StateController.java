@@ -1,17 +1,31 @@
-// StateController.java
-//
-// REST controller for state-level data.
-//
-// Annotations:
-//   @RestController
-//   @RequestMapping("/api/states")
-//
-// Endpoints:
-//   GET /api/states              — list all available states (MA, TX) with summary info
-//   GET /api/states/{stateId}    — get a single state's details (boundary, summary stats)
-//
-// Injects: StateService
-//
-// This is the first endpoint the frontend hits on load (splash page with US map).
-// Returns lightweight summaries, NOT full GeoJSON boundaries (those come from
-// the district/precinct endpoints).
+package tigers.redistricting.controller;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import tigers.redistricting.model.State;
+import tigers.redistricting.service.StateService;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/states")
+public class StateController {
+
+    private final StateService stateService;
+
+    public StateController(StateService stateService) {
+        this.stateService = stateService;
+    }
+
+    @GetMapping
+    public List<State> getAllStates() {
+        return stateService.getAllStates();
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<State> getState(@PathVariable String id) {
+        return stateService.getStateById(id.toUpperCase())
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+}

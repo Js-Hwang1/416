@@ -4,8 +4,55 @@ We'll be performing analysis on states:
 1. Massachusetts (Non-preclearance State)
 2. Texas (Preclearance State)
 
-Tech Stack:
-JS (or TS), D3 (GUI; Visualization), Java (Server), Python, and etc.
+Tech Stack: React, D3, MapLibre GL, Spring Boot, MongoDB, Python
+
+### Prerequisites
+
+- **Java 21** (check with `java -version`)
+- **Node.js / npm** (check with `node -v`)
+- **MongoDB** running locally on port 27017 (check with `mongosh --eval "db.runCommand({ping:1})"`)
+- **Python 3** with `pymongo` (`pip install pymongo`)
+
+### First-Time Setup
+
+1. **Populate the database** (only needed once):
+   ```
+   cd server/database
+   python populate_database.py
+   ```
+   To reset and re-populate: `python populate_database.py --drop`
+
+2. **Generate vector tiles** (only needed once, requires [tippecanoe](https://github.com/felt/tippecanoe)):
+   ```
+   brew install tippecanoe
+   cd server/database
+   ./generate_tiles.sh
+   ```
+
+3. **Install frontend dependencies** (only needed once):
+   ```
+   cd client
+   npm install
+   ```
+
+### Running the App
+
+Open two terminals:
+
+**Terminal 1 — Server** (Spring Boot on http://localhost:8080):
+```
+cd server
+./gradlew bootRun
+```
+Wait for `Started RedistrictingApplication in X.XX seconds` before opening the client.
+
+**Terminal 2 — Client** (React on http://localhost:3000):
+```
+cd client
+npm start
+```
+
+Open http://localhost:3000 in your browser.
 
 Group Member Roles:
 Karen Zhao - Database

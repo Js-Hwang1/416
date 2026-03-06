@@ -1,15 +1,23 @@
-// WebConfig.java
-//
-// Web/CORS configuration so the frontend client can call this API.
-//
-// Annotations:
-//   @Configuration
-//
-// Responsibilities:
-//   - Implement WebMvcConfigurer and override addCorsMappings()
-//   - Allow origins from the client dev server (e.g., http://localhost:3000)
-//   - Allow methods: GET, POST, PUT, DELETE
-//   - Allow headers: Content-Type, Authorization
-//
-// Without this, browser security will block the frontend from
-// calling the backend API due to same-origin policy.
+package tigers.redistricting.config;
+
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.*;
+
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/tiles/**")
+                .addResourceLocations("file:tiles/")
+                .setCachePeriod(86400);
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:3000")
+                .allowedMethods("GET", "HEAD", "OPTIONS")
+                .exposedHeaders("Content-Range", "Accept-Ranges", "Content-Length");
+    }
+}

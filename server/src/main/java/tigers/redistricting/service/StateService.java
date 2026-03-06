@@ -1,13 +1,26 @@
-// StateService.java
-//
-// Business logic for state-level operations.
-//
-// Annotations:
-//   @Service
-//
-// Responsibilities:
-//   - Fetch state data from StateRepository
-//   - Convert State model -> StateSummaryDTO for lightweight API responses
-//   - Aggregate summary statistics (total population, num districts, etc.)
-//
-// Injects: StateRepository
+package tigers.redistricting.service;
+
+import org.springframework.stereotype.Service;
+import tigers.redistricting.model.State;
+import tigers.redistricting.repository.StateRepository;
+
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class StateService {
+
+    private final StateRepository stateRepository;
+
+    public StateService(StateRepository stateRepository) {
+        this.stateRepository = stateRepository;
+    }
+
+    public List<State> getAllStates() {
+        return stateRepository.findAll();
+    }
+
+    public Optional<State> getStateById(String id) {
+        return stateRepository.findById(id);
+    }
+}

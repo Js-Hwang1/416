@@ -1,50 +1,25 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { Map as MapGL, Source, Layer, NavigationControl } from "react-map-gl/maplibre";
 import BoxPlotChart from './box_and_whisker';
 import BarChart from "./bar_chart";
 import ProbabilityChart from "./probability_curve";
 import GinglessScatterPlot from "./gingles_scatter";
 import DemographicHeatMap from "./DemographicHeatMap";
 import VoteSeatChart from "./VoteSeatChart";
-import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
-import L from "leaflet";
-
-const DISTRICT_COLORS = [
-  "#e8e8e8", "#d4d4d4", "#c0c0c0", "#acacac",
-  "#e0dcd0", "#ccc8bc", "#d8d4c8", "#c4c0b4",
-  "#dcdcdc", "#c8c8c8", "#b4b4b4", "#e4e0d8",
-  "#d0ccc0", "#bcb8ac", "#d4d0c4", "#c0bcb0",
-  "#e0e0e0", "#cccccc", "#b8b8b8", "#a8a8a8",
-  "#dcd8cc", "#c8c4b8", "#d4d0c8", "#c0bcb4",
-  "#d8d8d8", "#c4c4c4", "#b0b0b0", "#e8e4dc",
-  "#d4d0c4", "#c0bcb0", "#dcd8d0", "#c8c4bc",
-  "#e4e4e4", "#d0d0d0", "#bcbcbc", "#d8d4cc",
-  "#c4c0b8", "#b0aca4",
-];
+import { apiUrl, tilesUrl } from "./api";
 
 const STATE_CONFIG = {
   texas: {
     name: "Texas",
     abbr: "TX",
+    stateId: "TX",
     fips: 48,
     districts: 38,
-    geojson: `${process.env.PUBLIC_URL}/data/tx_districts.geojson`,
-    summaryFile: `${process.env.PUBLIC_URL}/data/tx_state_summary.json`,
-    repsFile: `${process.env.PUBLIC_URL}/data/congressional_reps.json`,
-    ginglesFile: `${process.env.PUBLIC_URL}/data/tx_gingles_precinct.json`,
-    regressionFile: `${process.env.PUBLIC_URL}/data/tx_gingles_regression.json`,
-    enactedDemoFile: `${process.env.PUBLIC_URL}/data/tx_enacted_demographics.json`,
-    heatmapGeojson: `${process.env.PUBLIC_URL}/data/tx_vtds_heatmap.geojson`,
-    ensembleBarFile: `${process.env.PUBLIC_URL}/data/tx_ensemble_bar.json`,
-    ensembleBoxFile: `${process.env.PUBLIC_URL}/data/tx_ensemble_box.json`,
-    eiCurvesFile: `${process.env.PUBLIC_URL}/data/tx_ei_curves.json`,
-    voteSeatFile: `${process.env.PUBLIC_URL}/data/tx_vote_seat.json`,
-    repsKey: "TX",
-    mapView: {
-      fitPadding: [18, 18],
-      zoomOffset: 0,
-      panBoundsPad: 0.08,
-    },
+    districtGeoJson: `${process.env.PUBLIC_URL}/data/tx_districts.geojson`,
+    precinctTiles: tilesUrl("tx_precincts.pmtiles"),
+    blockTiles: tilesUrl("tx_blocks.pmtiles"),
+    mapView: { center: [-99.5, 31.0], zoom: 5.2, minZoom: 4.5, maxZoom: 14 },
     redistrictingAuthority: "Republican Legislature",
     ensembles: [
       { id: 1, type: "Race-Blind", plans: 5000, populationThreshold: "2.0%" },
@@ -54,25 +29,13 @@ const STATE_CONFIG = {
   massachusetts: {
     name: "Massachusetts",
     abbr: "MA",
+    stateId: "MA",
     fips: 25,
     districts: 9,
-    geojson: `${process.env.PUBLIC_URL}/data/ma_districts.geojson`,
-    summaryFile: `${process.env.PUBLIC_URL}/data/ma_state_summary.json`,
-    repsFile: `${process.env.PUBLIC_URL}/data/congressional_reps.json`,
-    ginglesFile: `${process.env.PUBLIC_URL}/data/ma_gingles_precinct.json`,
-    regressionFile: `${process.env.PUBLIC_URL}/data/ma_gingles_regression.json`,
-    enactedDemoFile: `${process.env.PUBLIC_URL}/data/ma_enacted_demographics.json`,
-    heatmapGeojson: `${process.env.PUBLIC_URL}/data/ma_precincts_heatmap.geojson`,
-    ensembleBarFile: `${process.env.PUBLIC_URL}/data/ma_ensemble_bar.json`,
-    ensembleBoxFile: `${process.env.PUBLIC_URL}/data/ma_ensemble_box.json`,
-    eiCurvesFile: `${process.env.PUBLIC_URL}/data/ma_ei_curves.json`,
-    voteSeatFile: `${process.env.PUBLIC_URL}/data/ma_vote_seat.json`,
-    repsKey: "MA",
-    mapView: {
-      fitPadding: [18, 18],
-      zoomOffset: 0,
-      panBoundsPad: 0.08,
-    },
+    districtGeoJson: `${process.env.PUBLIC_URL}/data/ma_districts.geojson`,
+    precinctTiles: tilesUrl("ma_precincts.pmtiles"),
+    blockTiles: tilesUrl("ma_blocks.pmtiles"),
+    mapView: { center: [-71.8, 42.1], zoom: 7.5, minZoom: 6.5, maxZoom: 14 },
     redistrictingAuthority: "Democratic Legislature",
     ensembles: [
       { id: 1, type: "Race-Blind", plans: 5000, populationThreshold: "2.0%" },
@@ -110,34 +73,21 @@ const DEMO_CHART_OPTIONS = [
 const GINGLES_PAGE_SIZE = 10;
 const DISTRICT_PAGE_SIZE = 10;
 
+const MAP_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+
 function formatNumber(value) {
   return Number(value).toLocaleString();
-}
-
-function formatPercent(value, total) {
-  if (!total) return "0.00%";
-  const pct = (value / total) * 100;
-  return `${pct.toFixed(2)}%`;
 }
 
 function formatPct1(value) {
   return `${Number(value).toFixed(1)}%`;
 }
 
-function parseDistrictNumber(feature) {
-  const rawDistrict =
-    feature?.properties?.district ??
-    feature?.properties?.DISTRICT ??
-    feature?.properties?.District;
-  const districtNumber = Number.parseInt(String(rawDistrict), 10);
-  return Number.isFinite(districtNumber) ? districtNumber : null;
-}
-
 /* ---------- helper: fetch JSON with abort support ---------- */
 function useFetchJson(url) {
   const [data, setData] = useState(null);
   useEffect(() => {
-    setData(null);              // reset immediately so stale data is cleared
+    setData(null);
     if (!url) return;
     const controller = new AbortController();
     fetch(url, { signal: controller.signal })
@@ -151,31 +101,28 @@ function useFetchJson(url) {
   return data;
 }
 
-/* ---------- StateMap ---------- */
-function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect, districtParties }) {
+/* ---------- StateMap (MapLibre GL + GeoJSON direct) ---------- */
+function StateMap({ cfg, selectedDistrict, onDistrictSelect, districtParties }) {
+  const [hoveredDistrict, setHoveredDistrict] = useState(null);
   const [geojson, setGeojson] = useState(null);
-  const hasFittedBoundsRef = useRef(false);
 
+  /* Fetch district GeoJSON directly (only 9-38 features, no need for tiles) */
+  const districtGeoJsonUrl = cfg.districtGeoJson;
   useEffect(() => {
-    const controller = new AbortController();
-
-    hasFittedBoundsRef.current = false;
     setGeojson(null);
-    fetch(geojsonPath, { signal: controller.signal })
-      .then((r) => r.json())
-      .then((data) => setGeojson(data))
-      .catch((err) => {
-        if (err.name !== "AbortError") {
-          console.error("geojson fetch error", err);
-        }
-      });
+    if (!districtGeoJsonUrl) return;
+    fetch(districtGeoJsonUrl)
+      .then((r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then((data) => {
+        console.log("District GeoJSON loaded:", data.features?.length, "features");
+        setGeojson(data);
+      })
+      .catch((err) => console.error("Failed to load district geojson", err));
+  }, [districtGeoJsonUrl]);
 
-    return () => {
-      controller.abort();
-    };
-  }, [geojsonPath]);
-
-  /* Build district → party + margin lookup */
   const districtInfo = useMemo(() => {
     const map = {};
     if (districtParties) {
@@ -186,155 +133,112 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect, di
     return map;
   }, [districtParties]);
 
-  const getDistrictColor = (districtNumber) => {
-    const info = districtInfo[districtNumber];
-    if (!info) return "#ccc";
-    // t ranges from 0.3 (very competitive) to 1.0 (safe/uncontested)
-    const t = 0.3 + 0.7 * Math.min(info.margin / 60, 1);
-    if (info.party === "Democrat") {
-      // Light blue → deep blue
-      const r = Math.round(220 - 130 * t);
-      const g = Math.round(225 - 100 * t);
-      const b = Math.round(255 - 40 * t);
-      return `rgb(${r},${g},${b})`;
+  /* Build MapLibre match expression for district fill colors.
+     district property may be "09" or "9" — convert to number for matching. */
+  const fillColorExpr = useMemo(() => {
+    const expr = ["match", ["to-number", ["get", "district"]]];
+    for (let d = 1; d <= cfg.districts; d++) {
+      const info = districtInfo[d];
+      if (!info) {
+        expr.push(d, "#ccc");
+        continue;
+      }
+      const t = 0.3 + 0.7 * Math.min(info.margin / 60, 1);
+      if (info.party === "Democrat") {
+        const r = Math.round(220 - 130 * t);
+        const g = Math.round(225 - 100 * t);
+        const b = Math.round(255 - 40 * t);
+        expr.push(d, `rgb(${r},${g},${b})`);
+      } else if (info.party === "Republican") {
+        const r = Math.round(255 - 40 * t);
+        const g = Math.round(225 - 130 * t);
+        const b = Math.round(220 - 130 * t);
+        expr.push(d, `rgb(${r},${g},${b})`);
+      } else {
+        expr.push(d, "#ccc");
+      }
     }
-    if (info.party === "Republican") {
-      // Light red → deep red
-      const r = Math.round(255 - 40 * t);
-      const g = Math.round(225 - 130 * t);
-      const b = Math.round(220 - 130 * t);
-      return `rgb(${r},${g},${b})`;
+    expr.push("#ccc"); // fallback
+    return expr;
+  }, [districtInfo, cfg.districts]);
+
+  const onMapClick = useCallback((e) => {
+    const features = e.features;
+    if (features && features.length > 0) {
+      const d = features[0].properties.district;
+      const districtNumber = typeof d === "number" ? d : parseInt(d, 10);
+      if (Number.isFinite(districtNumber)) {
+        onDistrictSelect((prev) => prev === districtNumber ? null : districtNumber);
+      }
     }
-    return "#ccc";
-  };
+  }, [onDistrictSelect]);
 
-  const styleFeature = (feature) => {
-    const districtNumber = parseDistrictNumber(feature);
-    return {
-      weight: 1.5,
-      color: "#1a1a1a",
-      fillColor: getDistrictColor(districtNumber),
-      fillOpacity: 0.72,
-      smoothFactor: 0,
-    };
-  };
+  const onMouseMove = useCallback((e) => {
+    if (e.features && e.features.length > 0) {
+      const d = e.features[0].properties.district;
+      setHoveredDistrict(typeof d === "number" ? d : parseInt(d, 10));
+    }
+  }, []);
 
-  const selectedDistrictStyle = (feature) => {
-    const districtNumber = parseDistrictNumber(feature);
-    return {
-      weight: 4,
-      color: "#f97316",
-      fillColor: getDistrictColor(districtNumber),
-      fillOpacity: 0.9,
-      smoothFactor: 0,
-    };
-  };
+  const onMouseLeave = useCallback(() => {
+    setHoveredDistrict(null);
+  }, []);
 
-  const onEachFeature = (feature, layer) => {
-    /* Disable Leaflet's built-in rendering simplification */
-    if (layer.options) layer.options.smoothFactor = 0;
-
-    layer.on({
-      mouseover: () => {
-        layer.setStyle({ weight: 2.5 });
-      },
-      mouseout: () => {
-        layer.setStyle({ weight: 1.5 });
-      },
-      click: () => {
-        const clickedDistrictNumber = parseDistrictNumber(feature);
-        if (clickedDistrictNumber !== null) {
-          onDistrictSelect((prevSelected) =>
-            prevSelected === clickedDistrictNumber ? null : clickedDistrictNumber
-          );
-        }
-      },
-    });
-  };
-
-  const geoJsonKey = useMemo(
-    () => `${geojsonPath}-${geojson?.features?.length ?? 0}`,
-    [geojsonPath, geojson]
+  /* Highlight filter for selected district */
+  const selectedFilter = useMemo(
+    () => selectedDistrict !== null ? ["==", ["to-number", ["get", "district"]], selectedDistrict] : ["==", 1, 0],
+    [selectedDistrict]
   );
 
-  const selectedDistrictGeojson = useMemo(() => {
-    if (!geojson || selectedDistrict === null) return null;
-    const selectedFeatures = (geojson.features ?? []).filter(
-      (feature) => parseDistrictNumber(feature) === selectedDistrict
-    );
-    if (selectedFeatures.length === 0) return null;
-    return {
-      ...geojson,
-      features: selectedFeatures,
-    };
-  }, [geojson, selectedDistrict]);
-
-  function FitGeoJsonBounds({ data, view }) {
-    const map = useMap();
-
-    useEffect(() => {
-      if (!data) return;
-      if (hasFittedBoundsRef.current) return;
-
-      const bounds = L.geoJSON(data).getBounds();
-      if (bounds.isValid()) {
-        const fitPadding = view?.fitPadding ?? [18, 18];
-        const zoomOffset = view?.zoomOffset ?? 0;
-        const panBoundsPad = view?.panBoundsPad ?? 0.08;
-        const paddingPoint = L.point(fitPadding[0], fitPadding[1]);
-
-        map.setMinZoom(0);
-        map.setMaxBounds(null);
-
-        const fittedZoom = map.getBoundsZoom(bounds, false, paddingPoint);
-        const targetZoom = fittedZoom + zoomOffset;
-        map.setView(bounds.getCenter(), targetZoom, { animate: false });
-
-        map.setMinZoom(targetZoom);
-        map.setMaxBounds(bounds.pad(panBoundsPad));
-        hasFittedBoundsRef.current = true;
-      }
-    }, [map, data, view]);
-
-    return null;
-  }
+  if (!geojson) return <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading map…</div>;
 
   return (
-    <MapContainer
-      key={geojsonPath}
-      className="leaflet-map"
-      center={[37.8, -96]}
-      zoom={4}
-      zoomSnap={0.25}
-      scrollWheelZoom={true}
-      maxBoundsViscosity={1}
+    <MapGL
+      key={cfg.stateId}
+      initialViewState={{
+        longitude: cfg.mapView.center[0],
+        latitude: cfg.mapView.center[1],
+        zoom: cfg.mapView.zoom,
+      }}
+      minZoom={cfg.mapView.minZoom}
+      maxZoom={cfg.mapView.maxZoom}
+      style={{ width: "100%", height: "100%" }}
+      mapStyle={MAP_STYLE}
+      interactiveLayerIds={["district-fill"]}
+      onClick={onMapClick}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      cursor={hoveredDistrict ? "pointer" : ""}
     >
-      <TileLayer
-        attribution="&copy; OpenStreetMap contributors"
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      {geojson && (
-        <>
-          <GeoJSON
-            key={geoJsonKey}
-            data={geojson}
-            style={styleFeature}
-            onEachFeature={onEachFeature}
-            smoothFactor={0}
-          />
-          {selectedDistrictGeojson && (
-            <GeoJSON
-              key={`selected-${selectedDistrict}`}
-              data={selectedDistrictGeojson}
-              style={selectedDistrictStyle}
-              interactive={false}
-              smoothFactor={0}
-            />
-          )}
-          <FitGeoJsonBounds data={geojson} view={mapView} />
-        </>
-      )}
-    </MapContainer>
+      <NavigationControl position="top-right" />
+      <Source id="districts" type="geojson" data={geojson}>
+        <Layer
+          id="district-fill"
+          type="fill"
+          paint={{
+            "fill-color": fillColorExpr,
+            "fill-opacity": 0.72,
+          }}
+        />
+        <Layer
+          id="district-line"
+          type="line"
+          paint={{
+            "line-color": "#1a1a1a",
+            "line-width": 1.5,
+          }}
+        />
+        <Layer
+          id="district-selected"
+          type="line"
+          filter={selectedFilter}
+          paint={{
+            "line-color": "#f97316",
+            "line-width": 4,
+          }}
+        />
+      </Source>
+    </MapGL>
   );
 }
 
@@ -364,43 +268,43 @@ export default function StatePage() {
   const districtRowRefs = useRef(new Map());
   const isStateOverviewPanel = activeDetailPanel === "stateOverview";
 
-  /* ---- fetch real data ---- */
-  const summary = useFetchJson(cfg?.summaryFile);
-  const allReps = useFetchJson(cfg?.repsFile);
-  const ginglesData = useFetchJson(cfg?.ginglesFile);
-  const regressionData = useFetchJson(cfg?.regressionFile);
-  const enactedDemo = useFetchJson(cfg?.enactedDemoFile);
-  const heatmapGeojson = useFetchJson(cfg?.heatmapGeojson);
-  const ensembleBarData = useFetchJson(cfg?.ensembleBarFile);
-  const ensembleBoxData = useFetchJson(cfg?.ensembleBoxFile);
-  const eiCurvesData = useFetchJson(cfg?.eiCurvesFile);
-  const voteSeatData = useFetchJson(cfg?.voteSeatFile);
+  /* ---- fetch data from API ---- */
+  const stateData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}`) : null);
+  const analysisData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis`) : null);
 
-  const reps = allReps?.[cfg?.repsKey];
+  /* ---- derive analysis sub-data (same variable names as before) ---- */
+  const ginglesData = analysisData?.ginglesPrecinct;
+  const regressionData = analysisData?.ginglesRegression;
+  const enactedDemo = analysisData?.enactedDemographics;
+  const ensembleBarData = analysisData?.ensembleBar;
+  const ensembleBoxData = analysisData?.ensembleBox;
+  const eiCurvesData = analysisData?.eiCurves;
+  const voteSeatData = analysisData?.voteSeat;
+
+  const reps = stateData?.representatives;
 
   /* ---- minority groups available for heatmap dropdown ---- */
   const heatmapMinorityGroups = useMemo(() => {
-    if (!summary?.population_by_group) return [];
+    if (!stateData?.population_by_group) return [];
     const MINORITY_LABELS = {
       hispanic: "Latino",
       black: "Black",
       asian: "Asian",
     };
-    // Show all minority groups that have nonzero population
-    return Object.entries(summary.population_by_group)
+    return Object.entries(stateData.population_by_group)
       .filter(([g, pop]) => g in MINORITY_LABELS && pop > 0)
       .map(([g]) => ({ key: g, label: MINORITY_LABELS[g] }));
-  }, [summary]);
+  }, [stateData]);
 
-  /* ---- build overview from fetched summary ---- */
+  /* ---- build overview from fetched state data ---- */
   const overview = useMemo(() => {
-    if (!summary) return null;
-    const pop = summary.population_by_group || {};
-    const pres = summary.presidential_2024 || {};
+    if (!stateData) return null;
+    const pop = stateData.population_by_group || {};
+    const pres = stateData.presidential_2024 || {};
     const otherPct = Math.max(0, 100 - (pres.dem_pct || 0) - (pres.rep_pct || 0));
     return {
-      totalPopulation: summary.total_population,
-      votingAgePopulation: summary.voting_age_population,
+      totalPopulation: stateData.total_population,
+      votingAgePopulation: stateData.voting_age_population,
       populationByGroup: {
         White: pop.white ?? 0,
         Black: pop.black ?? 0,
@@ -413,13 +317,13 @@ export default function StatePage() {
         republican: pres.rep_pct ?? 0,
         other: Math.round(otherPct * 10) / 10,
       },
-      congressionalByParty: summary.party_split ?? {},
+      congressionalByParty: stateData.party_split ?? {},
     };
-  }, [summary]);
+  }, [stateData]);
 
-  /* ---- build district table rows from fetched reps ---- */
+  /* ---- build district table rows from reps ---- */
   const districtTableRows = useMemo(() => {
-    if (!reps?.representatives) {
+    if (!reps?.length) {
       return Array.from({ length: cfg?.districts ?? 0 }, (_, i) => ({
         districtNumber: String(i + 1),
         representative: "...",
@@ -428,7 +332,7 @@ export default function StatePage() {
         voteMargin: "--",
       }));
     }
-    return reps.representatives.map((r) => ({
+    return reps.map((r) => ({
       districtNumber: String(r.district),
       representative: r.name,
       party: r.party,
@@ -490,7 +394,6 @@ export default function StatePage() {
         setIsInterestingPlanOpen(false);
       }
     };
-
     document.addEventListener("mousedown", onDocumentMouseDown);
     return () => document.removeEventListener("mousedown", onDocumentMouseDown);
   }, []);
@@ -503,29 +406,25 @@ export default function StatePage() {
   /* ---- auto-scroll to selected district row ---- */
   useEffect(() => {
     if (selectedDistrict === null) return;
-
     const rowIndex = districtTableRows.findIndex(
       (r) => Number.parseInt(r.districtNumber, 10) === selectedDistrict
     );
     if (rowIndex !== -1) {
       setDistrictPage(Math.floor(rowIndex / DISTRICT_PAGE_SIZE));
     }
-
     const wrapper = districtTableWrapperRef.current;
     const row = districtRowRefs.current.get(selectedDistrict);
     if (!wrapper || !row) return;
-
     const rowTop = row.offsetTop;
     const rowBottom = rowTop + row.offsetHeight;
     const visibleTop = wrapper.scrollTop;
     const visibleBottom = visibleTop + wrapper.clientHeight;
-
     if (rowTop < visibleTop) {
       wrapper.scrollTo({ top: rowTop, behavior: "smooth" });
     } else if (rowBottom > visibleBottom) {
       wrapper.scrollTo({ top: rowBottom - wrapper.clientHeight, behavior: "smooth" });
     }
-  }, [selectedDistrict, isStateOverviewPanel]);
+  }, [selectedDistrict, isStateOverviewPanel, districtTableRows]);
 
   if (!cfg) {
     return (
@@ -540,7 +439,6 @@ export default function StatePage() {
     );
   }
 
-  /* helper: use real overview or loading fallback */
   const ov = overview || {
     totalPopulation: 0,
     votingAgePopulation: 0,
@@ -589,11 +487,10 @@ export default function StatePage() {
               <h2 className="section-title">Congressional Districts</h2>
               <div className="state-map-wrapper">
                 <StateMap
-                  geojsonPath={cfg.geojson}
-                  mapView={cfg.mapView}
+                  cfg={cfg}
                   selectedDistrict={selectedDistrict}
                   onDistrictSelect={setSelectedDistrict}
-                  districtParties={reps?.representatives}
+                  districtParties={reps}
                 />
               </div>
               <div className="interesting-plan-controls">
@@ -662,10 +559,6 @@ export default function StatePage() {
                           <dt>Total Population</dt>
                           <dd>{formatNumber(ov.totalPopulation)}</dd>
                         </div>
-                        {/* <div className="overview-kv-row">
-                          <dt>Voting Age Population</dt>
-                          <dd>{formatNumber(ov.votingAgePopulation)}</dd>
-                        </div>*/}
                       </dl>
                     </article>
 
@@ -680,10 +573,6 @@ export default function StatePage() {
                           <dt>Republican Vote Share</dt>
                           <dd>{formatPct1(ov.voterShare.republican)}</dd>
                         </div>
-                        {/* <div className="overview-kv-row">
-                          <dt>Other</dt>
-                          <dd>{formatPct1(ov.voterShare.other)}</dd>
-                        </div>*/}
                       </dl>
                     </article>
 
@@ -737,7 +626,7 @@ export default function StatePage() {
                           <React.Fragment key={ensemble.id}>
                             <div className="overview-kv-row">
                               <dt>{ensemble.type} Plans</dt>
-                              <dd>{ensemble.plans.toLocaleString()} <span style={{ color: "#aaa", fontSize: "0.85em" }}></span></dd>
+                              <dd>{ensemble.plans.toLocaleString()}</dd>
                             </div>
                             <div className="overview-kv-row">
                               <dt>{ensemble.type} Threshold</dt>
@@ -873,12 +762,11 @@ export default function StatePage() {
               </div>
               <div className="demo-heatmap-wrapper">
                 <DemographicHeatMap
-                  geojson={heatmapGeojson}
-                  loading={heatmapGeojson === null && !!cfg?.heatmapGeojson}
-                  geojsonPath={cfg.heatmapGeojson}
+                  precinctTilesUrl={cfg.precinctTiles}
+                  blockTilesUrl={cfg.blockTiles}
+                  mapView={cfg.mapView}
                   minorityGroups={heatmapMinorityGroups}
                   selectedGroup={demoGroup}
-                  highlightPrecinct={hoveredPrecinct}
                 />
               </div>
             </div>

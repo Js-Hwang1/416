@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import "leaflet/dist/leaflet.css";
+import "maplibre-gl/dist/maplibre-gl.css";
 import "./App.css";
+import "./mapSetup";
 import SplashPage from "./SplashPage";
 import StatePage from "./StatePage";
 

@@ -1,16 +1,5 @@
 // ElectionData.java
 //
 // Embedded subdocument for election results (not its own collection).
-//
-// This is used INSIDE Precinct and District — not stored independently.
-// No @Document annotation needed.
-//
-// Fields:
-//   int totalVotes;
-//   int democraticVotes;
-//   int republicanVotes;
-//   int otherVotes;
-//   String electionYear;         — "2024", "2020", "2016", etc.
-//   String electionType;         — "presidential", "senate", "congressional"
-//
-// Source: 2024 General Election precinct-level results (Redistricting Data Hub)
+// Not currently used as a standalone POJO — State stores election data as
+// Map<String, Object> (presidential_2024) to preserve the exact JSON structure.

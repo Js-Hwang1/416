@@ -1,6 +1,5 @@
-import { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
-import L from "leaflet";
+import { useState, useMemo, useCallback } from "react";
+import { Map as MapGL, Source, Layer, NavigationControl } from "react-map-gl/maplibre";
 
 const GROUP_LABELS = {
   hispanic: "Latino",
@@ -8,7 +7,7 @@ const GROUP_LABELS = {
   asian: "Asian",
 };
 
-/* Monochromatic GREEN scale – politically neutral, 10 stops light→dark */
+/* Monochromatic GREEN scale - politically neutral, 10 stops light->dark */
 const MONO_SCALE = [
   "#f7fcf5",
   "#e5f5e0",
@@ -22,238 +21,139 @@ const MONO_SCALE = [
   "#002d12",
 ];
 
-const BIN_WIDTH = 10;
-const NUM_BINS = 10;
+const MAP_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 
 /**
- * Compute equal-width bins with integer bounds, eliminate empty bins,
- * and assign monochromatic colors to the remaining bins.
+ * Build a MapLibre GL `step` expression for coloring features by demographic %.
+ * Maps [0-10) -> color[0], [10-20) -> color[1], ... [90-100] -> color[9]
  */
-function computeBinsAndColors(geojson, groupKey) {
-  if (!geojson?.features?.length) return { bins: [], getColor: () => "#f0f0f0" };
-
-  /* Create 10 bins: [0–10), [10–20), …, [90–100] */
-  const allBins = Array.from({ length: NUM_BINS }, (_, i) => ({
-    lo: i * BIN_WIDTH,
-    hi: (i + 1) * BIN_WIDTH,
-    count: 0,
-  }));
-
-  for (const feat of geojson.features) {
-    const val = feat.properties[groupKey] ?? 0;
-    const idx = Math.min(Math.floor(val / BIN_WIDTH), NUM_BINS - 1);
-    allBins[idx].count++;
-  }
-
-  /* Keep only non-empty bins and assign labels + colors */
-  const nonEmpty = allBins
-    .filter((b) => b.count > 0)
-    .map((b, i, arr) => {
-      const t = arr.length > 1 ? i / (arr.length - 1) : 0;
-      const colorIdx = Math.round(t * (MONO_SCALE.length - 1));
-      return {
-        ...b,
-        label: `${b.lo}–${b.hi}%`,
-        color: MONO_SCALE[colorIdx],
-      };
-    });
-
-  /* Fast lookup: original-bin-index → colour */
-  const colorByOrigIdx = {};
-  for (const b of nonEmpty) {
-    const origIdx = b.lo / BIN_WIDTH;
-    colorByOrigIdx[origIdx] = b.color;
-  }
-
-  function getColor(val) {
-    const idx = Math.min(Math.floor(val / BIN_WIDTH), NUM_BINS - 1);
-    return colorByOrigIdx[idx] || "#f0f0f0";
-  }
-
-  return { bins: nonEmpty, getColor };
+function buildFillColorExpr(groupKey) {
+  return [
+    "step",
+    ["coalesce", ["get", groupKey], 0],
+    MONO_SCALE[0],       // 0-10%
+    10, MONO_SCALE[1],   // 10-20%
+    20, MONO_SCALE[2],   // 20-30%
+    30, MONO_SCALE[3],   // 30-40%
+    40, MONO_SCALE[4],   // 40-50%
+    50, MONO_SCALE[5],   // 50-60%
+    60, MONO_SCALE[6],   // 60-70%
+    70, MONO_SCALE[7],   // 70-80%
+    80, MONO_SCALE[8],   // 80-90%
+    90, MONO_SCALE[9],   // 90-100%
+  ];
 }
 
-/* ---- highlight a precinct on the map ---- */
-function HighlightPrecinct({ geojson, precinct }) {
-  const map = useMap();
-  const layerRef = useRef(null);
+/* Legend bins (always show all 10) */
+const LEGEND_BINS = MONO_SCALE.map((color, i) => ({
+  label: `${i * 10}\u2013${(i + 1) * 10}%`,
+  color,
+}));
 
-  useEffect(() => {
-    if (layerRef.current) {
-      map.removeLayer(layerRef.current);
-      layerRef.current = null;
-    }
-    if (!precinct || !geojson) return;
+export default function DemographicHeatMap({
+  precinctTilesUrl,
+  blockTilesUrl,
+  mapView,
+  selectedGroup,
+}) {
+  const [hoverInfo, setHoverInfo] = useState(null);
 
-    const match = geojson.features.find(
-      (f) => f.properties.name === precinct.name && f.properties.pop === precinct.pop
-    );
-    if (!match) return;
+  const fillColorExpr = useMemo(
+    () => buildFillColorExpr(selectedGroup),
+    [selectedGroup]
+  );
 
-    const layer = L.geoJSON(match, {
-      style: { weight: 3, color: "#f97316", fillColor: "#f97316", fillOpacity: 0.5 },
-    });
-    layer.addTo(map);
-    layerRef.current = layer;
+  const tilesUrl = precinctTilesUrl;
+  const sourceLayer = "precincts";
 
-    return () => {
-      if (layerRef.current) {
-        map.removeLayer(layerRef.current);
-        layerRef.current = null;
-      }
-    };
-  }, [map, geojson, precinct]);
-
-  return null;
-}
-
-/* ---- auto-fit map to GeoJSON bounds ---- */
-function FitBounds({ data, pathKey }) {
-  const map = useMap();
-  const lastPathRef = useRef(null);
-
-  useEffect(() => {
-    if (!data) return;
-    if (lastPathRef.current === pathKey) return;
-    lastPathRef.current = pathKey;
-
-    const bounds = L.geoJSON(data).getBounds();
-    if (bounds.isValid()) {
-      map.fitBounds(bounds, { padding: [20, 20] });
-    }
-  }, [map, data, pathKey]);
-
-  return null;
-}
-
-export default function DemographicHeatMap({ geojsonPath, geojson: geojsonProp, loading: loadingProp, minorityGroups, selectedGroup: selectedGroupProp, highlightPrecinct }) {
-  const [geojsonInternal, setGeojsonInternal] = useState(null);
-  const [loadingInternal, setLoadingInternal] = useState(false);
-  const [selectedGroupInternal, setSelectedGroupInternal] = useState("");
-
-  /* Use pre-fetched data when provided, otherwise fall back to internal fetch */
-  const geojson = geojsonProp !== undefined ? geojsonProp : geojsonInternal;
-  const loading = loadingProp !== undefined ? loadingProp : loadingInternal;
-
-  /* Controlled vs uncontrolled group selection */
-  const selectedGroup = selectedGroupProp !== undefined ? selectedGroupProp : selectedGroupInternal;
-
-  /* Set initial group once groups are known (uncontrolled mode only) */
-  useEffect(() => {
-    if (selectedGroupProp !== undefined) return;
-    if (
-      minorityGroups.length > 0 &&
-      !minorityGroups.find((g) => g.key === selectedGroupInternal)
-    ) {
-      setSelectedGroupInternal(minorityGroups[0].key);
-    }
-  }, [minorityGroups, selectedGroupInternal, selectedGroupProp]);
-
-  /* Fetch GeoJSON internally only when no pre-fetched data is provided */
-  useEffect(() => {
-    if (geojsonProp !== undefined) return;
-    setGeojsonInternal(null);
-    if (!geojsonPath) return;
-    setLoadingInternal(true);
-    const controller = new AbortController();
-    fetch(geojsonPath, { signal: controller.signal })
-      .then((r) => r.json())
-      .then((data) => {
-        setGeojsonInternal(data);
-        setLoadingInternal(false);
-      })
-      .catch((err) => {
-        if (err.name !== "AbortError") {
-          console.error("heatmap fetch error", err);
-          setLoadingInternal(false);
-        }
+  const onMouseMove = useCallback((e) => {
+    if (e.features && e.features.length > 0) {
+      const props = e.features[0].properties;
+      setHoverInfo({
+        lng: e.lngLat.lng,
+        lat: e.lngLat.lat,
+        name: props.name || "",
+        value: props[selectedGroup] ?? 0,
+        pop: props.pop || 0,
       });
-    return () => controller.abort();
-  }, [geojsonPath, geojsonProp]);
+    }
+  }, [selectedGroup]);
 
-  /* Compute bins + color function for current group */
-  const { bins, getColor } = useMemo(
-    () => computeBinsAndColors(geojson, selectedGroup),
-    [geojson, selectedGroup],
-  );
+  const onMouseLeave = useCallback(() => {
+    setHoverInfo(null);
+  }, []);
 
-  const styleFeature = useCallback(
-    (feature) => {
-      const val = feature.properties[selectedGroup] ?? 0;
-      return {
-        weight: 0.3,
-        color: "#666",
-        fillColor: getColor(val),
-        fillOpacity: 0.85,
-      };
-    },
-    [selectedGroup, getColor],
-  );
-
-  const onEachFeature = useCallback(
-    (feature, layer) => {
-      const props = feature.properties;
-      const val = props[selectedGroup] ?? 0;
-      const name = props.name || "";
-      const pop = (props.pop || 0).toLocaleString();
-      const vap = (props.vap || 0).toLocaleString();
-      const label = GROUP_LABELS[selectedGroup] || selectedGroup;
-      layer.bindTooltip(
-        `<strong>${name}</strong><br/>${label}: ${val.toFixed(1)}%<br/>Population: ${pop}`,
-        { sticky: true },
-      );
-    },
-    [selectedGroup],
-  );
-
-  const geoJsonKey = `${geojsonPath}-${selectedGroup}-${geojson?.features?.length ?? 0}`;
-
-  if (loading) {
-    return (
-      <div className="demographics-placeholder">
-        <div className="demographics-placeholder-title">Loading precinct data...</div>
-      </div>
-    );
-  }
-
-  if (!geojson) {
-    return (
-      <div className="demographics-placeholder">
-        <div className="demographics-placeholder-title">No data available</div>
-      </div>
-    );
-  }
+  const label = GROUP_LABELS[selectedGroup] || selectedGroup;
 
   return (
     <div className="heatmap-container">
       <div className="heatmap-map-wrapper">
-        <MapContainer
-          className="leaflet-map heatmap-leaflet"
-          center={[37.8, -96]}
-          zoom={4}
-          zoomSnap={0.25}
-          scrollWheelZoom={true}
-          maxBoundsViscosity={1}
+        <MapGL
+          key={`${tilesUrl}-${selectedGroup}`}
+          initialViewState={{
+            longitude: mapView.center[0],
+            latitude: mapView.center[1],
+            zoom: mapView.zoom,
+          }}
+          minZoom={mapView.minZoom}
+          maxZoom={mapView.maxZoom}
+          style={{ width: "100%", height: "100%" }}
+          mapStyle={MAP_STYLE}
+          interactiveLayerIds={["heatmap-fill"]}
+          onMouseMove={onMouseMove}
+          onMouseLeave={onMouseLeave}
         >
-          <TileLayer
-            attribution="&copy; OpenStreetMap contributors"
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-          <GeoJSON
-            key={geoJsonKey}
-            data={geojson}
-            style={styleFeature}
-            onEachFeature={onEachFeature}
-          />
-          <FitBounds data={geojson} pathKey={geojsonPath} />
-          <HighlightPrecinct geojson={geojson} precinct={highlightPrecinct} />
-        </MapContainer>
+          <NavigationControl position="top-right" />
+          <Source id="heatmap-source" type="vector" url={tilesUrl}>
+            <Layer
+              id="heatmap-fill"
+              type="fill"
+              source-layer={sourceLayer}
+              paint={{
+                "fill-color": fillColorExpr,
+                "fill-opacity": 0.85,
+              }}
+            />
+            <Layer
+              id="heatmap-line"
+              type="line"
+              source-layer={sourceLayer}
+              paint={{
+                "line-color": "#666",
+                "line-width": 0.3,
+              }}
+            />
+          </Source>
+
+          {/* Hover tooltip */}
+          {hoverInfo && (
+            <div
+              className="maplibre-tooltip"
+              style={{
+                position: "absolute",
+                left: "10px",
+                bottom: "10px",
+                background: "rgba(255,255,255,0.95)",
+                border: "1px solid #ccc",
+                padding: "6px 10px",
+                fontSize: "0.78rem",
+                fontFamily: "Verdana, sans-serif",
+                pointerEvents: "none",
+                zIndex: 10,
+              }}
+            >
+              <strong>{hoverInfo.name}</strong><br />
+              {label}: {Number(hoverInfo.value).toFixed(1)}%<br />
+              Population: {Number(hoverInfo.pop).toLocaleString()}
+            </div>
+          )}
+        </MapGL>
 
         <div className="heatmap-legend">
           <div className="heatmap-legend-title">
-            {GROUP_LABELS[selectedGroup] || selectedGroup} Population %
+            {label} Population %
           </div>
-          {bins.map((b, i) => (
+          {LEGEND_BINS.map((b, i) => (
             <div key={i} className="heatmap-legend-item">
               <span
                 className="heatmap-legend-swatch"

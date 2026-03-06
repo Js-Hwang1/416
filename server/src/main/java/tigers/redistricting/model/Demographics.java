@@ -1,22 +1,6 @@
 // Demographics.java
 //
 // Embedded subdocument for population demographics (not its own collection).
-//
-// This is used INSIDE Precinct, District, and State — not stored independently.
-// No @Document annotation needed.
-//
-// Fields:
-//   int totalPopulation;
-//   int whitePop;
-//   int blackPop;
-//   int hispanicPop;
-//   int asianPop;
-//   int nativeAmericanPop;
-//   int otherPop;
-//   int votingAgePop;            — total VAP (voting age population)
-//   int whiteVAP;
-//   int blackVAP;
-//   int hispanicVAP;
-//   int asianVAP;
-//
-// Source: 2020 Census PL 94-171 tables (P1-P4)
+// Not currently used as a standalone POJO — State stores demographics as
+// Map<String, Integer> fields (population_by_group, vap_by_group) to preserve
+// the exact JSON structure from the source data files.

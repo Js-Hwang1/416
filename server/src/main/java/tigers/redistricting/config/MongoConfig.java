@@ -1,18 +1,22 @@
-// MongoConfig.java
-//
-// MongoDB connection configuration.
-//
-// Annotations:
-//   @Configuration
-//
-// Responsibilities:
-//   - Override default MongoDB settings if needed (custom database name, URI, etc.)
-//   - Register custom converters (e.g., GeoJSON geometry types if Spring doesn't
-//     handle them automatically)
-//   - Most basic cases need NO code here — Spring auto-configures from
-//     application.properties. This file exists for when you need to customize.
-//
-// Coordinate with Karen (database team) on:
-//   - MongoDB connection URI (localhost vs Atlas vs Docker)
-//   - Database name
-//   - Collection naming conventions
+package tigers.redistricting.config;
+
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.SimpleMongoClientDatabaseFactory;
+
+@Configuration
+public class MongoConfig {
+
+    @Bean
+    public MongoClient mongoClient() {
+        return MongoClients.create("mongodb://localhost:27017");
+    }
+
+    @Bean
+    public MongoTemplate mongoTemplate(MongoClient mongoClient) {
+        return new MongoTemplate(new SimpleMongoClientDatabaseFactory(mongoClient, "tigers-db"));
+    }
+}

@@ -1,6 +1,9 @@
+server:
+  port: 8081
+
 spring:
   application:
     name: demo
   data:
     mongodb:
-      uri: mongodb://localhost:27017/tigers-db
+      uri: "mongodb://localhost:27017/tigers-db"
