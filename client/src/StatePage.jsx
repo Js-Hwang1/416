@@ -53,8 +53,8 @@ const VIEWS = [
 
 const INTERESTING_PLAN_OPTIONS = [
   { value: "enacted", label: "Enacted" },
-  { value: "max_d", label: "Max D" },
-  { value: "min_d", label: "Min D" },
+  { value: "max_d", label: "Max Democrat" },
+  { value: "min_d", label: "Max Republican" },
   { value: "median", label: "Median" },
   { value: "most_competitive", label: "Most Competitive" },
   { value: "least_competitive", label: "Least Competitive" },
@@ -574,7 +574,96 @@ export default function StatePage() {
       </nav>
 
       <main className={`state-content${activeView === "planExplorer" ? " plan-explorer-content" : ""}${activeView === "demographics" ? " demographics-content" : ""}`}>
-        {activeView === "planExplorer" && (
+        {activeView === "planExplorer" && showCompare && selectedInterestingPlan !== "enacted" && (
+          <div className="compare-side-by-side">
+            <div className="compare-map-col">
+              <h2 className="section-title compare-map-title">Enacted</h2>
+              <div className="compare-map-wrapper">
+                <StateMap
+                  cfg={cfg}
+                  selectedDistrict={selectedDistrict}
+                  onDistrictSelect={setSelectedDistrict}
+                  districtParties={reps}
+                />
+              </div>
+              {(() => {
+                const enactedD = reps?.filter(r => r.party === "Democrat").length ?? 0;
+                const enactedR = reps?.filter(r => r.party === "Republican").length ?? 0;
+                return (
+                  <div className="compare-seat-summary">
+                    <span className="compare-d">D: {enactedD}</span>
+                    <span className="compare-r">R: {enactedR}</span>
+                  </div>
+                );
+              })()}
+            </div>
+            <div className="compare-map-col">
+              <h2 className="section-title compare-map-title">
+                {INTERESTING_PLAN_OPTIONS.find(o => o.value === selectedInterestingPlan)?.label}
+              </h2>
+              <div className="compare-map-wrapper">
+                <StateMap
+                  cfg={cfg}
+                  selectedDistrict={selectedDistrict}
+                  onDistrictSelect={setSelectedDistrict}
+                  districtParties={activePlanParties}
+                />
+              </div>
+              {(() => {
+                const planD = activePlanParties?.filter(r => r.party === "Democrat").length ?? 0;
+                const planR = activePlanParties?.filter(r => r.party === "Republican").length ?? 0;
+                return (
+                  <div className="compare-seat-summary">
+                    <span className="compare-d">D: {planD}</span>
+                    <span className="compare-r">R: {planR}</span>
+                  </div>
+                );
+              })()}
+            </div>
+            <div className="compare-controls-bar">
+              <div className="interesting-plan-dropdown" ref={interestingPlanRef}>
+                <button
+                  type="button"
+                  className="compare-enacted-btn interesting-plan-select"
+                  onClick={() => setIsInterestingPlanOpen((prev) => !prev)}
+                >
+                  {INTERESTING_PLAN_OPTIONS.find((o) => o.value === selectedInterestingPlan)?.label} ▾
+                </button>
+                {isInterestingPlanOpen && (
+                  <div
+                    className="interesting-plan-menu"
+                    onWheel={(e) => e.stopPropagation()}
+                    onTouchMove={(e) => e.stopPropagation()}
+                  >
+                    {INTERESTING_PLAN_OPTIONS.map((option) => (
+                      <button
+                        type="button"
+                        key={option.value}
+                        className="interesting-plan-option"
+                        onClick={() => {
+                          setSelectedInterestingPlan(option.value);
+                          setIsInterestingPlanOpen(false);
+                          if (option.value === "enacted") setShowCompare(false);
+                        }}
+                      >
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                className="compare-enacted-btn compare-active"
+                onClick={() => setShowCompare(false)}
+              >
+                Exit Comparison
+              </button>
+            </div>
+          </div>
+        )}
+
+        {activeView === "planExplorer" && !showCompare && (
           <div className="state-layout">
             <div className="state-map-panel">
               <h2 className="section-title">Congressional Districts</h2>
@@ -585,27 +674,6 @@ export default function StatePage() {
                   onDistrictSelect={setSelectedDistrict}
                   districtParties={activePlanParties}
                 />
-                {showCompare && selectedInterestingPlan !== "enacted" && reps && activePlanParties && (() => {
-                  const enactedD = reps.filter(r => r.party === "Democrat").length;
-                  const enactedR = reps.filter(r => r.party === "Republican").length;
-                  const planD = activePlanParties.filter(r => r.party === "Democrat").length;
-                  const planR = activePlanParties.filter(r => r.party === "Republican").length;
-                  const planLabel = INTERESTING_PLAN_OPTIONS.find(o => o.value === selectedInterestingPlan)?.label;
-                  return (
-                    <div className="compare-overlay">
-                      <table className="compare-table">
-                        <thead>
-                          <tr><th></th><th>D Seats</th><th>R Seats</th></tr>
-                        </thead>
-                        <tbody>
-                          <tr><td>Enacted</td><td className="compare-d">{enactedD}</td><td className="compare-r">{enactedR}</td></tr>
-                          <tr><td>{planLabel}</td><td className="compare-d">{planD}</td><td className="compare-r">{planR}</td></tr>
-                          <tr className="compare-diff"><td>Diff</td><td className="compare-d">{planD - enactedD > 0 ? "+" : ""}{planD - enactedD}</td><td className="compare-r">{planR - enactedR > 0 ? "+" : ""}{planR - enactedR}</td></tr>
-                        </tbody>
-                      </table>
-                    </div>
-                  );
-                })()}
               </div>
               <div className="interesting-plan-controls">
                 <div className="interesting-plan-dropdown" ref={interestingPlanRef}>
@@ -645,9 +713,9 @@ export default function StatePage() {
                   type="button"
                   className={`compare-enacted-btn${showCompare ? " compare-active" : ""}`}
                   disabled={selectedInterestingPlan === "enacted"}
-                  onClick={() => setShowCompare((v) => !v)}
+                  onClick={() => setShowCompare(true)}
                 >
-                  {showCompare ? "Hide Comparison" : "Compare with Enacted"}
+                  Compare with Enacted
                 </button>
                 <button
                   type="button"
@@ -865,6 +933,13 @@ export default function StatePage() {
                 <div className="demo-group-btn-group" role="group" aria-label="Map level">
                   <button
                     type="button"
+                    className={`demo-group-btn${heatmapLevel === "district" ? " active" : ""}`}
+                    onClick={() => setHeatmapLevel("district")}
+                  >
+                    District
+                  </button>
+                  <button
+                    type="button"
                     className={`demo-group-btn${heatmapLevel === "precinct" ? " active" : ""}`}
                     onClick={() => setHeatmapLevel("precinct")}
                   >
@@ -896,6 +971,9 @@ export default function StatePage() {
                   key={stateSlug}
                   precinctTilesUrl={cfg.precinctTiles}
                   blockTilesUrl={cfg.blockTiles}
+                  districtGeoJson={cfg.districtGeoJson}
+                  districtParties={reps}
+                  numDistricts={cfg.districts}
                   mapView={cfg.mapView}
                   minorityGroups={heatmapMinorityGroups}
                   selectedGroup={demoGroup}

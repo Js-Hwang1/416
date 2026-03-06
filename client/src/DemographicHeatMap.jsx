@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Map as MapGL, Source, Layer, NavigationControl } from "react-map-gl/maplibre";
 
 const GROUP_LABELS = {
@@ -50,35 +50,101 @@ const LEGEND_BINS = MONO_SCALE.map((color, i) => ({
   color,
 }));
 
+/**
+ * Build a MapLibre match expression for district party colors.
+ * Same logic as StateMap — uses vote margin for color intensity.
+ */
+function buildDistrictFillExpr(numDistricts, districtParties) {
+  const districtInfo = {};
+  if (districtParties) {
+    for (const rep of districtParties) {
+      districtInfo[rep.district] = { party: rep.party, margin: rep.vote_margin_pct ?? 0 };
+    }
+  }
+  const expr = ["match", ["to-number", ["get", "district"]]];
+  for (let d = 1; d <= numDistricts; d++) {
+    const info = districtInfo[d];
+    if (!info) { expr.push(d, "#ccc"); continue; }
+    const t = 0.3 + 0.7 * Math.min(info.margin / 60, 1);
+    if (info.party === "Democrat") {
+      const r = Math.round(220 - 130 * t);
+      const g = Math.round(225 - 100 * t);
+      const b = Math.round(255 - 40 * t);
+      expr.push(d, `rgb(${r},${g},${b})`);
+    } else if (info.party === "Republican") {
+      const r = Math.round(255 - 40 * t);
+      const g = Math.round(225 - 130 * t);
+      const b = Math.round(220 - 130 * t);
+      expr.push(d, `rgb(${r},${g},${b})`);
+    } else {
+      expr.push(d, "#ccc");
+    }
+  }
+  expr.push("#ccc");
+  return expr;
+}
+
 export default function DemographicHeatMap({
   precinctTilesUrl,
   blockTilesUrl,
+  districtGeoJson,
+  districtParties,
+  numDistricts,
   mapView,
   selectedGroup,
   heatmapLevel,
   highlightedPrecinct,
 }) {
   const [hoverInfo, setHoverInfo] = useState(null);
+  const [districtGeojsonData, setDistrictGeojsonData] = useState(null);
 
   const fillColorExpr = useMemo(
     () => buildFillColorExpr(selectedGroup),
     [selectedGroup]
   );
 
+  const isDistrict = heatmapLevel === "district";
   const isBlock = heatmapLevel === "block";
+
+  /* Fetch district GeoJSON when needed */
+  useEffect(() => {
+    if (!districtGeoJson) return;
+    fetch(districtGeoJson)
+      .then((r) => r.json())
+      .then(setDistrictGeojsonData)
+      .catch((err) => console.error("Failed to load district geojson for heatmap", err));
+  }, [districtGeoJson]);
+
+  const districtFillExpr = useMemo(
+    () => buildDistrictFillExpr(numDistricts || 0, districtParties),
+    [numDistricts, districtParties]
+  );
 
   const onMouseMove = useCallback((e) => {
     if (e.features && e.features.length > 0) {
       const props = e.features[0].properties;
-      setHoverInfo({
-        lng: e.lngLat.lng,
-        lat: e.lngLat.lat,
-        name: props.name || "",
-        value: props[selectedGroup] ?? 0,
-        pop: props.pop || 0,
-      });
+      if (heatmapLevel === "district") {
+        const dNum = typeof props.district === "number" ? props.district : parseInt(props.district, 10);
+        const rep = districtParties?.find(r => r.district === dNum);
+        setHoverInfo({
+          lng: e.lngLat.lng,
+          lat: e.lngLat.lat,
+          name: props.name || `District ${props.district}`,
+          districtNum: dNum,
+          party: rep?.party || "N/A",
+          representative: rep?.representative || "N/A",
+        });
+      } else {
+        setHoverInfo({
+          lng: e.lngLat.lng,
+          lat: e.lngLat.lat,
+          name: props.name || "",
+          value: props[selectedGroup] ?? 0,
+          pop: props.pop || 0,
+        });
+      }
     }
-  }, [selectedGroup]);
+  }, [selectedGroup, heatmapLevel, districtParties]);
 
   const onMouseLeave = useCallback(() => {
     setHoverInfo(null);
@@ -96,9 +162,14 @@ export default function DemographicHeatMap({
 
   /* Use both sources always loaded; toggle visibility via layout.
      This avoids full map remount when switching levels. */
-  const precinctVisibility = isBlock ? "none" : "visible";
+  const precinctVisibility = (!isBlock && !isDistrict) ? "visible" : "none";
   const blockVisibility = isBlock ? "visible" : "none";
-  const interactiveIds = isBlock ? ["block-fill"] : ["precinct-fill"];
+  const districtVisibility = isDistrict ? "visible" : "none";
+  const interactiveIds = isDistrict
+    ? ["district-fill"]
+    : isBlock
+      ? ["block-fill"]
+      : ["precinct-fill"];
 
   return (
     <div className="heatmap-container">
@@ -189,6 +260,30 @@ export default function DemographicHeatMap({
             />
           </Source>
 
+          {/* District source — GeoJSON */}
+          {districtGeojsonData && (
+            <Source id="district-source" type="geojson" data={districtGeojsonData}>
+              <Layer
+                id="district-fill"
+                type="fill"
+                layout={{ visibility: districtVisibility }}
+                paint={{
+                  "fill-color": districtFillExpr,
+                  "fill-opacity": 0.7,
+                }}
+              />
+              <Layer
+                id="district-line"
+                type="line"
+                layout={{ visibility: districtVisibility }}
+                paint={{
+                  "line-color": "#333",
+                  "line-width": 1.5,
+                }}
+              />
+            </Source>
+          )}
+
           {/* Hover tooltip */}
           {hoverInfo && (
             <div
@@ -206,27 +301,52 @@ export default function DemographicHeatMap({
                 zIndex: 10,
               }}
             >
-              <strong>{hoverInfo.name}</strong><br />
-              {label}: {Number(hoverInfo.value).toFixed(1)}%<br />
-              Population: {Number(hoverInfo.pop).toLocaleString()}
+              {isDistrict ? (
+                <>
+                  <strong>{hoverInfo.name}</strong><br />
+                  Party: {hoverInfo.party}<br />
+                  Rep: {hoverInfo.representative}
+                </>
+              ) : (
+                <>
+                  <strong>{hoverInfo.name}</strong><br />
+                  {label}: {Number(hoverInfo.value).toFixed(1)}%<br />
+                  Population: {Number(hoverInfo.pop).toLocaleString()}
+                </>
+              )}
             </div>
           )}
         </MapGL>
 
-        <div className="heatmap-legend">
-          <div className="heatmap-legend-title">
-            {label} Population %
-          </div>
-          {LEGEND_BINS.map((b, i) => (
-            <div key={i} className="heatmap-legend-item">
-              <span
-                className="heatmap-legend-swatch"
-                style={{ background: b.color }}
-              />
-              <span className="heatmap-legend-label">{b.label}</span>
+        {/* Legend — show demographic legend for precinct/block, party legend for district */}
+        {isDistrict ? (
+          <div className="heatmap-legend">
+            <div className="heatmap-legend-title">Party</div>
+            <div className="heatmap-legend-item">
+              <span className="heatmap-legend-swatch" style={{ background: "rgb(90,125,215)" }} />
+              <span className="heatmap-legend-label">Democrat</span>
             </div>
-          ))}
-        </div>
+            <div className="heatmap-legend-item">
+              <span className="heatmap-legend-swatch" style={{ background: "rgb(215,95,90)" }} />
+              <span className="heatmap-legend-label">Republican</span>
+            </div>
+          </div>
+        ) : (
+          <div className="heatmap-legend">
+            <div className="heatmap-legend-title">
+              {label} Population %
+            </div>
+            {LEGEND_BINS.map((b, i) => (
+              <div key={i} className="heatmap-legend-item">
+                <span
+                  className="heatmap-legend-swatch"
+                  style={{ background: b.color }}
+                />
+                <span className="heatmap-legend-label">{b.label}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
