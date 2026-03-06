@@ -73,6 +73,40 @@ function computeBinsAndColors(geojson, groupKey) {
   return { bins: nonEmpty, getColor };
 }
 
+/* ---- highlight a precinct on the map ---- */
+function HighlightPrecinct({ geojson, precinct }) {
+  const map = useMap();
+  const layerRef = useRef(null);
+
+  useEffect(() => {
+    if (layerRef.current) {
+      map.removeLayer(layerRef.current);
+      layerRef.current = null;
+    }
+    if (!precinct || !geojson) return;
+
+    const match = geojson.features.find(
+      (f) => f.properties.name === precinct.name && f.properties.pop === precinct.pop
+    );
+    if (!match) return;
+
+    const layer = L.geoJSON(match, {
+      style: { weight: 3, color: "#f97316", fillColor: "#f97316", fillOpacity: 0.5 },
+    });
+    layer.addTo(map);
+    layerRef.current = layer;
+
+    return () => {
+      if (layerRef.current) {
+        map.removeLayer(layerRef.current);
+        layerRef.current = null;
+      }
+    };
+  }, [map, geojson, precinct]);
+
+  return null;
+}
+
 /* ---- auto-fit map to GeoJSON bounds ---- */
 function FitBounds({ data, pathKey }) {
   const map = useMap();
@@ -92,7 +126,7 @@ function FitBounds({ data, pathKey }) {
   return null;
 }
 
-export default function DemographicHeatMap({ geojsonPath, geojson: geojsonProp, loading: loadingProp, minorityGroups, selectedGroup: selectedGroupProp }) {
+export default function DemographicHeatMap({ geojsonPath, geojson: geojsonProp, loading: loadingProp, minorityGroups, selectedGroup: selectedGroupProp, highlightPrecinct }) {
   const [geojsonInternal, setGeojsonInternal] = useState(null);
   const [loadingInternal, setLoadingInternal] = useState(false);
   const [selectedGroupInternal, setSelectedGroupInternal] = useState("");
@@ -212,6 +246,7 @@ export default function DemographicHeatMap({ geojsonPath, geojson: geojsonProp, 
             onEachFeature={onEachFeature}
           />
           <FitBounds data={geojson} pathKey={geojsonPath} />
+          <HighlightPrecinct geojson={geojson} precinct={highlightPrecinct} />
         </MapContainer>
 
         <div className="heatmap-legend">

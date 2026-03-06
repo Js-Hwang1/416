@@ -75,11 +75,11 @@ const BarChart = ({ data }) => {
           display: true,
           text: "Republican / Democrat Wins",
           font: { size: 11, family: "'Verdana', sans-serif" },
-          color: '#888'
+          color: '#333'
         },
         ticks: {
           font: { size: 10, family: "'Verdana', sans-serif" },
-          color: '#666'
+          color: '#333'
         },
         grid: { display: false }
       },
@@ -89,11 +89,11 @@ const BarChart = ({ data }) => {
           display: true,
           text: "Frequency",
           font: { size: 11, family: "'Verdana', sans-serif" },
-          color: '#888'
+          color: '#333'
         },
         ticks: {
           font: { size: 10, family: "'Verdana', sans-serif" },
-          color: '#666'
+          color: '#333'
         },
         grid: { color: '#f0f0f0' }
       }

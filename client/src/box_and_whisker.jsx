@@ -153,7 +153,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .selectAll("text")
       .style("font-family", "'Verdana', sans-serif")
       .style("font-size", "10px")
-      .style("fill", "#666");
+      .style("fill", "#333");
 
     // X Axis label
     svg
@@ -164,7 +164,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .style("font-family", "'Verdana', sans-serif")
       .style("font-size", "11px")
       .style("font-weight", "600")
-      .style("fill", "#888")
+      .style("fill", "#333")
       .text("Districts (ordered by increasing % of selected group)");
 
     // Y Axis
@@ -178,7 +178,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
         g.selectAll(".tick text")
           .style("font-family", "'Verdana', sans-serif")
           .style("font-size", "10px")
-          .style("fill", "#666");
+          .style("fill", "#333");
       });
 
     // Y Axis label
@@ -191,7 +191,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .style("font-family", "'Verdana', sans-serif")
       .style("font-size", "11px")
       .style("font-weight", "600")
-      .style("fill", "#888")
+      .style("fill", "#333")
       .text(`${GROUP_LABELS[selectedGroup] || selectedGroup} Population %`);
 
   }, [districts, selectedGroup, enactedData, dims]);

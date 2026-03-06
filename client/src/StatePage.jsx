@@ -330,6 +330,8 @@ export default function StatePage() {
   const [demoGroup, setDemoGroup] = useState("black");
   const [demoPanelChart, setDemoPanelChart] = useState("gingles");
   const [ginglesPage, setGinglesPage] = useState(0);
+  const [ginglesSort, setGinglesSort] = useState({ key: null, dir: "asc" });
+  const [hoveredPrecinct, setHoveredPrecinct] = useState(null);
   const [districtPage, setDistrictPage] = useState(0);
 
   const interestingPlanRef = useRef(null);
@@ -415,13 +417,37 @@ export default function StatePage() {
 
   /* ---- precinct table data (driven by demoGroup) ---- */
   const ginglesPoints = ginglesData?.[demoGroup] ?? [];
-  const ginglesTotalPages = Math.ceil(ginglesPoints.length / GINGLES_PAGE_SIZE);
-  const ginglesPageRows = ginglesPoints.slice(
+
+  const sortedGinglesPoints = useMemo(() => {
+    if (!ginglesSort.key) return ginglesPoints;
+    const sorted = [...ginglesPoints];
+    const accessor =
+      ginglesSort.key === "minority" ? (r) => r.minority_vap_pct
+      : ginglesSort.key === "dem" ? (r) => r.d_vote_share
+      : (r) => 1 - r.d_vote_share;
+    sorted.sort((a, b) => {
+      const diff = accessor(a) - accessor(b);
+      return ginglesSort.dir === "asc" ? diff : -diff;
+    });
+    return sorted;
+  }, [ginglesPoints, ginglesSort]);
+
+  const ginglesTotalPages = Math.ceil(sortedGinglesPoints.length / GINGLES_PAGE_SIZE);
+  const ginglesPageRows = sortedGinglesPoints.slice(
     ginglesPage * GINGLES_PAGE_SIZE,
     (ginglesPage + 1) * GINGLES_PAGE_SIZE
   );
 
-  useEffect(() => { setGinglesPage(0); }, [demoGroup]);
+  const toggleGinglesSort = (key) => {
+    setGinglesSort((prev) =>
+      prev.key === key
+        ? { key, dir: prev.dir === "asc" ? "desc" : "asc" }
+        : { key, dir: "asc" }
+    );
+    setGinglesPage(0);
+  };
+
+  useEffect(() => { setGinglesPage(0); setGinglesSort({ key: null, dir: "asc" }); }, [demoGroup]);
 
   /* ---- district table pagination ---- */
   const districtTotalPages = Math.ceil(districtTableRows.length / DISTRICT_PAGE_SIZE);
@@ -823,6 +849,7 @@ export default function StatePage() {
                   geojsonPath={cfg.heatmapGeojson}
                   minorityGroups={heatmapMinorityGroups}
                   selectedGroup={demoGroup}
+                  highlightPrecinct={hoveredPrecinct}
                 />
               </div>
             </div>
@@ -865,14 +892,28 @@ export default function StatePage() {
                         <thead>
                           <tr>
                             <th>#</th>
-                            <th>% {heatmapMinorityGroups.find((g) => g.key === demoGroup)?.label}</th>
-                            <th>Dem Vote %</th>
-                            <th>Rep Vote %</th>
+                            <th className="sortable-th" onClick={() => toggleGinglesSort("minority")}>
+                              % {heatmapMinorityGroups.find((g) => g.key === demoGroup)?.label}
+                              {ginglesSort.key === "minority" ? (ginglesSort.dir === "asc" ? " ▲" : " ▼") : ""}
+                            </th>
+                            <th className="sortable-th" onClick={() => toggleGinglesSort("dem")}>
+                              Dem Vote %
+                              {ginglesSort.key === "dem" ? (ginglesSort.dir === "asc" ? " ▲" : " ▼") : ""}
+                            </th>
+                            <th className="sortable-th" onClick={() => toggleGinglesSort("rep")}>
+                              Rep Vote %
+                              {ginglesSort.key === "rep" ? (ginglesSort.dir === "asc" ? " ▲" : " ▼") : ""}
+                            </th>
                           </tr>
                         </thead>
                         <tbody>
                           {ginglesPageRows.map((row, idx) => (
-                            <tr key={ginglesPage * GINGLES_PAGE_SIZE + idx}>
+                            <tr
+                              key={ginglesPage * GINGLES_PAGE_SIZE + idx}
+                              className={hoveredPrecinct && hoveredPrecinct.name === row.name && hoveredPrecinct.pop === row.total_pop ? "precinct-row-hovered" : ""}
+                              onMouseEnter={() => setHoveredPrecinct({ name: row.name, pop: row.total_pop })}
+                              onMouseLeave={() => setHoveredPrecinct(null)}
+                            >
                               <td>{(ginglesPage * GINGLES_PAGE_SIZE + idx + 1).toLocaleString()}</td>
                               <td>{(row.minority_vap_pct * 100).toFixed(1)}%</td>
                               <td>{(row.d_vote_share * 100).toFixed(1)}%</td>

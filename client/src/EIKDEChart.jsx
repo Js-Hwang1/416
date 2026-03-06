@@ -88,7 +88,7 @@ export default function EIKDEChart({ data }) {
           xaxis: {
             title: {
               text: "% Support for Democratic Candidate",
-              font: { family: "'Verdana', sans-serif", size: 11, color: "#888" }
+              font: { family: "'Verdana', sans-serif", size: 11, color: "#333" }
             },
             range: [0, 100],
             gridcolor: "#f0f0f0",
@@ -97,7 +97,7 @@ export default function EIKDEChart({ data }) {
           yaxis: {
             title: {
               text: "Density",
-              font: { family: "'Verdana', sans-serif", size: 11, color: "#888" }
+              font: { family: "'Verdana', sans-serif", size: 11, color: "#333" }
             },
             gridcolor: "#f0f0f0",
             zeroline: false,

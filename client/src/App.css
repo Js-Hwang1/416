@@ -1176,6 +1176,19 @@
   background: #fafafa;
 }
 
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+}
+
+.sortable-th:hover {
+  color: #fff;
+}
+
+.precinct-row-hovered {
+  background: #fff3e0 !important;
+}
+
 .plan-explorer-content .district-table-wrapper {
   flex: 1;
   min-height: 0;

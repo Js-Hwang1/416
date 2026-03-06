@@ -131,7 +131,7 @@ export default function EISupportSummary({ data }) {
         g.selectAll(".tick text")
           .style("font-family", "'Verdana', sans-serif")
           .style("font-size", "10px")
-          .style("fill", "#666");
+          .style("fill", "#333");
       });
 
     // Y Axis label
@@ -144,7 +144,7 @@ export default function EISupportSummary({ data }) {
       .style("font-family", "'Verdana', sans-serif")
       .style("font-size", "11px")
       .style("font-weight", "600")
-      .style("fill", "#888")
+      .style("fill", "#333")
       .text("Estimated Support (%)");
 
     // Legend

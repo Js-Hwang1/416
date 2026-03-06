@@ -128,7 +128,7 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
       inset: 10,
       grid: true,
       marginBottom: 45,
-      style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent" },
+      style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent", color: "#333" },
       x: {
         label: `Percent ${groupLabel}`,
         tickFormat: d => `${d}%`,
