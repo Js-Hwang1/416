@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import * as Plot from "@observablehq/plot";
 
 const GROUP_LABELS = {
-  hispanic: "Hispanic",
+  hispanic: "Latino",
   black: "Black",
   asian: "Asian",
 };
@@ -123,23 +123,28 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
     );
 
     const legendHeight = 36;
-    const plotHeight = Math.min(Math.round(dims.width * 0.55), dims.height - legendHeight);
+    const plotHeight = dims.height - legendHeight;
 
     const plot = Plot.plot({
       width: dims.width,
       height: Math.max(plotHeight, 150),
       inset: 10,
       grid: true,
-      marginBottom: 45,
-      style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent", color: "#333" },
+      marginLeft: 60,
+      marginBottom: 50,
+      style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent", color: "#000" },
       x: {
         label: `Percent ${groupLabel}`,
         tickFormat: d => `${d}%`,
         domain: [0, 100],
+        labelAnchor: "center",
+        labelOffset: 40,
       },
       y: {
         label: "Party Vote Share (%)",
         domain: [0, 100],
+        labelAnchor: "center",
+        labelOffset: 56,
       },
       marks,
     });

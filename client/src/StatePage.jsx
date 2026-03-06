@@ -7,6 +7,8 @@ import ProbabilityChart from "./probability_curve";
 import GinglessScatterPlot from "./gingles_scatter";
 import DemographicHeatMap from "./DemographicHeatMap";
 import VoteSeatChart from "./VoteSeatChart";
+import EISupportSummary from "./EISupportSummary";
+import EIKDEChart from "./EIKDEChart";
 import { apiUrl, tilesUrl } from "./api";
 
 const STATE_CONFIG = {
@@ -62,12 +64,72 @@ const INTERESTING_PLAN_OPTIONS = [
   { value: "min_minority_districts", label: "Min Minority Districts" },
 ];
 
+/**
+ * Generate dummy district-level party data for interesting plans.
+ * In production, this would come from SeaWulf ensemble results.
+ */
+function generateDummyPlanData(numDistricts, planType) {
+  const seed = planType.split("").reduce((a, c) => a + c.charCodeAt(0), 0);
+  const rng = (i) => {
+    const x = Math.sin(seed * 9301 + i * 49297 + 233280) * 49297;
+    return x - Math.floor(x);
+  };
+
+  const districts = [];
+  for (let d = 1; d <= numDistricts; d++) {
+    let demLean;
+    switch (planType) {
+      case "max_d":
+        demLean = 0.35 + rng(d) * 0.5; // skew D
+        break;
+      case "min_d":
+        demLean = 0.15 + rng(d) * 0.45; // skew R
+        break;
+      case "median":
+        demLean = 0.3 + rng(d) * 0.4; // centered
+        break;
+      case "most_competitive":
+        demLean = 0.42 + rng(d) * 0.16; // tight around 50%
+        break;
+      case "least_competitive":
+        demLean = rng(d) > 0.5 ? 0.6 + rng(d + 100) * 0.25 : 0.1 + rng(d + 100) * 0.25; // polarized
+        break;
+      case "fewest_county_splits":
+      case "most_county_splits":
+        demLean = 0.25 + rng(d) * 0.5;
+        break;
+      case "max_minority_districts":
+        demLean = d <= numDistricts * 0.4 ? 0.55 + rng(d) * 0.3 : 0.2 + rng(d) * 0.35;
+        break;
+      case "min_minority_districts":
+        demLean = 0.2 + rng(d) * 0.55;
+        break;
+      default:
+        demLean = 0.3 + rng(d) * 0.4;
+    }
+    const isDem = demLean > 0.5;
+    const margin = Math.abs(demLean - 0.5) * 100 * 2;
+    districts.push({
+      district: d,
+      party: isDem ? "Democrat" : "Republican",
+      vote_margin_pct: Math.round(margin * 10) / 10,
+    });
+  }
+  return districts;
+}
+
 const DEMO_CHART_OPTIONS = [
   { value: "gingles", label: "Gingles + Precinct", group: "racial" },
   { value: "boxwhisker", label: "Minority Distribution", group: "racial" },
-  { value: "probability", label: "EI Curves", group: "racial" },
+  { value: "ei", label: "Ecological Inference", group: "racial" },
   { value: "seatSplits", label: "Seat Splits", group: "ensemble" },
   { value: "fairness", label: "Fairness", group: "ensemble" },
+];
+
+const EI_SUB_OPTIONS = [
+  { value: "curves", label: "EI Curves" },
+  { value: "bar", label: "EI Summary" },
+  { value: "kde", label: "EI KDE" },
 ];
 
 const GINGLES_PAGE_SIZE = 10;
@@ -255,13 +317,16 @@ export default function StatePage() {
   const [activeDetailPanel, setActiveDetailPanel] = useState("stateOverview");
   const [selectedInterestingPlan, setSelectedInterestingPlan] = useState("enacted");
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
+  const [showCompare, setShowCompare] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [demoGroup, setDemoGroup] = useState("black");
   const [heatmapLevel, setHeatmapLevel] = useState("precinct");
   const [demoPanelChart, setDemoPanelChart] = useState("gingles");
+  const [eiSubView, setEiSubView] = useState("curves");
   const [ginglesPage, setGinglesPage] = useState(0);
   const [ginglesSort, setGinglesSort] = useState({ key: null, dir: "asc" });
   const [hoveredPrecinct, setHoveredPrecinct] = useState(null);
+  const [ginglesTableOpen, setGinglesTableOpen] = useState(true);
   const [districtPage, setDistrictPage] = useState(0);
 
   const interestingPlanRef = useRef(null);
@@ -280,9 +345,18 @@ export default function StatePage() {
   const ensembleBarData = analysisData?.ensembleBar;
   const ensembleBoxData = analysisData?.ensembleBox;
   const eiCurvesData = analysisData?.eiCurves;
+  const eiSummaryData = analysisData?.eiSummary;
+  const eiKdeData = analysisData?.eiKde;
   const voteSeatData = analysisData?.voteSeat;
 
   const reps = stateData?.representatives;
+
+  /* ---- compute district parties for selected plan ---- */
+  const activePlanParties = useMemo(() => {
+    if (selectedInterestingPlan === "enacted") return reps;
+    if (!cfg) return reps;
+    return generateDummyPlanData(cfg.districts, selectedInterestingPlan);
+  }, [selectedInterestingPlan, reps, cfg]);
 
   /* ---- minority groups available for heatmap dropdown ---- */
   const heatmapMinorityGroups = useMemo(() => {
@@ -491,25 +565,40 @@ export default function StatePage() {
                   cfg={cfg}
                   selectedDistrict={selectedDistrict}
                   onDistrictSelect={setSelectedDistrict}
-                  districtParties={reps}
+                  districtParties={activePlanParties}
                 />
-                {selectedInterestingPlan !== "enacted" && (
-                  <div className="plan-badge">
-                    Viewing: {INTERESTING_PLAN_OPTIONS.find((o) => o.value === selectedInterestingPlan)?.label}
-                    <span className="plan-badge-note">(SeaWulf data pending)</span>
-                  </div>
-                )}
+                {showCompare && selectedInterestingPlan !== "enacted" && reps && activePlanParties && (() => {
+                  const enactedD = reps.filter(r => r.party === "Democrat").length;
+                  const enactedR = reps.filter(r => r.party === "Republican").length;
+                  const planD = activePlanParties.filter(r => r.party === "Democrat").length;
+                  const planR = activePlanParties.filter(r => r.party === "Republican").length;
+                  const planLabel = INTERESTING_PLAN_OPTIONS.find(o => o.value === selectedInterestingPlan)?.label;
+                  return (
+                    <div className="compare-overlay">
+                      <table className="compare-table">
+                        <thead>
+                          <tr><th></th><th>D Seats</th><th>R Seats</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td>Enacted</td><td className="compare-d">{enactedD}</td><td className="compare-r">{enactedR}</td></tr>
+                          <tr><td>{planLabel}</td><td className="compare-d">{planD}</td><td className="compare-r">{planR}</td></tr>
+                          <tr className="compare-diff"><td>Diff</td><td className="compare-d">{planD - enactedD > 0 ? "+" : ""}{planD - enactedD}</td><td className="compare-r">{planR - enactedR > 0 ? "+" : ""}{planR - enactedR}</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
               </div>
               <div className="interesting-plan-controls">
                 <div className="interesting-plan-dropdown" ref={interestingPlanRef}>
                   <button
                     type="button"
-                    className="plan-select-dropdown interesting-plan-select"
+                    className="compare-enacted-btn interesting-plan-select"
                     onClick={() => setIsInterestingPlanOpen((prev) => !prev)}
                   >
                     {selectedInterestingPlan
                       ? INTERESTING_PLAN_OPTIONS.find((o) => o.value === selectedInterestingPlan)?.label
-                      : "Enacted"}
+                      : "Enacted"} ▾
                   </button>
                   {isInterestingPlanOpen && (
                     <div
@@ -525,6 +614,7 @@ export default function StatePage() {
                           onClick={() => {
                             setSelectedInterestingPlan(option.value);
                             setIsInterestingPlanOpen(false);
+                            if (option.value === "enacted") setShowCompare(false);
                           }}
                         >
                           {option.label}
@@ -535,11 +625,11 @@ export default function StatePage() {
                 </div>
                 <button
                   type="button"
-                  className="compare-enacted-btn"
+                  className={`compare-enacted-btn${showCompare ? " compare-active" : ""}`}
                   disabled={selectedInterestingPlan === "enacted"}
-                  onClick={() => {/* TODO: overlay comparison when SeaWulf plans available */}}
+                  onClick={() => setShowCompare((v) => !v)}
                 >
-                  Compare with enacted
+                  {showCompare ? "Hide Comparison" : "Compare with Enacted"}
                 </button>
                 <button
                   type="button"
@@ -791,6 +881,7 @@ export default function StatePage() {
                   minorityGroups={heatmapMinorityGroups}
                   selectedGroup={demoGroup}
                   heatmapLevel={heatmapLevel}
+                  highlightedPrecinct={hoveredPrecinct}
                 />
               </div>
             </div>
@@ -815,7 +906,7 @@ export default function StatePage() {
               <div className="demo-chart-body">
                 {demoPanelChart === "gingles" && (
                   <div className="demo-gingles-combined">
-                    <div className="demo-gingles-scatter">
+                    <div className={`demo-gingles-scatter${ginglesTableOpen ? "" : " gingles-scatter-full"}`}>
                       <GinglessScatterPlot
                         points={ginglesPoints}
                         regression={regressionData?.[demoGroup]}
@@ -823,12 +914,20 @@ export default function StatePage() {
                       />
                     </div>
                     <div className="demo-gingles-table">
+                      <button
+                        type="button"
+                        className="gingles-table-toggle"
+                        onClick={() => setGinglesTableOpen((o) => !o)}
+                      >
+                        {ginglesTableOpen ? "Hide Precinct Table ▼" : "Show Precinct Table ▲"}
+                      </button>
+                    {ginglesTableOpen && (<>
                       <table className="district-table" aria-label="Precinct data table">
                         <colgroup>
-                          <col style={{ width: "12%" }} />
+                          <col style={{ width: "10%" }} />
                           <col style={{ width: "30%" }} />
-                          <col style={{ width: "29%" }} />
-                          <col style={{ width: "29%" }} />
+                          <col style={{ width: "30%" }} />
+                          <col style={{ width: "30%" }} />
                         </colgroup>
                         <thead>
                           <tr>
@@ -838,29 +937,31 @@ export default function StatePage() {
                               {ginglesSort.key === "minority" ? (ginglesSort.dir === "asc" ? " ▲" : " ▼") : ""}
                             </th>
                             <th className="sortable-th" onClick={() => toggleGinglesSort("dem")}>
-                              Dem Vote %
+                              Democratic Vote %
                               {ginglesSort.key === "dem" ? (ginglesSort.dir === "asc" ? " ▲" : " ▼") : ""}
                             </th>
                             <th className="sortable-th" onClick={() => toggleGinglesSort("rep")}>
-                              Rep Vote %
+                              Republican Vote %
                               {ginglesSort.key === "rep" ? (ginglesSort.dir === "asc" ? " ▲" : " ▼") : ""}
                             </th>
                           </tr>
                         </thead>
-                        <tbody>
-                          {ginglesPageRows.map((row, idx) => (
+                        <tbody onMouseLeave={() => setHoveredPrecinct(null)}>
+                          {ginglesPageRows.map((row, idx) => {
+                            const globalIdx = ginglesPage * GINGLES_PAGE_SIZE + idx;
+                            return (
                             <tr
-                              key={ginglesPage * GINGLES_PAGE_SIZE + idx}
-                              className={hoveredPrecinct && hoveredPrecinct.name === row.name && hoveredPrecinct.pop === row.total_pop ? "precinct-row-hovered" : ""}
-                              onMouseEnter={() => setHoveredPrecinct({ name: row.name, pop: row.total_pop })}
-                              onMouseLeave={() => setHoveredPrecinct(null)}
+                              key={globalIdx}
+                              className={hoveredPrecinct?._idx === globalIdx ? "precinct-row-hovered" : ""}
+                              onMouseEnter={() => setHoveredPrecinct({ name: row.name, precinct_id: row.precinct_id, pop: row.total_pop, _idx: globalIdx })}
                             >
                               <td>{(ginglesPage * GINGLES_PAGE_SIZE + idx + 1).toLocaleString()}</td>
                               <td>{(Math.min(row.minority_vap_pct, 1) * 100).toFixed(1)}%</td>
                               <td>{(Math.min(row.d_vote_share, 1) * 100).toFixed(1)}%</td>
                               <td>{(Math.min(1 - row.d_vote_share, 1) * 100).toFixed(1)}%</td>
                             </tr>
-                          ))}
+                            );
+                          })}
                         </tbody>
                       </table>
                       <div className="gingles-pagination">
@@ -892,6 +993,7 @@ export default function StatePage() {
                           disabled={ginglesPage >= ginglesTotalPages - 1}
                         >›</button>
                       </div>
+                    </>)}
                     </div>
                   </div>
                 )}
@@ -899,7 +1001,27 @@ export default function StatePage() {
                 {demoPanelChart === "boxwhisker" && (
                   <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} selectedGroup={demoGroup} />
                 )}
-                {demoPanelChart === "probability" && <ProbabilityChart data={eiCurvesData} />}
+                {demoPanelChart === "ei" && (
+                  <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+                    <div className="demo-group-btn-group ei-sub-tabs" role="group" aria-label="EI view">
+                      {EI_SUB_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          className={`demo-group-btn${eiSubView === opt.value ? " active" : ""}`}
+                          onClick={() => setEiSubView(opt.value)}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+                      {eiSubView === "curves" && <ProbabilityChart data={eiCurvesData} />}
+                      {eiSubView === "bar" && <EISupportSummary data={eiSummaryData} />}
+                      {eiSubView === "kde" && <EIKDEChart data={eiKdeData} />}
+                    </div>
+                  </div>
+                )}
                 {demoPanelChart === "seatSplits" && <BarChart data={ensembleBarData} />}
                 {demoPanelChart === "fairness" && <VoteSeatChart data={voteSeatData} />}
               </div>

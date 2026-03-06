@@ -33,6 +33,7 @@
     "white",
     "black",
     "hispanic",
-    "asian"
+    "asian",
+    "other"
   ]
 }

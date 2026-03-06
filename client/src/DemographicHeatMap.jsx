@@ -56,6 +56,7 @@ export default function DemographicHeatMap({
   mapView,
   selectedGroup,
   heatmapLevel,
+  highlightedPrecinct,
 }) {
   const [hoverInfo, setHoverInfo] = useState(null);
 
@@ -84,6 +85,14 @@ export default function DemographicHeatMap({
   }, []);
 
   const label = GROUP_LABELS[selectedGroup] || selectedGroup;
+
+  /* Build filter to highlight a specific precinct by unique ID.
+     tippecanoe may coerce numeric-looking strings to numbers,
+     so compare with to-string to handle both cases. */
+  const highlightFilter = useMemo(() => {
+    if (!highlightedPrecinct?.precinct_id) return ["==", 1, 0]; // match nothing
+    return ["==", ["to-string", ["get", "precinct_id"]], String(highlightedPrecinct.precinct_id)];
+  }, [highlightedPrecinct]);
 
   /* Use both sources always loaded; toggle visibility via layout.
      This avoids full map remount when switching levels. */
@@ -130,6 +139,28 @@ export default function DemographicHeatMap({
               paint={{
                 "line-color": "#666",
                 "line-width": 0.3,
+              }}
+            />
+            <Layer
+              id="precinct-highlight-fill"
+              type="fill"
+              source-layer="precincts"
+              layout={{ visibility: precinctVisibility }}
+              filter={highlightFilter}
+              paint={{
+                "fill-color": "#f97316",
+                "fill-opacity": 0.35,
+              }}
+            />
+            <Layer
+              id="precinct-highlight"
+              type="line"
+              source-layer="precincts"
+              layout={{ visibility: precinctVisibility }}
+              filter={highlightFilter}
+              paint={{
+                "line-color": "#f97316",
+                "line-width": 3,
               }}
             />
           </Source>

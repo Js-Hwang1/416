@@ -409,18 +409,19 @@
 
 .interesting-plan-select {
   margin-top: 12px;
-  width: 220px;
+  width: 100%;
   min-width: 0;
   position: relative;
   z-index: 5;
   text-align: left;
   background-image: none;
+  white-space: nowrap;
 }
 
 .interesting-plan-dropdown {
   margin-top: 0;
   position: relative;
-  width: 180px;
+  min-width: 200px;
   z-index: 20;
 }
 
@@ -440,7 +441,8 @@
   position: absolute;
   bottom: calc(100% + 4px);
   left: 0;
-  right: 0;
+  min-width: 100%;
+  width: max-content;
   background: #222;
   border: 1px solid #444;
   max-height: calc(34px * 8);
@@ -467,10 +469,11 @@
   color: #aaa;
   border: none;
   border-top: 1px solid #333;
-  padding: 7px 10px;
+  padding: 7px 14px;
   font-family: "Verdana", sans-serif;
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .interesting-plan-option:first-child {
@@ -503,6 +506,57 @@
   opacity: 0.6;
   margin-left: 6px;
   font-size: 0.75rem;
+}
+
+.compare-overlay {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px 12px;
+  z-index: 10;
+  font-family: 'Verdana', sans-serif;
+  font-size: 0.75rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.compare-table {
+  border-collapse: collapse;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 3px 10px;
+  text-align: center;
+}
+
+.compare-table th {
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: #555;
+  border-bottom: 1px solid #ddd;
+}
+
+.compare-table td:first-child {
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+}
+
+.compare-d { color: steelblue; font-weight: 700; }
+.compare-r { color: tomato; font-weight: 700; }
+
+.compare-diff td {
+  border-top: 1px solid #ddd;
+  font-style: italic;
+}
+
+.compare-enacted-btn.compare-active {
+  background: #444;
+  border-color: #888;
+  color: #fff;
 }
 
 /* ── State Content ───────────────────────────────── */
@@ -1220,10 +1274,6 @@
   color: #fff;
 }
 
-.precinct-row-hovered {
-  background: #fff3e0 !important;
-}
-
 .plan-explorer-content .district-table-wrapper {
   overflow-y: auto;
   scrollbar-width: none;
@@ -1512,6 +1562,19 @@
   color: #222;
 }
 
+.ei-sub-tabs {
+  margin-top: 10px;
+  margin-bottom: 10px;
+  align-self: flex-start;
+  border-radius: 0;
+}
+
+.ei-sub-tabs .demo-group-btn {
+  font-size: 0.78rem;
+  padding: 5px 14px;
+  font-weight: 500;
+}
+
 .demo-group-btn.active {
   background: #1a1a1a;
   color: #fff;
@@ -1594,6 +1657,19 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+}
+
+/* Observable Plot axis labels: bold + black */
+.demo-chart-body [aria-label="x-axis label"],
+.demo-chart-body [aria-label="y-axis label"] {
+  font-weight: 700 !important;
+  fill: #000 !important;
+}
+
+.demo-gingles-scatter [aria-label="x-axis label"],
+.demo-gingles-scatter [aria-label="y-axis label"] {
+  font-weight: 700 !important;
+  fill: #000 !important;
   overflow: hidden;
   background: #fff;
 }
@@ -1751,6 +1827,7 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
 .demo-gingles-table .district-table {
@@ -1761,4 +1838,35 @@
   flex-shrink: 0;
   border-top: 1px solid #eee;
   padding: 6px 0;
+}
+
+.demo-gingles-scatter.gingles-scatter-full {
+  flex: 1 1 100%;
+  border-bottom: none;
+  min-height: 0;
+}
+
+.gingles-table-toggle {
+  flex-shrink: 0;
+  background: #888;
+  border: 1px solid #ddd;
+  border-top: none;
+  margin: 0 1px;
+  padding: 5px 0;
+  font-family: 'Verdana', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fff;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+  letter-spacing: 0.02em;
+}
+.gingles-table-toggle:hover {
+  background: #666;
+}
+
+.precinct-row-hovered td {
+  background: #fff3e0 !important;
+  font-weight: 600;
 }

@@ -6,7 +6,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
   const containerRef = useRef();
   const [dims, setDims] = useState({ width: 800, height: 400 });
 
-  const GROUP_LABELS = { hispanic: "Hispanic", black: "Black", asian: "Asian" };
+  const GROUP_LABELS = { hispanic: "Latino", black: "Black", asian: "Asian" };
 
   const districts = boxData?.[selectedGroup] ?? [];
 
@@ -153,7 +153,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .selectAll("text")
       .style("font-family", "'Verdana', sans-serif")
       .style("font-size", "10px")
-      .style("fill", "#333");
+      .style("fill", "#000").style("font-weight", "700");
 
     // X Axis label
     svg
@@ -163,8 +163,8 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .attr("text-anchor", "middle")
       .style("font-family", "'Verdana', sans-serif")
       .style("font-size", "11px")
-      .style("font-weight", "600")
-      .style("fill", "#333")
+      .style("font-weight", "700")
+      .style("fill", "#000").style("font-weight", "700")
       .text("Districts (ordered by increasing % of selected group)");
 
     // Y Axis
@@ -178,7 +178,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
         g.selectAll(".tick text")
           .style("font-family", "'Verdana', sans-serif")
           .style("font-size", "10px")
-          .style("fill", "#333");
+          .style("fill", "#000").style("font-weight", "700");
       });
 
     // Y Axis label
@@ -190,8 +190,8 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .attr("text-anchor", "middle")
       .style("font-family", "'Verdana', sans-serif")
       .style("font-size", "11px")
-      .style("font-weight", "600")
-      .style("fill", "#333")
+      .style("font-weight", "700")
+      .style("fill", "#000").style("font-weight", "700")
       .text(`${GROUP_LABELS[selectedGroup] || selectedGroup} Population %`);
 
   }, [districts, selectedGroup, enactedData, dims]);

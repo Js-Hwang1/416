@@ -76,16 +76,22 @@ export default function VoteSeatChart({ data }) {
       height: chartHeight,
       inset: 10,
       grid: true,
-      style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent" },
+      marginLeft: 60,
+      marginBottom: 50,
+      style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent", color: "#000" },
       x: {
         label: "Democratic Vote Share (%)",
         domain: [0, 100],
         tickFormat: d => `${d}%`,
+        labelAnchor: "center",
+        labelOffset: 40,
       },
       y: {
         label: "Democratic Seat Share (%)",
         domain: [0, 100],
         tickFormat: d => `${d}%`,
+        labelAnchor: "center",
+        labelOffset: 56,
       },
       marks,
     });
@@ -99,7 +105,7 @@ export default function VoteSeatChart({ data }) {
 
   return (
     <div ref={containerRef} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-      <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "4px", fontSize: "11px", flexShrink: 0 }}>
+      <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginTop: "12px", marginBottom: "6px", fontSize: "11px", flexShrink: 0 }}>
         <span><span style={{ display: "inline-block", width: 16, height: 2, background: "#2c7bb6", marginRight: 4, verticalAlign: "middle" }} />Vote-Seat Curve</span>
         <span><span style={{ display: "inline-block", width: 16, height: 2, background: "#ccc", marginRight: 4, verticalAlign: "middle", borderBottom: "1px dashed #ccc" }} />Proportional</span>
         <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "#c0392b", marginRight: 4 }} />Enacted</span>

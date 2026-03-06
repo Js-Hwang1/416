@@ -15,6 +15,9 @@ const FILL_MAP = {
   Asian: "rgba(120, 170, 100, 0.2)"
 };
 
+const DISPLAY_NAME = { Hispanic: "Latino", White: "White", Black: "Black", Asian: "Asian" };
+const displayName = (key) => DISPLAY_NAME[key] || key;
+
 const CANDIDATE_TO_PARTY = {
   "Harris (D)": "Democratic",
   "Trump (R)": "Republican",
@@ -54,7 +57,7 @@ const ProbabilityChart = ({ data }) => {
     y: d.data.map(point => point.probability),
     type: "scatter",
     mode: "lines",
-    name: `${d.race}`,
+    name: displayName(d.race),
     fill: "tozeroy",
     line: {
       color: COLOR_MAP[d.race] || "rgba(128, 128, 128, 0.8)",
@@ -93,7 +96,7 @@ const ProbabilityChart = ({ data }) => {
               className="chart-control-swatch"
               style={{ background: COLOR_MAP[race] || "#888" }}
             ></span>
-            {race}
+            {displayName(race)}
           </label>
         ))}
       </div>
@@ -103,17 +106,19 @@ const ProbabilityChart = ({ data }) => {
           xaxis: {
             title: {
               text: `% of Group Voting ${getPartyLabel(selectedCandidate)}`,
-              font: { family: "'Verdana', sans-serif", size: 11, color: "#333" }
+              font: { family: "'Verdana', sans-serif", size: 12, color: "#000", weight: 700 }
             },
+            tickfont: { family: "'Verdana', sans-serif", size: 11, color: "#000" },
             gridcolor: "#f0f0f0",
             zeroline: false
           },
           yaxis: {
             title: {
               text: "Probability Density",
-              font: { family: "'Verdana', sans-serif", size: 11, color: "#333" },
+              font: { family: "'Verdana', sans-serif", size: 12, color: "#000", weight: 700 },
               standoff: 15
             },
+            tickfont: { family: "'Verdana', sans-serif", size: 11, color: "#000" },
             gridcolor: "#f0f0f0",
             zeroline: false
           },
@@ -128,7 +133,7 @@ const ProbabilityChart = ({ data }) => {
           plot_bgcolor: "#fff",
           paper_bgcolor: "#fff",
           margin: { l: 65, r: 20, t: 10, b: 70 },
-          font: { family: "'Verdana', sans-serif" },
+          font: { family: "'Verdana', sans-serif", color: "#000" },
           autosize: true,
         }}
         style={{ width: "100%", flex: 1, minHeight: 0 }}

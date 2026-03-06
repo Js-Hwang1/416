@@ -702,11 +702,12 @@ def step8_gingles_precinct(ma, tx):
     print("STEP 8: Gingles Precinct Analysis")
     print("=" * 70)
 
-    def compute_gingles_data(gdf, state_abbr, group_cols, name_col="NAME"):
+    def compute_gingles_data(gdf, state_abbr, group_cols, name_col="NAME", id_col=None):
         """Compute per-precinct D vote share and minority VAP % for each group.
 
         group_cols: dict mapping group name -> vap column name
         name_col: column with precinct name
+        id_col: column with unique precinct identifier (for map highlight)
         """
         result = {}
         pres_d = gdf["G24PREDHAR"].values.astype(float)
@@ -724,11 +725,16 @@ def step8_gingles_precinct(ma, tx):
 
         valid = has_votes & has_vap
 
-        # Get precinct names
+        # Get precinct names and unique IDs
         if name_col and name_col in gdf.columns:
             names = gdf[name_col].values
         else:
             names = [f"Precinct {i+1}" for i in range(len(gdf))]
+
+        if id_col and id_col in gdf.columns:
+            ids = gdf[id_col].astype(str).values
+        else:
+            ids = [str(n) for n in names]
 
         for group_name, vap_col in group_cols.items():
             if vap_col not in gdf.columns:
@@ -744,6 +750,7 @@ def step8_gingles_precinct(ma, tx):
             data_points = []
             for i in np.where(mask)[0]:
                 data_points.append({
+                    "precinct_id": ids[i],
                     "name": str(names[i]),
                     "total_pop": int(total_pop[i]),
                     "minority_pop": int(minority_vap[i]),
@@ -762,7 +769,7 @@ def step8_gingles_precinct(ma, tx):
         "black": "BVAP",
         "asian": "ASIANVAP",
     }
-    ma_data = compute_gingles_data(ma, "MA", ma_groups, name_col="NAME")
+    ma_data = compute_gingles_data(ma, "MA", ma_groups, name_col="NAME", id_col="NAME")
     out_ma = os.path.join(ANALYSIS_DIR, "ma_gingles_precinct.json")
     with open(out_ma, "w") as f:
         json.dump(ma_data, f)
@@ -776,7 +783,7 @@ def step8_gingles_precinct(ma, tx):
     if "ASIANVAP" in tx.columns and tx["ASIANVAP"].sum() > 0:
         tx_groups["asian"] = "ASIANVAP"
 
-    tx_data = compute_gingles_data(tx, "TX", tx_groups, name_col="COUNTY")
+    tx_data = compute_gingles_data(tx, "TX", tx_groups, name_col="COUNTY", id_col="CNTYVTD")
     out_tx = os.path.join(ANALYSIS_DIR, "tx_gingles_precinct.json")
     with open(out_tx, "w") as f:
         json.dump(tx_data, f)
@@ -1385,13 +1392,13 @@ def main():
         ("MA precincts", os.path.join(GEOJSON_DIR, "ma_precincts.geojson"),
          "ma_precincts_heatmap.geojson",
          {"hispanic": "HVAP", "black": "BVAP", "asian": "ASIANVAP", "white": "WVAP"},
-         "NAME"),
+         "NAME", "NAME"),
         ("TX VTDs", os.path.join(GEOJSON_DIR, "tx_vtds.geojson"),
          "tx_vtds_heatmap.geojson",
          {"hispanic": "HISPVAP", "black": "BVAP", "asian": "ASIANVAP", "white": "WVAP"},
-         "COUNTY"),
+         "COUNTY", "CNTYVTD"),
     ]
-    for label, src_path, out_name, group_cols, name_col in heatmap_configs:
+    for label, src_path, out_name, group_cols, name_col, id_col in heatmap_configs:
         with open(src_path) as f:
             src_data = json.load(f)
         new_feats = []
@@ -1401,6 +1408,8 @@ def main():
             new_props = {"pop": int(props.get("TOTPOP", 0)), "vap": int(vap)}
             if name_col and name_col in props:
                 new_props["name"] = props[name_col]
+            if id_col and id_col in props:
+                new_props["precinct_id"] = str(props[id_col])
             for gk, vc in group_cols.items():
                 gv = float(props.get(vc, 0))
                 new_props[gk] = round(gv / vap * 100, 1) if vap > 0 else 0
