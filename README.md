@@ -56,7 +56,8 @@ Open http://localhost:3000 in your browser.
 
 Group Member Roles:
 Karen Zhao - Database
-Kevin Darby - Frontend 
+Kevin Darby - Frontend
+Bo Kim - Frontend
 Junsung Hwang - Backend (Server)
 
 Data Sources:
