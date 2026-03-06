@@ -13,7 +13,7 @@ function AppHeader() {
     massachusetts: "Massachusetts",
   };
   const headerTitle = stateSlugMatch
-    ? (stateNames[stateSlugMatch[1]] || "State")
+    ? `Ensemble Redistricting Analysis of ${stateNames[stateSlugMatch[1]] || "State"}`
     : "Ensemble Redistricting Analysis";
 
   return (
@@ -21,6 +21,10 @@ function AppHeader() {
       <span className="app-header-title" onClick={() => navigate("/")} role="button" tabIndex={0}>
         {headerTitle}
       </span>
+      <div className="app-header-brand">
+        <span className="app-header-team">by Tigers</span>
+        <img src={`${process.env.PUBLIC_URL}/logo.jpeg`} alt="Tigers logo" className="app-header-logo" />
+      </div>
     </header>
   );
 }

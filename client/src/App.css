@@ -38,6 +38,29 @@
   color: #fff;
 }
 
+.app-header-brand {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.app-header-team {
+  font-family: "Verdana", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #aaa;
+  letter-spacing: 0.5px;
+}
+
+.app-header-logo {
+  height: 26px;
+  width: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center;
+}
+
 .app-header-right {
   margin-left: auto;
 }
