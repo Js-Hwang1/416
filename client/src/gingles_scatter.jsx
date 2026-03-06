@@ -37,19 +37,22 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
 
     const groupLabel = GROUP_LABELS[group] || group;
 
+    /* Clamp values to [0,100] — some TX VTDs have corrupt census data */
+    const clamp = (v) => Math.max(0, Math.min(v, 100));
+
     const marks = [
       // Dem vote scatter (blue)
       Plot.dot(points, {
-        x: d => d.minority_vap_pct * 100,
-        y: d => d.d_vote_share * 100,
+        x: d => clamp(d.minority_vap_pct * 100),
+        y: d => clamp(d.d_vote_share * 100),
         fill: "steelblue",
         fillOpacity: 0.18,
         r: 2.5,
       }),
       // Rep vote scatter (red) — mirror of Dem
       Plot.dot(points, {
-        x: d => d.minority_vap_pct * 100,
-        y: d => (1 - d.d_vote_share) * 100,
+        x: d => clamp(d.minority_vap_pct * 100),
+        y: d => clamp((1 - d.d_vote_share) * 100),
         fill: "tomato",
         fillOpacity: 0.18,
         r: 2.5,
@@ -61,16 +64,16 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
       const sel = points[selectedIdx];
       marks.push(
         Plot.dot([sel], {
-          x: d => d.minority_vap_pct * 100,
-          y: d => d.d_vote_share * 100,
+          x: d => clamp(d.minority_vap_pct * 100),
+          y: d => clamp(d.d_vote_share * 100),
           fill: "steelblue",
           stroke: "#000",
           strokeWidth: 2,
           r: 6,
         }),
         Plot.dot([sel], {
-          x: d => d.minority_vap_pct * 100,
-          y: d => (1 - d.d_vote_share) * 100,
+          x: d => clamp(d.minority_vap_pct * 100),
+          y: d => clamp((1 - d.d_vote_share) * 100),
           fill: "tomato",
           stroke: "#000",
           strokeWidth: 2,

@@ -257,6 +257,7 @@ export default function StatePage() {
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [demoGroup, setDemoGroup] = useState("black");
+  const [heatmapLevel, setHeatmapLevel] = useState("precinct");
   const [demoPanelChart, setDemoPanelChart] = useState("gingles");
   const [ginglesPage, setGinglesPage] = useState(0);
   const [ginglesSort, setGinglesSort] = useState({ key: null, dir: "asc" });
@@ -746,7 +747,22 @@ export default function StatePage() {
             {/* ── LEFT: map ── */}
             <div className="state-map-panel">
               <div className="demo-map-toolbar">
-                <span className="section-title">Precinct Heat Map</span>
+                <div className="demo-group-btn-group" role="group" aria-label="Map level">
+                  <button
+                    type="button"
+                    className={`demo-group-btn${heatmapLevel === "precinct" ? " active" : ""}`}
+                    onClick={() => setHeatmapLevel("precinct")}
+                  >
+                    Precinct
+                  </button>
+                  <button
+                    type="button"
+                    className={`demo-group-btn${heatmapLevel === "block" ? " active" : ""}`}
+                    onClick={() => setHeatmapLevel("block")}
+                  >
+                    Census Block
+                  </button>
+                </div>
                 <div className="demo-group-btn-group" role="group" aria-label="Minority group">
                   {heatmapMinorityGroups.map((g) => (
                     <button
@@ -767,6 +783,7 @@ export default function StatePage() {
                   mapView={cfg.mapView}
                   minorityGroups={heatmapMinorityGroups}
                   selectedGroup={demoGroup}
+                  heatmapLevel={heatmapLevel}
                 />
               </div>
             </div>
@@ -832,9 +849,9 @@ export default function StatePage() {
                               onMouseLeave={() => setHoveredPrecinct(null)}
                             >
                               <td>{(ginglesPage * GINGLES_PAGE_SIZE + idx + 1).toLocaleString()}</td>
-                              <td>{(row.minority_vap_pct * 100).toFixed(1)}%</td>
-                              <td>{(row.d_vote_share * 100).toFixed(1)}%</td>
-                              <td>{((1 - row.d_vote_share) * 100).toFixed(1)}%</td>
+                              <td>{(Math.min(row.minority_vap_pct, 1) * 100).toFixed(1)}%</td>
+                              <td>{(Math.min(row.d_vote_share, 1) * 100).toFixed(1)}%</td>
+                              <td>{(Math.min(1 - row.d_vote_share, 1) * 100).toFixed(1)}%</td>
                             </tr>
                           ))}
                         </tbody>

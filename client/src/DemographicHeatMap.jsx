@@ -55,6 +55,7 @@ export default function DemographicHeatMap({
   blockTilesUrl,
   mapView,
   selectedGroup,
+  heatmapLevel,
 }) {
   const [hoverInfo, setHoverInfo] = useState(null);
 
@@ -63,8 +64,7 @@ export default function DemographicHeatMap({
     [selectedGroup]
   );
 
-  const tilesUrl = precinctTilesUrl;
-  const sourceLayer = "precincts";
+  const isBlock = heatmapLevel === "block";
 
   const onMouseMove = useCallback((e) => {
     if (e.features && e.features.length > 0) {
@@ -85,11 +85,16 @@ export default function DemographicHeatMap({
 
   const label = GROUP_LABELS[selectedGroup] || selectedGroup;
 
+  /* Use both sources always loaded; toggle visibility via layout.
+     This avoids full map remount when switching levels. */
+  const precinctVisibility = isBlock ? "none" : "visible";
+  const blockVisibility = isBlock ? "visible" : "none";
+  const interactiveIds = isBlock ? ["block-fill"] : ["precinct-fill"];
+
   return (
     <div className="heatmap-container">
       <div className="heatmap-map-wrapper">
         <MapGL
-          key={`${tilesUrl}-${selectedGroup}`}
           initialViewState={{
             longitude: mapView.center[0],
             latitude: mapView.center[1],
@@ -99,28 +104,56 @@ export default function DemographicHeatMap({
           maxZoom={mapView.maxZoom}
           style={{ width: "100%", height: "100%" }}
           mapStyle={MAP_STYLE}
-          interactiveLayerIds={["heatmap-fill"]}
+          interactiveLayerIds={interactiveIds}
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
         >
           <NavigationControl position="top-right" />
-          <Source id="heatmap-source" type="vector" url={tilesUrl}>
+
+          {/* Precinct source — always loaded */}
+          <Source id="precinct-source" type="vector" url={precinctTilesUrl}>
             <Layer
-              id="heatmap-fill"
+              id="precinct-fill"
               type="fill"
-              source-layer={sourceLayer}
+              source-layer="precincts"
+              layout={{ visibility: precinctVisibility }}
               paint={{
                 "fill-color": fillColorExpr,
                 "fill-opacity": 0.85,
               }}
             />
             <Layer
-              id="heatmap-line"
+              id="precinct-line"
               type="line"
-              source-layer={sourceLayer}
+              source-layer="precincts"
+              layout={{ visibility: precinctVisibility }}
               paint={{
                 "line-color": "#666",
                 "line-width": 0.3,
+              }}
+            />
+          </Source>
+
+          {/* Block source — always loaded */}
+          <Source id="block-source" type="vector" url={blockTilesUrl}>
+            <Layer
+              id="block-fill"
+              type="fill"
+              source-layer="blocks"
+              layout={{ visibility: blockVisibility }}
+              paint={{
+                "fill-color": fillColorExpr,
+                "fill-opacity": 0.85,
+              }}
+            />
+            <Layer
+              id="block-line"
+              type="line"
+              source-layer="blocks"
+              layout={{ visibility: blockVisibility }}
+              paint={{
+                "line-color": "#666",
+                "line-width": 0.2,
               }}
             />
           </Source>
