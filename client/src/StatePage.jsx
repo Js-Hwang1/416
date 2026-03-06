@@ -100,12 +100,11 @@ const INTERESTING_PLAN_OPTIONS = [
 ];
 
 const DEMO_CHART_OPTIONS = [
-  { value: "gingles", label: "Gingles Scatter" },
-  { value: "precinct", label: "Precinct Data" },
-  { value: "boxwhisker", label: "Minority Distribution" },
-  { value: "probability", label: "EI Curves" },
-  { value: "seatSplits", label: "Seat Splits" },
-  { value: "fairness", label: "Fairness" },
+  { value: "gingles", label: "Gingles + Precinct", group: "racial" },
+  { value: "boxwhisker", label: "Minority Distribution", group: "racial" },
+  { value: "probability", label: "EI Curves", group: "racial" },
+  { value: "seatSplits", label: "Seat Splits", group: "ensemble" },
+  { value: "fairness", label: "Fairness", group: "ensemble" },
 ];
 
 const GINGLES_PAGE_SIZE = 10;
@@ -847,75 +846,76 @@ export default function StatePage() {
 
               <div className="demo-chart-body">
                 {demoPanelChart === "gingles" && (
-                  <GinglessScatterPlot
-                    points={ginglesPoints}
-                    regression={regressionData?.[demoGroup]}
-                    group={demoGroup}
-                  />
-                )}
-
-                {demoPanelChart === "precinct" && (
-                  <div className="demo-precinct-panel">
-                    <table className="district-table" aria-label="Precinct data table">
-                      <colgroup>
-                        <col style={{ width: "12%" }} />
-                        <col style={{ width: "30%" }} />
-                        <col style={{ width: "29%" }} />
-                        <col style={{ width: "29%" }} />
-                      </colgroup>
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>{heatmapMinorityGroups.find((g) => g.key === demoGroup)?.label} VAP %</th>
-                          <th>Dem Vote %</th>
-                          <th>Rep Vote %</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ginglesPageRows.map((row, idx) => (
-                          <tr key={ginglesPage * GINGLES_PAGE_SIZE + idx}>
-                            <td>{(ginglesPage * GINGLES_PAGE_SIZE + idx + 1).toLocaleString()}</td>
-                            <td>{(row.minority_vap_pct * 100).toFixed(1)}%</td>
-                            <td>{(row.d_vote_share * 100).toFixed(1)}%</td>
-                            <td>{((1 - row.d_vote_share) * 100).toFixed(1)}%</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <div className="gingles-pagination">
-                      <button
-                        className="gingles-page-btn"
-                        onClick={() => setGinglesPage((p) => p - 1)}
-                        disabled={ginglesPage === 0}
-                      >‹</button>
-                      <input
-                        type="number"
-                        className="gingles-page-input"
-                        min={1}
-                        max={ginglesTotalPages || 1}
-                        defaultValue={ginglesPage + 1}
-                        key={ginglesPage}
-                        onBlur={(e) => {
-                          const v = Number(e.target.value) - 1;
-                          if (v >= 0 && v < (ginglesTotalPages || 1)) setGinglesPage(v);
-                          else e.target.value = ginglesPage + 1;
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") e.target.blur();
-                        }}
+                  <div className="demo-gingles-combined">
+                    <div className="demo-gingles-scatter">
+                      <GinglessScatterPlot
+                        points={ginglesPoints}
+                        regression={regressionData?.[demoGroup]}
+                        group={demoGroup}
                       />
-                      <span className="gingles-page-info">/ {ginglesTotalPages || 1}</span>
-                      <button
-                        className="gingles-page-btn"
-                        onClick={() => setGinglesPage((p) => p + 1)}
-                        disabled={ginglesPage >= ginglesTotalPages - 1}
-                      >›</button>
+                    </div>
+                    <div className="demo-gingles-table">
+                      <table className="district-table" aria-label="Precinct data table">
+                        <colgroup>
+                          <col style={{ width: "12%" }} />
+                          <col style={{ width: "30%" }} />
+                          <col style={{ width: "29%" }} />
+                          <col style={{ width: "29%" }} />
+                        </colgroup>
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>{heatmapMinorityGroups.find((g) => g.key === demoGroup)?.label} VAP %</th>
+                            <th>Dem Vote %</th>
+                            <th>Rep Vote %</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {ginglesPageRows.map((row, idx) => (
+                            <tr key={ginglesPage * GINGLES_PAGE_SIZE + idx}>
+                              <td>{(ginglesPage * GINGLES_PAGE_SIZE + idx + 1).toLocaleString()}</td>
+                              <td>{(row.minority_vap_pct * 100).toFixed(1)}%</td>
+                              <td>{(row.d_vote_share * 100).toFixed(1)}%</td>
+                              <td>{((1 - row.d_vote_share) * 100).toFixed(1)}%</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                      <div className="gingles-pagination">
+                        <button
+                          className="gingles-page-btn"
+                          onClick={() => setGinglesPage((p) => p - 1)}
+                          disabled={ginglesPage === 0}
+                        >‹</button>
+                        <input
+                          type="number"
+                          className="gingles-page-input"
+                          min={1}
+                          max={ginglesTotalPages || 1}
+                          defaultValue={ginglesPage + 1}
+                          key={ginglesPage}
+                          onBlur={(e) => {
+                            const v = Number(e.target.value) - 1;
+                            if (v >= 0 && v < (ginglesTotalPages || 1)) setGinglesPage(v);
+                            else e.target.value = ginglesPage + 1;
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") e.target.blur();
+                          }}
+                        />
+                        <span className="gingles-page-info">/ {ginglesTotalPages || 1}</span>
+                        <button
+                          className="gingles-page-btn"
+                          onClick={() => setGinglesPage((p) => p + 1)}
+                          disabled={ginglesPage >= ginglesTotalPages - 1}
+                        >›</button>
+                      </div>
                     </div>
                   </div>
                 )}
 
                 {demoPanelChart === "boxwhisker" && (
-                  <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} />
+                  <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} selectedGroup={demoGroup} />
                 )}
                 {demoPanelChart === "probability" && <ProbabilityChart data={eiCurvesData} />}
                 {demoPanelChart === "seatSplits" && <BarChart data={ensembleBarData} />}
