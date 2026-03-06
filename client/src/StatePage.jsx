@@ -493,6 +493,12 @@ export default function StatePage() {
                   onDistrictSelect={setSelectedDistrict}
                   districtParties={reps}
                 />
+                {selectedInterestingPlan !== "enacted" && (
+                  <div className="plan-badge">
+                    Viewing: {INTERESTING_PLAN_OPTIONS.find((o) => o.value === selectedInterestingPlan)?.label}
+                    <span className="plan-badge-note">(SeaWulf data pending)</span>
+                  </div>
+                )}
               </div>
               <div className="interesting-plan-controls">
                 <div className="interesting-plan-dropdown" ref={interestingPlanRef}>
@@ -531,6 +537,7 @@ export default function StatePage() {
                   type="button"
                   className="compare-enacted-btn"
                   disabled={selectedInterestingPlan === "enacted"}
+                  onClick={() => {/* TODO: overlay comparison when SeaWulf plans available */}}
                 >
                   Compare with enacted
                 </button>

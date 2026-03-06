@@ -438,17 +438,18 @@
 
 .interesting-plan-menu {
   position: absolute;
-  top: calc(100% + 4px);
+  bottom: calc(100% + 4px);
   left: 0;
   right: 0;
   background: #222;
   border: 1px solid #444;
-  max-height: calc(34px * 5);
+  max-height: calc(34px * 8);
   overflow-y: auto;
   overscroll-behavior-y: contain;
   overscroll-behavior: contain;
   box-sizing: border-box;
   scrollbar-width: none;
+  border-radius: 6px;
   -ms-overflow-style: none;
 }
 
@@ -481,6 +482,28 @@
   color: #fff;
 }
 
+.plan-badge {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 30, 30, 0.9);
+  color: #fff;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  z-index: 10;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.plan-badge-note {
+  font-weight: 400;
+  opacity: 0.6;
+  margin-left: 6px;
+  font-size: 0.75rem;
+}
 
 /* ── State Content ───────────────────────────────── */
 .state-content {
@@ -513,6 +536,7 @@
 }
 
 .state-map-wrapper {
+  position: relative;
   background: #fff;
   border: 1px solid #ddd;
   padding: 0;
