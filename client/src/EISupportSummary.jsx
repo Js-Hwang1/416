@@ -6,6 +6,11 @@ const CANDIDATE_COLORS = {
   1: "rgba(200, 170, 80, 0.8)",
 };
 
+const CANDIDATE_TO_PARTY = {
+  "Harris (D)": "Democratic",
+  "Trump (R)": "Republican",
+};
+
 export default function EISupportSummary({ data }) {
   const svgRef = useRef();
 
@@ -157,7 +162,7 @@ export default function EISupportSummary({ data }) {
         .style("font-family", "'Verdana', sans-serif")
         .style("font-size", "10px")
         .style("fill", "#555")
-        .text(cand);
+        .text(CANDIDATE_TO_PARTY[cand] || cand);
     });
 
   }, [data]);

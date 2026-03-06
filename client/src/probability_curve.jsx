@@ -15,6 +15,13 @@ const FILL_MAP = {
   Asian: "rgba(120, 170, 100, 0.2)"
 };
 
+const CANDIDATE_TO_PARTY = {
+  "Harris (D)": "Democratic",
+  "Trump (R)": "Republican",
+};
+
+const getPartyLabel = (candidate) => CANDIDATE_TO_PARTY[candidate] || candidate;
+
 const ProbabilityChart = ({ data }) => {
   const dataJson = data || [];
   const allRaces = [...new Set(dataJson.map(d => d.race))];
@@ -64,14 +71,14 @@ const ProbabilityChart = ({ data }) => {
   return (
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <div className="chart-controls">
-        <span className="chart-controls-label">Candidate:</span>
+        <span className="chart-controls-label">Party:</span>
         {allCandidates.map(cand => (
           <button
             key={cand}
             className={`chart-control-btn${selectedCandidate === cand ? " active" : ""}`}
             onClick={() => setSelectedCandidate(cand)}
           >
-            {cand}
+            {getPartyLabel(cand)}
           </button>
         ))}
         <span className="chart-controls-label" style={{ marginLeft: 16 }}>Groups:</span>
@@ -95,8 +102,8 @@ const ProbabilityChart = ({ data }) => {
         layout={{
           xaxis: {
             title: {
-              text: "% of Group Voting for Candidate",
-              font: { family: "'Verdana', sans-serif", size: 11, color: "#888" }
+              text: `% of Group Voting ${getPartyLabel(selectedCandidate)}`,
+              font: { family: "'Verdana', sans-serif", size: 11, color: "#333" }
             },
             gridcolor: "#f0f0f0",
             zeroline: false
@@ -104,7 +111,8 @@ const ProbabilityChart = ({ data }) => {
           yaxis: {
             title: {
               text: "Probability Density",
-              font: { family: "'Verdana', sans-serif", size: 11, color: "#888" }
+              font: { family: "'Verdana', sans-serif", size: 11, color: "#333" },
+              standoff: 15
             },
             gridcolor: "#f0f0f0",
             zeroline: false
@@ -119,7 +127,7 @@ const ProbabilityChart = ({ data }) => {
           },
           plot_bgcolor: "#fff",
           paper_bgcolor: "#fff",
-          margin: { l: 55, r: 20, t: 10, b: 70 },
+          margin: { l: 65, r: 20, t: 10, b: 70 },
           font: { family: "'Verdana', sans-serif" },
           autosize: true,
         }}

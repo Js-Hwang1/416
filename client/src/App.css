@@ -1689,23 +1689,20 @@
 }
 
 .demo-gingles-scatter {
-  flex: 3;
+  flex: 1;
   min-height: 0;
   overflow: hidden;
   border-bottom: 1px solid #e0e0e0;
 }
 
 .demo-gingles-table {
-  flex: 2;
-  min-height: 0;
+  flex-shrink: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .demo-gingles-table .district-table {
-  flex: 1;
-  min-height: 0;
+  width: 100%;
 }
 
 .demo-gingles-table .gingles-pagination {

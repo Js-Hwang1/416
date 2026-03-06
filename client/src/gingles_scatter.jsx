@@ -10,14 +10,17 @@ const GROUP_LABELS = {
 const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointClick }) => {
   const containerRef = useRef();
   const plotRef = useRef();
-  const [width, setWidth] = useState(600);
+  const [dims, setDims] = useState({ width: 600, height: 350 });
 
-  // Track container width responsively
+  // Track container size responsively
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
-        setWidth(entry.contentRect.width);
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setDims({ width, height });
+        }
       }
     });
     observer.observe(containerRef.current);
@@ -104,14 +107,30 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
       Plot.ruleY([50], { stroke: "#999", strokeDasharray: "4,4", strokeWidth: 1 })
     );
 
+    // Precinct count label — centered at the top, at y-axis label height
+    marks.push(
+      Plot.text([`${points.length.toLocaleString()} precincts`], {
+        frameAnchor: "top",
+        dy: -5,
+        textAnchor: "middle",
+        fill: "#555",
+        fontSize: 12,
+        fontFamily: "Verdana, sans-serif",
+      })
+    );
+
+    const legendHeight = 36;
+    const plotHeight = Math.min(Math.round(dims.width * 0.55), dims.height - legendHeight);
+
     const plot = Plot.plot({
-      width: width,
-      height: Math.round(width * 0.55),
+      width: dims.width,
+      height: Math.max(plotHeight, 150),
       inset: 10,
       grid: true,
+      marginBottom: 45,
       style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent" },
       x: {
-        label: `% ${groupLabel} VAP in precinct`,
+        label: `Percent ${groupLabel}`,
         tickFormat: d => `${d}%`,
         domain: [0, 100],
       },
@@ -138,8 +157,9 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
           let bestIdx = -1;
           let bestDist = Infinity;
           // Use the plot's scales to convert data → pixel coords
-          const plotWidth = width;
-          const plotHeight = Math.round(width * 0.55);
+          const plotWidth = dims.width;
+          const legendH = 36;
+          const plotHeight = Math.max(Math.min(Math.round(dims.width * 0.55), dims.height - legendH), 150);
           const inset = 10;
           // Approximate margins from Observable Plot defaults
           const marginLeft = 40;
@@ -166,7 +186,7 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
         svg.addEventListener("click", handleClick);
       }
     }
-  }, [points, regression, group, width, selectedIdx, onPointClick]);
+  }, [points, regression, group, dims, selectedIdx, onPointClick]);
 
   return (
     <div ref={containerRef} style={{ width: "100%", height: "100%" }}>

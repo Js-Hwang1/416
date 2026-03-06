@@ -865,7 +865,7 @@ export default function StatePage() {
                         <thead>
                           <tr>
                             <th>#</th>
-                            <th>{heatmapMinorityGroups.find((g) => g.key === demoGroup)?.label} VAP %</th>
+                            <th>% {heatmapMinorityGroups.find((g) => g.key === demoGroup)?.label}</th>
                             <th>Dem Vote %</th>
                             <th>Rep Vote %</th>
                           </tr>
