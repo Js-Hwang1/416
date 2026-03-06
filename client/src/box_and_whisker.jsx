@@ -1,18 +1,36 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 
-export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hispanic" }) {
+export default function BoxPlotChart({ boxData, enactedData }) {
   const svgRef = useRef();
+  const containerRef = useRef();
+  const [selectedGroup, setSelectedGroup] = useState("hispanic");
+  const [dims, setDims] = useState({ width: 800, height: 400 });
 
   const GROUP_LABELS = { hispanic: "Hispanic", black: "Black", asian: "Asian" };
+  const minorityGroups = ["hispanic", "black", "asian"];
 
   const districts = boxData?.[selectedGroup] ?? [];
 
   useEffect(() => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setDims({ width, height });
+        }
+      }
+    });
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     if (!districts || districts.length === 0) return;
 
-    const width = 1000;
-    const height = 420;
+    const width = dims.width;
+    const height = dims.height;
     const marginTop = 20;
     const marginRight = 30;
     const marginBottom = 50;
@@ -178,10 +196,22 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .style("fill", "#888")
       .text(`${GROUP_LABELS[selectedGroup] || selectedGroup} Population %`);
 
-  }, [districts, selectedGroup, enactedData]);
+  }, [districts, selectedGroup, enactedData, dims]);
 
   return (
-    <div style={{ width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+      <div className="chart-controls">
+        <span className="chart-controls-label">Group:</span>
+        {minorityGroups.map(group => (
+          <button
+            key={group}
+            className={`chart-control-btn${selectedGroup === group ? " active" : ""}`}
+            onClick={() => setSelectedGroup(group)}
+          >
+            {GROUP_LABELS[group] || group}
+          </button>
+        ))}
+      </div>
       <div className="chart-legend">
         <div className="chart-legend-item">
           <span className="chart-legend-box" style={{ background: "#c8d0da" }}></span>
@@ -200,7 +230,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
           Enacted Plan
         </div>
       </div>
-      <div style={{ display: "flex", justifyContent: "center" }}>
+      <div ref={containerRef} style={{ flex: 1, minHeight: 0 }}>
         <svg ref={svgRef} />
       </div>
     </div>

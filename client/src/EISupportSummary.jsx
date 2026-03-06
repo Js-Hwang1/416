@@ -167,7 +167,7 @@ export default function EISupportSummary({ data }) {
   }
 
   return (
-    <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+    <div style={{ width: "100%", display: "flex", justifyContent: "center", flex: 1, minHeight: 0, alignItems: "center" }}>
       <svg ref={svgRef} />
     </div>
   );

@@ -5,7 +5,7 @@ import BarChart from "./bar_chart";
 import ProbabilityChart from "./probability_curve";
 import GinglessScatterPlot from "./gingles_scatter";
 import DemographicHeatMap from "./DemographicHeatMap";
-import box_data from "./dummy_data/dummy_box_and_whisker.json";
+import VoteSeatChart from "./VoteSeatChart";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 
@@ -35,6 +35,10 @@ const STATE_CONFIG = {
     regressionFile: `${process.env.PUBLIC_URL}/data/tx_gingles_regression.json`,
     enactedDemoFile: `${process.env.PUBLIC_URL}/data/tx_enacted_demographics.json`,
     heatmapGeojson: `${process.env.PUBLIC_URL}/data/tx_vtds_heatmap.geojson`,
+    ensembleBarFile: `${process.env.PUBLIC_URL}/data/tx_ensemble_bar.json`,
+    ensembleBoxFile: `${process.env.PUBLIC_URL}/data/tx_ensemble_box.json`,
+    eiCurvesFile: `${process.env.PUBLIC_URL}/data/tx_ei_curves.json`,
+    voteSeatFile: `${process.env.PUBLIC_URL}/data/tx_vote_seat.json`,
     repsKey: "TX",
     mapView: {
       fitPadding: [18, 18],
@@ -59,6 +63,10 @@ const STATE_CONFIG = {
     regressionFile: `${process.env.PUBLIC_URL}/data/ma_gingles_regression.json`,
     enactedDemoFile: `${process.env.PUBLIC_URL}/data/ma_enacted_demographics.json`,
     heatmapGeojson: `${process.env.PUBLIC_URL}/data/ma_precincts_heatmap.geojson`,
+    ensembleBarFile: `${process.env.PUBLIC_URL}/data/ma_ensemble_bar.json`,
+    ensembleBoxFile: `${process.env.PUBLIC_URL}/data/ma_ensemble_box.json`,
+    eiCurvesFile: `${process.env.PUBLIC_URL}/data/ma_ei_curves.json`,
+    voteSeatFile: `${process.env.PUBLIC_URL}/data/ma_vote_seat.json`,
     repsKey: "MA",
     mapView: {
       fitPadding: [18, 18],
@@ -337,6 +345,10 @@ export default function StatePage() {
   const regressionData = useFetchJson(cfg?.regressionFile);
   const enactedDemo = useFetchJson(cfg?.enactedDemoFile);
   const heatmapGeojson = useFetchJson(cfg?.heatmapGeojson);
+  const ensembleBarData = useFetchJson(cfg?.ensembleBarFile);
+  const ensembleBoxData = useFetchJson(cfg?.ensembleBoxFile);
+  const eiCurvesData = useFetchJson(cfg?.eiCurvesFile);
+  const voteSeatData = useFetchJson(cfg?.voteSeatFile);
 
   const reps = allReps?.[cfg?.repsKey];
 
@@ -903,16 +915,11 @@ export default function StatePage() {
                 )}
 
                 {demoPanelChart === "boxwhisker" && (
-                  <BoxPlotChart boxData={box_data} enactedData={enactedDemo} selectedGroup={demoGroup} />
+                  <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} />
                 )}
-                {demoPanelChart === "probability" && <ProbabilityChart />}
-                {demoPanelChart === "seatSplits" && <BarChart />}
-                {demoPanelChart === "fairness" && (
-                  <div className="demographics-placeholder">
-                    <div className="demographics-placeholder-title">Fairness Analysis</div>
-                    <div className="demographics-placeholder-label">Coming soon</div>
-                  </div>
-                )}
+                {demoPanelChart === "probability" && <ProbabilityChart data={eiCurvesData} />}
+                {demoPanelChart === "seatSplits" && <BarChart data={ensembleBarData} />}
+                {demoPanelChart === "fairness" && <VoteSeatChart data={voteSeatData} />}
               </div>
             </div>
           </div>

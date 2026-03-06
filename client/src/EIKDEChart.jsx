@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Plot from "react-plotly.js";
 
 const COLOR_MAP = {
@@ -17,8 +17,16 @@ const FILL_MAP = {
 
 export default function EIKDEChart({ data }) {
   const allGroups = data ? Object.keys(data) : [];
-  const [group1, setGroup1] = useState(allGroups[0] || "");
-  const [group2, setGroup2] = useState(allGroups[1] || "");
+  const [group1, setGroup1] = useState("");
+  const [group2, setGroup2] = useState("");
+
+  // Initialize selections once data arrives
+  useEffect(() => {
+    if (allGroups.length >= 2 && !group1 && !group2) {
+      setGroup1(allGroups[0]);
+      setGroup2(allGroups[1]);
+    }
+  }, [allGroups.length]); // only re-run when data loads
 
   if (!data || allGroups.length < 2) {
     return <div className="placeholder-card">No KDE data available</div>;
@@ -51,7 +59,7 @@ export default function EIKDEChart({ data }) {
   }
 
   return (
-    <div style={{ width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <div className="chart-controls">
         <span className="chart-controls-label">Group 1:</span>
         <select
@@ -80,7 +88,7 @@ export default function EIKDEChart({ data }) {
           xaxis: {
             title: {
               text: "% Support for Democratic Candidate",
-              font: { family: "'Inter', sans-serif", size: 11, color: "#888" }
+              font: { family: "'Verdana', sans-serif", size: 11, color: "#888" }
             },
             range: [0, 100],
             gridcolor: "#f0f0f0",
@@ -89,7 +97,7 @@ export default function EIKDEChart({ data }) {
           yaxis: {
             title: {
               text: "Density",
-              font: { family: "'Inter', sans-serif", size: 11, color: "#888" }
+              font: { family: "'Verdana', sans-serif", size: 11, color: "#888" }
             },
             gridcolor: "#f0f0f0",
             zeroline: false,
@@ -97,7 +105,7 @@ export default function EIKDEChart({ data }) {
           hovermode: "x unified",
           showlegend: true,
           legend: {
-            font: { family: "'Inter', sans-serif", size: 10 },
+            font: { family: "'Verdana', sans-serif", size: 10 },
             orientation: "h",
             x: 0,
             y: -0.2,
@@ -105,9 +113,11 @@ export default function EIKDEChart({ data }) {
           plot_bgcolor: "#fff",
           paper_bgcolor: "#fff",
           margin: { l: 55, r: 20, t: 10, b: 70 },
-          font: { family: "'Inter', sans-serif" },
+          font: { family: "'Verdana', sans-serif" },
+          autosize: true,
         }}
-        style={{ width: "100%", height: "420px" }}
+        style={{ width: "100%", flex: 1, minHeight: 0 }}
+        useResizeHandler={true}
         config={{ responsive: true, displayModeBar: false }}
       />
     </div>
