@@ -15,6 +15,7 @@ Usage:
     python clean_data.py
 """
 
+import gc
 import json
 import math
 import os
@@ -84,6 +85,7 @@ RAW_FILES = {
     "ma_cd": os.path.join(RAW_DIR, "tl_2023_25_cd118.zip"),
     "tx_cd": os.path.join(RAW_DIR, "tl_2023_48_cd118.zip"),
     "tx_pl2020_b": os.path.join(RAW_DIR, "tx_pl2020_b.zip"),
+    "ma_pl2020_b": os.path.join(RAW_DIR, "ma_pl2020_b.zip"),
 }
 
 REPS_FILE = os.path.join(BASE_DIR, "congressional_reps.json")
@@ -1067,6 +1069,124 @@ def step12_enacted_demographics(ma, tx):
 
 
 # =========================================================================
+# STEP 14: Census Block Heatmaps
+# =========================================================================
+def step14_block_heatmaps():
+    print("\n" + "=" * 70)
+    print("STEP 14: Census Block Heatmaps")
+    print("=" * 70)
+
+    os.makedirs(CLIENT_DATA_DIR, exist_ok=True)
+
+    # --- MA blocks (split across 5 shapefiles — need P2 + P4) ---
+    report("Reading MA census blocks...")
+    ma_zip = RAW_FILES["ma_pl2020_b"]
+    with timed("MA P2 (geometry + total pop)"):
+        ma_p2 = pyogrio.read_dataframe(
+            f"zip://{ma_zip}/ma_pl2020_p2_b.shp",
+            columns=["GEOID20", "P0020001", "P0020002", "P0020005", "P0020006", "P0020008"],
+            read_geometry=True,
+        )
+    with timed("MA P4 (VAP, no geometry)"):
+        ma_p4 = pyogrio.read_dataframe(
+            f"zip://{ma_zip}/ma_pl2020_p4_b.shp",
+            columns=["GEOID20", "P0040001", "P0040002", "P0040005", "P0040006", "P0040008"],
+            read_geometry=False,
+        )
+    report(f"MA P2: {len(ma_p2):,} rows, P4: {len(ma_p4):,} rows")
+
+    ma_blocks = ma_p2.merge(ma_p4, on="GEOID20", how="left")
+    del ma_p2, ma_p4
+
+    _write_block_heatmap(
+        ma_blocks, "MA", "ma_blocks_heatmap.geojson",
+        tolerance=0.0001, grid_size=1e-5,
+    )
+    del ma_blocks
+    gc.collect()
+
+    # --- TX blocks (single shapefile with all tables) ---
+    report("Reading TX census blocks...")
+    tx_zip = RAW_FILES["tx_pl2020_b"]
+    tx_cols = [
+        "GEOID20",
+        "P0020001", "P0020002", "P0020005", "P0020006", "P0020008",
+        "P0040001", "P0040002", "P0040005", "P0040006", "P0040008",
+    ]
+    with timed("TX blocks (all columns in one read)"):
+        tx_blocks = pyogrio.read_dataframe(
+            f"zip://{tx_zip}",
+            columns=tx_cols,
+            read_geometry=True,
+        )
+    report(f"TX blocks: {len(tx_blocks):,} rows")
+
+    _write_block_heatmap(
+        tx_blocks, "TX", "tx_blocks_heatmap.geojson",
+        tolerance=0.0002, grid_size=1e-5,
+    )
+    del tx_blocks
+    gc.collect()
+
+
+def _write_block_heatmap(gdf, state_label, out_name, tolerance, grid_size):
+    """Reproject, simplify, and stream-write a block heatmap GeoJSON."""
+    with timed(f"{state_label} reproject + simplify"):
+        gdf = gdf.to_crs(epsg=4326)
+
+        # Fix invalid geometries
+        invalid_mask = ~gdf.geometry.is_valid
+        n_invalid = invalid_mask.sum()
+        if n_invalid > 0:
+            gdf.loc[invalid_mask, "geometry"] = gdf.loc[invalid_mask, "geometry"].buffer(0)
+            report(f"  Fixed {n_invalid} invalid geometries")
+
+        # Simplify
+        gdf["geometry"] = gdf["geometry"].simplify(tolerance=tolerance, preserve_topology=True)
+
+        # Reduce precision
+        gdf = reduce_precision(gdf, grid_size=grid_size)
+
+    out_path = os.path.join(CLIENT_DATA_DIR, out_name)
+    n_features = len(gdf)
+    report(f"Stream-writing {n_features:,} features to {out_path}...")
+
+    with open(out_path, "w") as f:
+        f.write('{"type":"FeatureCollection","features":[')
+        first = True
+        for idx in range(n_features):
+            row = gdf.iloc[idx]
+            geom = row.geometry
+            if geom is None or geom.is_empty:
+                continue
+
+            vap = int(row["P0040001"]) if pd.notna(row["P0040001"]) else 0
+            pop = int(row["P0020001"]) if pd.notna(row["P0020001"]) else 0
+
+            props = {
+                "pop": pop,
+                "vap": vap,
+                "name": str(row["GEOID20"]),
+                "hispanic": round(float(row["P0040002"]) / vap * 100, 1) if vap > 0 else 0,
+                "black": round(float(row["P0040006"]) / vap * 100, 1) if vap > 0 else 0,
+                "asian": round(float(row["P0040008"]) / vap * 100, 1) if vap > 0 else 0,
+                "white": round(float(row["P0040005"]) / vap * 100, 1) if vap > 0 else 0,
+            }
+
+            geojson_geom = mapping(geom)
+            feat = {"type": "Feature", "geometry": geojson_geom, "properties": props}
+
+            if not first:
+                f.write(",")
+            json.dump(feat, f, separators=(",", ":"))
+            first = False
+        f.write("]}")
+
+    size_mb = os.path.getsize(out_path) / 1e6
+    report(f"{state_label} block heatmap: {size_mb:.1f} MB ({n_features:,} features)")
+
+
+# =========================================================================
 # STEP 13: Verification
 # =========================================================================
 def step13_verify():
@@ -1134,6 +1254,21 @@ def step13_verify():
             status = "OK" if size_mb <= max_mb else "WARNING: too large"
             report(f"{name}: {size_mb:.1f} MB ({status})")
             if size_mb > max_mb:
+                ok = False
+        else:
+            report(f"{name}: MISSING")
+            ok = False
+
+    # Check block heatmap files
+    for name, path, min_mb, max_mb in [
+        ("MA block heatmap", os.path.join(CLIENT_DATA_DIR, "ma_blocks_heatmap.geojson"), 5, 100),
+        ("TX block heatmap", os.path.join(CLIENT_DATA_DIR, "tx_blocks_heatmap.geojson"), 30, 500),
+    ]:
+        if os.path.exists(path):
+            size_mb = os.path.getsize(path) / 1e6
+            status = "OK" if min_mb <= size_mb <= max_mb else "WARNING: unexpected size"
+            report(f"{name}: {size_mb:.1f} MB ({status})")
+            if size_mb < min_mb or size_mb > max_mb:
                 ok = False
         else:
             report(f"{name}: MISSING")
@@ -1277,6 +1412,9 @@ def main():
                       f, separators=(",", ":"))
         sz = os.path.getsize(out_path) / 1e6
         report(f"{label} heatmap: {sz:.1f} MB -> {out_path}")
+
+    # --- Block-level heatmaps from Census PL2020 ---
+    step14_block_heatmaps()
 
     # --- Copy analysis data to client/public/data/ ---
     print("\nCopying analysis data to client...")
