@@ -574,8 +574,8 @@
 
 .state-layout {
   display: grid;
-  grid-template-columns: 3fr 2fr;
-  gap: 20px;
+  grid-template-columns: 65fr 35fr;
+  gap: 16px;
   align-items: start;
   flex: 1;
   min-height: 0;
@@ -1175,23 +1175,23 @@
 }
 
 .district-col-number {
-  width: 9%;
+  width: 8%;
 }
 
 .district-col-representative {
-  width: 24%;
+  width: 32%;
 }
 
 .district-col-party {
-  width: 14%;
+  width: 12%;
 }
 
 .district-col-racial {
-  width: 24%;
+  width: 18%;
 }
 
 .district-col-margin {
-  width: 24%;
+  width: 22%;
 }
 
 .district-table th {

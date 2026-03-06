@@ -1,0 +1,22 @@
+Bootstrap: docker
+From: python:3.11-slim
+
+%post
+    apt-get update && apt-get install -y --no-install-recommends \
+        build-essential gcc g++ && \
+    rm -rf /var/lib/apt/lists/*
+
+    pip install --no-cache-dir \
+        pyei>=1.1 \
+        numpy \
+        pandas \
+        scipy \
+        matplotlib \
+        pymongo
+
+%runscript
+    exec python3 "$@"
+
+%labels
+    Author tigers-redistricting
+    Description PyEI Ecological Inference container for CSE 416

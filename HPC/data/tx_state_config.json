@@ -1,0 +1,33 @@
+{
+  "state_name": "Texas",
+  "state_abbr": "TX",
+  "num_districts": 38,
+  "graph_path": "data/tx_vtds.geojson",
+  "pop_tolerance": 0.05,
+  "effectiveness_threshold": 0.5,
+  "opportunity_threshold": 0.5,
+  "ensemble_size": 5000,
+  "test_ensemble_size": 250,
+  "node_repeats": 2,
+  "random_seed": 42,
+  "minority_groups": [
+    {
+      "name": "Black",
+      "vap_col": "BVAP",
+      "party_of_choice": "Democratic",
+      "ei_confidence": 1.0
+    },
+    {
+      "name": "Hispanic",
+      "vap_col": "HVAP",
+      "party_of_choice": "Democratic",
+      "ei_confidence": 1.0
+    },
+    {
+      "name": "Asian",
+      "vap_col": "ASIANVAP",
+      "party_of_choice": "Democratic",
+      "ei_confidence": 1.0
+    }
+  ]
+}

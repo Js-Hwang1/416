@@ -1,0 +1,33 @@
+{
+  "state_name": "Massachusetts",
+  "state_abbr": "MA",
+  "num_districts": 9,
+  "graph_path": "data/ma_precinct_graph.json",
+  "pop_tolerance": 0.05,
+  "effectiveness_threshold": 0.5,
+  "opportunity_threshold": 0.5,
+  "ensemble_size": 5000,
+  "test_ensemble_size": 250,
+  "node_repeats": 2,
+  "random_seed": 42,
+  "minority_groups": [
+    {
+      "name": "Black",
+      "vap_col": "BVAP",
+      "party_of_choice": "Democratic",
+      "ei_confidence": 0.95
+    },
+    {
+      "name": "Hispanic",
+      "vap_col": "HVAP",
+      "party_of_choice": "Democratic",
+      "ei_confidence": 0.90
+    },
+    {
+      "name": "Asian",
+      "vap_col": "ASIANVAP",
+      "party_of_choice": "Democratic",
+      "ei_confidence": 0.85
+    }
+  ]
+}

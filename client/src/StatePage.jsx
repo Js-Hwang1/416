@@ -239,6 +239,8 @@ function StateMap({ cfg, selectedDistrict, onDistrictSelect, districtParties }) 
     if (e.features && e.features.length > 0) {
       const d = e.features[0].properties.district;
       setHoveredDistrict(typeof d === "number" ? d : parseInt(d, 10));
+    } else {
+      setHoveredDistrict(null);
     }
   }, []);
 
@@ -246,10 +248,16 @@ function StateMap({ cfg, selectedDistrict, onDistrictSelect, districtParties }) 
     setHoveredDistrict(null);
   }, []);
 
-  /* Highlight filter for selected district */
+  /* Highlight filter for selected district (click) */
   const selectedFilter = useMemo(
     () => selectedDistrict !== null ? ["==", ["to-number", ["get", "district"]], selectedDistrict] : ["==", 1, 0],
     [selectedDistrict]
+  );
+
+  /* Highlight filter for hovered district */
+  const hoverFilter = useMemo(
+    () => hoveredDistrict !== null ? ["==", ["to-number", ["get", "district"]], hoveredDistrict] : ["==", 1, 0],
+    [hoveredDistrict]
   );
 
   if (!geojson) return <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>Loading map…</div>;
@@ -288,6 +296,16 @@ function StateMap({ cfg, selectedDistrict, onDistrictSelect, districtParties }) 
           paint={{
             "line-color": "#1a1a1a",
             "line-width": 1.5,
+          }}
+        />
+        <Layer
+          id="district-hover"
+          type="line"
+          filter={hoverFilter}
+          paint={{
+            "line-color": "#f97316",
+            "line-width": 3,
+            "line-opacity": 0.7,
           }}
         />
         <Layer
