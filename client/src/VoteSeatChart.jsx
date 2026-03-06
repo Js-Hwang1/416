@@ -10,10 +10,10 @@ export default function VoteSeatChart({ data }) {
     if (!containerRef.current) return;
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
-        setDims({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
+        const { width, height } = entry.contentRect;
+        if (width > 0 && height > 0) {
+          setDims({ width, height });
+        }
       }
     });
     observer.observe(containerRef.current);
@@ -69,13 +69,11 @@ export default function VoteSeatChart({ data }) {
       );
     }
 
-    const legendHeight = 30;
-    const availableHeight = dims.height - legendHeight;
-    const chartHeight = Math.min(availableHeight, Math.round(dims.width * 0.6));
+    const chartHeight = Math.max(dims.height - 30, 200);
 
     const plot = Plot.plot({
       width: dims.width,
-      height: Math.max(chartHeight, 200),
+      height: chartHeight,
       inset: 10,
       grid: true,
       style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent" },
@@ -100,13 +98,13 @@ export default function VoteSeatChart({ data }) {
   }
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
-      <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "4px", fontSize: "11px" }}>
+    <div ref={containerRef} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+      <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "4px", fontSize: "11px", flexShrink: 0 }}>
         <span><span style={{ display: "inline-block", width: 16, height: 2, background: "#2c7bb6", marginRight: 4, verticalAlign: "middle" }} />Vote-Seat Curve</span>
         <span><span style={{ display: "inline-block", width: 16, height: 2, background: "#ccc", marginRight: 4, verticalAlign: "middle", borderBottom: "1px dashed #ccc" }} />Proportional</span>
         <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "#c0392b", marginRight: 4 }} />Enacted</span>
       </div>
-      <div ref={plotRef} />
+      <div ref={plotRef} style={{ flex: 1, minHeight: 0 }} />
     </div>
   );
 }

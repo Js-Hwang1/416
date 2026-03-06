@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Plot from "react-plotly.js";
 
 const COLOR_MAP = {
@@ -19,8 +19,16 @@ const ProbabilityChart = ({ data }) => {
   const dataJson = data || [];
   const allRaces = [...new Set(dataJson.map(d => d.race))];
   const allCandidates = [...new Set(dataJson.map(d => d.candidate))];
-  const [selectedRaces, setSelectedRaces] = useState(() => allRaces.slice(0, 2));
-  const [selectedCandidate, setSelectedCandidate] = useState(() => allCandidates[0] || "");
+  const [selectedRaces, setSelectedRaces] = useState([]);
+  const [selectedCandidate, setSelectedCandidate] = useState("");
+
+  // Initialize selections once data arrives
+  useEffect(() => {
+    if (dataJson.length > 0 && selectedRaces.length === 0 && !selectedCandidate) {
+      setSelectedRaces(allRaces.slice(0, 2));
+      setSelectedCandidate(allCandidates[0] || "");
+    }
+  }, [dataJson.length]); // only re-run when data loads
 
   const filteredData = dataJson.filter(
     d => selectedRaces.includes(d.race) && d.candidate === selectedCandidate
@@ -49,8 +57,12 @@ const ProbabilityChart = ({ data }) => {
     fillcolor: FILL_MAP[d.race] || "rgba(128, 128, 128, 0.15)"
   }));
 
+  if (dataJson.length === 0) {
+    return <div className="placeholder-card">{data === null ? "Loading..." : "No EI probability data available"}</div>;
+  }
+
   return (
-    <div style={{ width: "100%" }}>
+    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <div className="chart-controls">
         <span className="chart-controls-label">Candidate:</span>
         {allCandidates.map(cand => (
@@ -108,9 +120,11 @@ const ProbabilityChart = ({ data }) => {
           plot_bgcolor: "#fff",
           paper_bgcolor: "#fff",
           margin: { l: 55, r: 20, t: 10, b: 70 },
-          font: { family: "'Verdana', sans-serif" }
+          font: { family: "'Verdana', sans-serif" },
+          autosize: true,
         }}
-        style={{ width: "100%", height: "420px" }}
+        style={{ width: "100%", flex: 1, minHeight: 0 }}
+        useResizeHandler={true}
         config={{ responsive: true, displayModeBar: false }}
       />
     </div>

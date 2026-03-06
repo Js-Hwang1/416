@@ -457,9 +457,12 @@
   margin: 0;
   padding: 14px 24px;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   width: 100%;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .state-layout {
@@ -467,7 +470,8 @@
   grid-template-columns: 3fr 2fr;
   gap: 20px;
   align-items: start;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .state-map-panel {
@@ -717,7 +721,8 @@
   width: 100%;
   display: flex;
   flex-direction: column;
-  height: 100%;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
 }
 
@@ -770,10 +775,14 @@
   border: 1px solid #ddd;
   padding: 10px;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .chart-body > div {
   width: 100%;
+  flex: 1;
+  min-height: 0;
 }
 
 .demographics-placeholder {
@@ -1220,9 +1229,12 @@
   margin: 0;
   padding: 14px 24px;
   flex: 1;
+  min-height: 0;
   overflow: hidden;
   width: 100%;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
 }
 
 .gingles-content .state-map-panel {

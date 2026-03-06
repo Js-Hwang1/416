@@ -165,7 +165,7 @@ export default function DemographicHeatMap({ geojsonPath, geojson: geojsonProp, 
       const vap = (props.vap || 0).toLocaleString();
       const label = GROUP_LABELS[selectedGroup] || selectedGroup;
       layer.bindTooltip(
-        `<strong>${name}</strong><br/>${label} VAP: ${val.toFixed(1)}%<br/>Pop: ${pop} | VAP: ${vap}`,
+        `<strong>${name}</strong><br/>${label}: ${val.toFixed(1)}%<br/>Population: ${pop}`,
         { sticky: true },
       );
     },
@@ -216,7 +216,7 @@ export default function DemographicHeatMap({ geojsonPath, geojson: geojsonProp, 
 
         <div className="heatmap-legend">
           <div className="heatmap-legend-title">
-            {GROUP_LABELS[selectedGroup] || selectedGroup} VAP %
+            {GROUP_LABELS[selectedGroup] || selectedGroup} Population %
           </div>
           {bins.map((b, i) => (
             <div key={i} className="heatmap-legend-item">

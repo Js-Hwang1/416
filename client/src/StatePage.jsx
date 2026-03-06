@@ -5,7 +5,9 @@ import BarChart from "./bar_chart";
 import ProbabilityChart from "./probability_curve";
 import GinglessScatterPlot from "./gingles_scatter";
 import DemographicHeatMap from "./DemographicHeatMap";
-import box_data from "./dummy_data/dummy_box_and_whisker.json";
+import EISupportSummary from "./EISupportSummary";
+import EIKDEChart from "./EIKDEChart";
+import VoteSeatChart from "./VoteSeatChart";
 import { MapContainer, TileLayer, GeoJSON, useMap } from "react-leaflet";
 import L from "leaflet";
 
@@ -35,6 +37,13 @@ const STATE_CONFIG = {
     regressionFile: `${process.env.PUBLIC_URL}/data/tx_gingles_regression.json`,
     enactedDemoFile: `${process.env.PUBLIC_URL}/data/tx_enacted_demographics.json`,
     heatmapGeojson: `${process.env.PUBLIC_URL}/data/tx_vtds_heatmap.geojson`,
+    blocksHeatmapGeojson: `${process.env.PUBLIC_URL}/data/tx_blocks_heatmap.geojson`,
+    ensembleBarFile: `${process.env.PUBLIC_URL}/data/tx_ensemble_bar.json`,
+    ensembleBoxFile: `${process.env.PUBLIC_URL}/data/tx_ensemble_box.json`,
+    eiCurvesFile: `${process.env.PUBLIC_URL}/data/tx_ei_curves.json`,
+    eiSummaryFile: `${process.env.PUBLIC_URL}/data/tx_ei_summary.json`,
+    eiKdeFile: `${process.env.PUBLIC_URL}/data/tx_ei_kde.json`,
+    voteSeatFile: `${process.env.PUBLIC_URL}/data/tx_vote_seat.json`,
     repsKey: "TX",
     mapView: {
       fitPadding: [18, 18],
@@ -59,6 +68,13 @@ const STATE_CONFIG = {
     regressionFile: `${process.env.PUBLIC_URL}/data/ma_gingles_regression.json`,
     enactedDemoFile: `${process.env.PUBLIC_URL}/data/ma_enacted_demographics.json`,
     heatmapGeojson: `${process.env.PUBLIC_URL}/data/ma_precincts_heatmap.geojson`,
+    blocksHeatmapGeojson: `${process.env.PUBLIC_URL}/data/ma_blocks_heatmap.geojson`,
+    ensembleBarFile: `${process.env.PUBLIC_URL}/data/ma_ensemble_bar.json`,
+    ensembleBoxFile: `${process.env.PUBLIC_URL}/data/ma_ensemble_box.json`,
+    eiCurvesFile: `${process.env.PUBLIC_URL}/data/ma_ei_curves.json`,
+    eiSummaryFile: `${process.env.PUBLIC_URL}/data/ma_ei_summary.json`,
+    eiKdeFile: `${process.env.PUBLIC_URL}/data/ma_ei_kde.json`,
+    voteSeatFile: `${process.env.PUBLIC_URL}/data/ma_vote_seat.json`,
     repsKey: "MA",
     mapView: {
       fitPadding: [18, 18],
@@ -75,7 +91,11 @@ const STATE_CONFIG = {
 
 const VIEWS = [
   { id: "planExplorer", label: "Plan Explorer" },
-  { id: "demographics", label: "Analysis" },
+  { id: "demographics", label: "Demographics" },
+  { id: "ginglesAnalysis", label: "Gingles Analysis" },
+  { id: "ecologicalInference", label: "Ecological Inference" },
+  { id: "ensembles", label: "Ensembles" },
+  { id: "fairness", label: "Fairness" },
 ];
 
 const INTERESTING_PLAN_OPTIONS = [
@@ -91,17 +111,27 @@ const INTERESTING_PLAN_OPTIONS = [
   { value: "min_minority_districts", label: "Min Minority Districts" },
 ];
 
-const DEMO_CHART_OPTIONS = [
-  { value: "gingles", label: "Gingles Scatter" },
-  { value: "precinct", label: "Precinct Data" },
-  { value: "boxwhisker", label: "Minority Distribution" },
-  { value: "probability", label: "EI Curves" },
-  { value: "seatSplits", label: "Seat Splits" },
-  { value: "fairness", label: "Fairness" },
+const ENSEMBLES_SUBTABS = [
+  { id: "seatSplits", label: "Seat Splits" },
+  { id: "minorityDistribution", label: "Minority Distribution" },
 ];
 
-const GINGLES_PAGE_SIZE = 10;
-const DISTRICT_PAGE_SIZE = 10;
+const DEMOGRAPHICS_SUBTABS = [
+  { id: "precinct", label: "Precinct" },
+  { id: "censusBlock", label: "Census Block" },
+];
+
+const ECOLOGICAL_INFERENCE_SUBTABS = [
+  { id: "probabilityCurves", label: "Probability Curves" },
+  { id: "supportSummary", label: "Support Summary" },
+  { id: "groupComparison", label: "Group Comparison" },
+];
+
+const GINGLES_GROUPS = [
+  { key: "hispanic", label: "Hispanic" },
+  { key: "black", label: "Black" },
+  { key: "asian", label: "Asian" },
+];
 
 function formatNumber(value) {
   return Number(value).toLocaleString();
@@ -190,10 +220,10 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
       : 0;
 
     return {
-      weight: 4,
-      color: "#f97316",
+      weight: 2.5,
+      color: "#999",
       fillColor: DISTRICT_COLORS[colorIndex],
-      fillOpacity: 0.95,
+      fillOpacity: 0.82,
       smoothFactor: 0,
     };
   };
@@ -317,13 +347,15 @@ export default function StatePage() {
   /* ---- view / UI state ---- */
   const [activeView, setActiveView] = useState("planExplorer");
   const [activeDetailPanel, setActiveDetailPanel] = useState("stateOverview");
+  const [activeEnsemblesSubtab, setActiveEnsemblesSubtab] = useState("seatSplits");
+  const [activeDemographicsSubtab, setActiveDemographicsSubtab] = useState("precinct");
+  const [activeEcologicalSubtab, setActiveEcologicalSubtab] = useState("probabilityCurves");
   const [selectedInterestingPlan, setSelectedInterestingPlan] = useState("enacted");
   const [isInterestingPlanOpen, setIsInterestingPlanOpen] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState(null);
-  const [demoGroup, setDemoGroup] = useState("black");
-  const [demoPanelChart, setDemoPanelChart] = useState("gingles");
+  const [ginglesGroup, setGinglesGroup] = useState("hispanic");
   const [ginglesPage, setGinglesPage] = useState(0);
-  const [districtPage, setDistrictPage] = useState(0);
+  const GINGLES_PAGE_SIZE = 10;
 
   const interestingPlanRef = useRef(null);
   const districtTableWrapperRef = useRef(null);
@@ -336,7 +368,13 @@ export default function StatePage() {
   const ginglesData = useFetchJson(cfg?.ginglesFile);
   const regressionData = useFetchJson(cfg?.regressionFile);
   const enactedDemo = useFetchJson(cfg?.enactedDemoFile);
-  const heatmapGeojson = useFetchJson(cfg?.heatmapGeojson);
+
+  const ensembleBarData = useFetchJson(cfg?.ensembleBarFile);
+  const ensembleBoxData = useFetchJson(cfg?.ensembleBoxFile);
+  const eiCurvesData = useFetchJson(cfg?.eiCurvesFile);
+  const eiSummaryData = useFetchJson(cfg?.eiSummaryFile);
+  const eiKdeData = useFetchJson(cfg?.eiKdeFile);
+  const voteSeatData = useFetchJson(cfg?.voteSeatFile);
 
   const reps = allReps?.[cfg?.repsKey];
 
@@ -344,7 +382,7 @@ export default function StatePage() {
   const heatmapMinorityGroups = useMemo(() => {
     if (!summary?.population_by_group) return [];
     const MINORITY_LABELS = {
-      hispanic: "Latino",
+      hispanic: "Hispanic / Latino",
       black: "Black",
       asian: "Asian",
     };
@@ -366,7 +404,7 @@ export default function StatePage() {
       populationByGroup: {
         White: pop.white ?? 0,
         Black: pop.black ?? 0,
-        "Latino": pop.hispanic ?? 0,
+        "Hispanic / Latino": pop.hispanic ?? 0,
         Asian: pop.asian ?? 0,
         Other: pop.other ?? 0,
       },
@@ -402,24 +440,18 @@ export default function StatePage() {
     }));
   }, [reps, cfg]);
 
-  /* ---- precinct table data (driven by demoGroup) ---- */
-  const ginglesPoints = ginglesData?.[demoGroup] ?? [];
+  /* ---- gingles table data ---- */
+  const ginglesPoints = ginglesData?.[ginglesGroup] ?? [];
   const ginglesTotalPages = Math.ceil(ginglesPoints.length / GINGLES_PAGE_SIZE);
   const ginglesPageRows = ginglesPoints.slice(
     ginglesPage * GINGLES_PAGE_SIZE,
     (ginglesPage + 1) * GINGLES_PAGE_SIZE
   );
 
-  useEffect(() => { setGinglesPage(0); }, [demoGroup]);
-
-  /* ---- district table pagination ---- */
-  const districtTotalPages = Math.ceil(districtTableRows.length / DISTRICT_PAGE_SIZE);
-  const districtPageRows = districtTableRows.slice(
-    districtPage * DISTRICT_PAGE_SIZE,
-    (districtPage + 1) * DISTRICT_PAGE_SIZE
-  );
-
-  useEffect(() => { setDistrictPage(0); }, [stateSlug]);
+  // Reset gingles page when group changes
+  useEffect(() => {
+    setGinglesPage(0);
+  }, [ginglesGroup]);
 
   /* ---- close dropdown on outside click ---- */
   useEffect(() => {
@@ -441,13 +473,6 @@ export default function StatePage() {
   /* ---- auto-scroll to selected district row ---- */
   useEffect(() => {
     if (selectedDistrict === null) return;
-
-    const rowIndex = districtTableRows.findIndex(
-      (r) => Number.parseInt(r.districtNumber, 10) === selectedDistrict
-    );
-    if (rowIndex !== -1) {
-      setDistrictPage(Math.floor(rowIndex / DISTRICT_PAGE_SIZE));
-    }
 
     const wrapper = districtTableWrapperRef.current;
     const row = districtRowRefs.current.get(selectedDistrict);
@@ -520,7 +545,7 @@ export default function StatePage() {
         </div>
       </nav>
 
-      <main className={`state-content${activeView === "planExplorer" ? " plan-explorer-content" : ""}${activeView === "demographics" ? " demographics-content" : ""}`}>
+      <main className={`state-content${activeView === "planExplorer" ? " plan-explorer-content" : ""}${activeView === "ginglesAnalysis" ? " gingles-content" : ""}`}>
         {activeView === "planExplorer" && (
           <div className="state-layout">
             <div className="state-map-panel">
@@ -599,10 +624,10 @@ export default function StatePage() {
                           <dt>Total Population</dt>
                           <dd>{formatNumber(ov.totalPopulation)}</dd>
                         </div>
-                        {/* <div className="overview-kv-row">
+                        <div className="overview-kv-row">
                           <dt>Voting Age Population</dt>
                           <dd>{formatNumber(ov.votingAgePopulation)}</dd>
-                        </div>*/}
+                        </div>
                       </dl>
                     </article>
 
@@ -617,10 +642,10 @@ export default function StatePage() {
                           <dt>Republican Vote Share</dt>
                           <dd>{formatPct1(ov.voterShare.republican)}</dd>
                         </div>
-                        {/* <div className="overview-kv-row">
+                        <div className="overview-kv-row">
                           <dt>Other</dt>
                           <dd>{formatPct1(ov.voterShare.other)}</dd>
-                        </div>*/}
+                        </div>
                       </dl>
                     </article>
 
@@ -630,7 +655,9 @@ export default function StatePage() {
                         {Object.entries(ov.populationByGroup).map(([group, value]) => (
                           <div className="overview-kv-row" key={group}>
                             <dt>{group}</dt>
-                            <dd>{formatNumber(value)}</dd>
+                            <dd>
+                              {formatPercent(value, ov.totalPopulation)} ({formatNumber(value)})
+                            </dd>
                           </div>
                         ))}
                       </dl>
@@ -663,24 +690,6 @@ export default function StatePage() {
                         </div>
                       </dl>
                     </article>
-
-                    <article className="overview-card">
-                      <h3 className="overview-card-title">Available Ensembles</h3>
-                      <dl className="overview-kv-list">
-                        {cfg.ensembles.map((ensemble) => (
-                          <React.Fragment key={ensemble.id}>
-                            <div className="overview-kv-row">
-                              <dt>{ensemble.type} Plans</dt>
-                              <dd>{ensemble.plans.toLocaleString()} <span style={{ color: "#aaa", fontSize: "0.85em" }}></span></dd>
-                            </div>
-                            <div className="overview-kv-row">
-                              <dt>{ensemble.type} Threshold</dt>
-                              <dd>{ensemble.populationThreshold}</dd>
-                            </div>
-                          </React.Fragment>
-                        ))}
-                      </dl>
-                    </article>
                   </div>
                 ) : (
                   <div className="district-table-wrapper" ref={districtTableWrapperRef}>
@@ -702,7 +711,7 @@ export default function StatePage() {
                         </tr>
                       </thead>
                       <tbody>
-                        {districtPageRows.map((row) => {
+                        {districtTableRows.map((row) => {
                           const districtNumber = Number.parseInt(row.districtNumber, 10);
                           const isSelected = selectedDistrict === districtNumber;
                           return (
@@ -747,37 +756,6 @@ export default function StatePage() {
                         })}
                       </tbody>
                     </table>
-                    {districtTotalPages > 1 && (
-                      <div className="gingles-pagination">
-                        <button
-                          className="gingles-page-btn"
-                          onClick={() => setDistrictPage((p) => p - 1)}
-                          disabled={districtPage === 0}
-                        >‹</button>
-                        <input
-                          type="number"
-                          className="gingles-page-input"
-                          min={1}
-                          max={districtTotalPages}
-                          defaultValue={districtPage + 1}
-                          key={districtPage}
-                          onBlur={(e) => {
-                            const v = Number(e.target.value) - 1;
-                            if (v >= 0 && v < districtTotalPages) setDistrictPage(v);
-                            else e.target.value = districtPage + 1;
-                          }}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") e.target.blur();
-                          }}
-                        />
-                        <span className="gingles-page-info">/ {districtTotalPages}</span>
-                        <button
-                          className="gingles-page-btn"
-                          onClick={() => setDistrictPage((p) => p + 1)}
-                          disabled={districtPage >= districtTotalPages - 1}
-                        >›</button>
-                      </div>
-                    )}
                   </div>
                 )}
               </section>
@@ -785,135 +763,208 @@ export default function StatePage() {
           </div>
         )}
 
-        {activeView === "demographics" && (
-          <div className="state-layout demographics-layout">
+        {activeView === "ensembles" && (
+          <div className="chart-view">
+            <div className="chart-toolbar">
+              <fieldset className="ensembles-subtab-group" aria-label="Ensembles sub-tabs">
+                {ENSEMBLES_SUBTABS.map((subtab) => (
+                  <label key={subtab.id} className="ensembles-subtab-option">
+                    <input
+                      type="radio"
+                      name="ensembles-subtab"
+                      value={subtab.id}
+                      checked={activeEnsemblesSubtab === subtab.id}
+                      onChange={(e) => setActiveEnsemblesSubtab(e.target.value)}
+                    />
+                    <span>{subtab.label}</span>
+                  </label>
+                ))}
+              </fieldset>
+              <span className="chart-toolbar-subtitle">
+                {activeEnsemblesSubtab === "seatSplits"
+                  ? `R/D split frequency across ${cfg.ensembles[0].plans.toLocaleString()} simulated plans`
+                  : "Minority group distribution across ensemble district plans"}
+              </span>
+            </div>
+            <div className="chart-body">
+              {activeEnsemblesSubtab === "seatSplits" ? (
+                <BarChart data={ensembleBarData} />
+              ) : (
+                <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} />
+              )}
+            </div>
+          </div>
+        )}
 
-            {/* ── LEFT: map ── */}
-            <div className="state-map-panel">
-              <div className="demo-map-toolbar">
-                <span className="section-title">Precinct Heat Map</span>
-                <div className="demo-group-btn-group" role="group" aria-label="Minority group">
-                  {heatmapMinorityGroups.map((g) => (
-                    <button
-                      key={g.key}
-                      type="button"
-                      className={`demo-group-btn${demoGroup === g.key ? " active" : ""}`}
-                      onClick={() => setDemoGroup(g.key)}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
+        {activeView === "demographics" && (
+          <div className="chart-view">
+              <div className="chart-toolbar">
+                <fieldset className="ensembles-subtab-group" aria-label="Demographics sub-tabs">
+                  {DEMOGRAPHICS_SUBTABS.map((subtab) => (
+                  <label key={subtab.id} className="ensembles-subtab-option">
+                    <input
+                      type="radio"
+                      name="demographics-subtab"
+                      value={subtab.id}
+                      checked={activeDemographicsSubtab === subtab.id}
+                      onChange={(e) => setActiveDemographicsSubtab(e.target.value)}
+                    />
+                    <span>{subtab.label}</span>
+                  </label>
+                ))}
+              </fieldset>
+              <span className="chart-toolbar-subtitle">
+                {activeDemographicsSubtab === "precinct"
+                  ? "Demographic distribution by precinct / VTD"
+                  : "Demographic distribution by census block"}
+              </span>
               </div>
-              <div className="demo-heatmap-wrapper">
-                <DemographicHeatMap
-                  geojson={heatmapGeojson}
-                  loading={heatmapGeojson === null && !!cfg?.heatmapGeojson}
-                  geojsonPath={cfg.heatmapGeojson}
-                  minorityGroups={heatmapMinorityGroups}
-                  selectedGroup={demoGroup}
-                />
+              <div className="chart-body chart-body-map">
+                {activeDemographicsSubtab === "precinct" ? (
+                  <DemographicHeatMap
+                    geojsonPath={cfg.heatmapGeojson}
+                    minorityGroups={heatmapMinorityGroups}
+                  />
+                ) : (
+                  <DemographicHeatMap
+                    geojsonPath={cfg.blocksHeatmapGeojson}
+                    minorityGroups={heatmapMinorityGroups}
+                  />
+                )}
+              </div>
+            </div>
+          )}
+
+        {activeView === "ecologicalInference" && (
+          <div className="chart-view">
+            <div className="chart-toolbar">
+              <fieldset className="ensembles-subtab-group" aria-label="Ecological Inference sub-tabs">
+                {ECOLOGICAL_INFERENCE_SUBTABS.map((subtab) => (
+                  <label key={subtab.id} className="ensembles-subtab-option">
+                    <input
+                      type="radio"
+                      name="ecological-inference-subtab"
+                      value={subtab.id}
+                      checked={activeEcologicalSubtab === subtab.id}
+                      onChange={(e) => setActiveEcologicalSubtab(e.target.value)}
+                    />
+                    <span>{subtab.label}</span>
+                  </label>
+                ))}
+              </fieldset>
+              <span className="chart-toolbar-subtitle">
+                Ecological inference of candidate support by racial/ethnic group
+              </span>
+            </div>
+            <div className="chart-body">
+              {activeEcologicalSubtab === "probabilityCurves" && (
+                <ProbabilityChart data={eiCurvesData} />
+              )}
+              {activeEcologicalSubtab === "supportSummary" && (
+                <EISupportSummary data={eiSummaryData} />
+              )}
+              {activeEcologicalSubtab === "groupComparison" && (
+                <EIKDEChart data={eiKdeData} />
+              )}
+            </div>
+          </div>
+        )}
+
+        {activeView === "ginglesAnalysis" && (
+          <div className="state-layout gingles-layout">
+            <div className="state-map-panel">
+              <div className="gingles-scatter-section">
+                <div className="gingles-scatter-toolbar">
+                  <fieldset className="ensembles-subtab-group" aria-label="Gingles group selector">
+                    {GINGLES_GROUPS.map((g) => (
+                      <label key={g.key} className="ensembles-subtab-option">
+                        <input
+                          type="radio"
+                          name="gingles-group"
+                          value={g.key}
+                          checked={ginglesGroup === g.key}
+                          onChange={(e) => setGinglesGroup(e.target.value)}
+                        />
+                        <span>{g.label}</span>
+                      </label>
+                    ))}
+                  </fieldset>
+                  <span className="chart-toolbar-subtitle">
+                    Dem vote share vs. % {GINGLES_GROUPS.find(g => g.key === ginglesGroup)?.label} VAP by precinct
+                  </span>
+                </div>
+                <div className="gingles-scatter-body">
+                  <GinglessScatterPlot
+                    points={ginglesPoints}
+                    regression={regressionData?.[ginglesGroup]}
+                    group={ginglesGroup}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* ── RIGHT: analysis panel ── */}
-            <div className="state-info-panel demographics-info-panel">
-              <div className="demo-panel-tabs" role="tablist">
-                {DEMO_CHART_OPTIONS.map((opt) => (
+            <div className="state-info-panel gingles-info-panel">
+              <div className="gingles-table-section">
+                <h2 className="section-title">Precinct Data ({ginglesPoints.length.toLocaleString()} precincts)</h2>
+                <table className="district-table" aria-label="Precinct data table">
+                  <colgroup>
+                    <col style={{ width: "15%" }} />
+                    <col style={{ width: "30%" }} />
+                    <col style={{ width: "27.5%" }} />
+                    <col style={{ width: "27.5%" }} />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>#</th>
+                      <th>{GINGLES_GROUPS.find(g => g.key === ginglesGroup)?.label} VAP %</th>
+                      <th>Dem Vote %</th>
+                      <th>Rep Vote %</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {ginglesPageRows.map((row, idx) => (
+                      <tr key={ginglesPage * GINGLES_PAGE_SIZE + idx}>
+                        <td>{(ginglesPage * GINGLES_PAGE_SIZE + idx + 1).toLocaleString()}</td>
+                        <td>{(row.minority_vap_pct * 100).toFixed(1)}%</td>
+                        <td>{(row.d_vote_share * 100).toFixed(1)}%</td>
+                        <td>{((1 - row.d_vote_share) * 100).toFixed(1)}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="gingles-pagination">
                   <button
-                    key={opt.value}
-                    type="button"
-                    role="tab"
-                    aria-selected={demoPanelChart === opt.value}
-                    className={`demo-tab-btn${demoPanelChart === opt.value ? " active" : ""}`}
-                    onClick={() => setDemoPanelChart(opt.value)}
+                    className="gingles-page-btn"
+                    onClick={() => setGinglesPage((p) => p - 1)}
+                    disabled={ginglesPage === 0}
                   >
-                    {opt.label}
+                    ‹
                   </button>
-                ))}
+                  <span className="gingles-page-info">
+                    {ginglesPage + 1} / {ginglesTotalPages}
+                  </span>
+                  <button
+                    className="gingles-page-btn"
+                    onClick={() => setGinglesPage((p) => p + 1)}
+                    disabled={ginglesPage === ginglesTotalPages - 1}
+                  >
+                    ›
+                  </button>
+                </div>
               </div>
+            </div>
+          </div>
+        )}
 
-              <div className="demo-chart-body">
-                {demoPanelChart === "gingles" && (
-                  <GinglessScatterPlot
-                    points={ginglesPoints}
-                    regression={regressionData?.[demoGroup]}
-                    group={demoGroup}
-                  />
-                )}
-
-                {demoPanelChart === "precinct" && (
-                  <div className="demo-precinct-panel">
-                    <table className="district-table" aria-label="Precinct data table">
-                      <colgroup>
-                        <col style={{ width: "12%" }} />
-                        <col style={{ width: "30%" }} />
-                        <col style={{ width: "29%" }} />
-                        <col style={{ width: "29%" }} />
-                      </colgroup>
-                      <thead>
-                        <tr>
-                          <th>#</th>
-                          <th>{heatmapMinorityGroups.find((g) => g.key === demoGroup)?.label} VAP %</th>
-                          <th>Dem Vote %</th>
-                          <th>Rep Vote %</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ginglesPageRows.map((row, idx) => (
-                          <tr key={ginglesPage * GINGLES_PAGE_SIZE + idx}>
-                            <td>{(ginglesPage * GINGLES_PAGE_SIZE + idx + 1).toLocaleString()}</td>
-                            <td>{(row.minority_vap_pct * 100).toFixed(1)}%</td>
-                            <td>{(row.d_vote_share * 100).toFixed(1)}%</td>
-                            <td>{((1 - row.d_vote_share) * 100).toFixed(1)}%</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <div className="gingles-pagination">
-                      <button
-                        className="gingles-page-btn"
-                        onClick={() => setGinglesPage((p) => p - 1)}
-                        disabled={ginglesPage === 0}
-                      >‹</button>
-                      <input
-                        type="number"
-                        className="gingles-page-input"
-                        min={1}
-                        max={ginglesTotalPages || 1}
-                        defaultValue={ginglesPage + 1}
-                        key={ginglesPage}
-                        onBlur={(e) => {
-                          const v = Number(e.target.value) - 1;
-                          if (v >= 0 && v < (ginglesTotalPages || 1)) setGinglesPage(v);
-                          else e.target.value = ginglesPage + 1;
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") e.target.blur();
-                        }}
-                      />
-                      <span className="gingles-page-info">/ {ginglesTotalPages || 1}</span>
-                      <button
-                        className="gingles-page-btn"
-                        onClick={() => setGinglesPage((p) => p + 1)}
-                        disabled={ginglesPage >= ginglesTotalPages - 1}
-                      >›</button>
-                    </div>
-                  </div>
-                )}
-
-                {demoPanelChart === "boxwhisker" && (
-                  <BoxPlotChart boxData={box_data} enactedData={enactedDemo} selectedGroup={demoGroup} />
-                )}
-                {demoPanelChart === "probability" && <ProbabilityChart />}
-                {demoPanelChart === "seatSplits" && <BarChart />}
-                {demoPanelChart === "fairness" && (
-                  <div className="demographics-placeholder">
-                    <div className="demographics-placeholder-title">Fairness Analysis</div>
-                    <div className="demographics-placeholder-label">Coming soon</div>
-                  </div>
-                )}
-              </div>
+        {activeView === "fairness" && (
+          <div className="chart-view">
+            <div className="chart-toolbar">
+              <span className="chart-toolbar-subtitle">
+                Vote share vs. seat share analysis for {cfg.name}
+              </span>
+            </div>
+            <div className="chart-body">
+              <VoteSeatChart data={voteSeatData} />
             </div>
           </div>
         )}
