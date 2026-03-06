@@ -21,7 +21,7 @@ const STATE_CONFIG = {
     districtGeoJson: `${process.env.PUBLIC_URL}/data/tx_districts.geojson`,
     precinctTiles: tilesUrl("tx_precincts.pmtiles"),
     blockTiles: tilesUrl("tx_blocks.pmtiles"),
-    mapView: { center: [-99.5, 31.0], zoom: 4.3, minZoom: 3.5, maxZoom: 14 },
+    mapView: { center: [-99.5, 31.0], zoom: 5.2, minZoom: 4.5, maxZoom: 14 },
     redistrictingAuthority: "Republican Legislature",
     ensembles: [
       { id: 1, type: "Race-Blind", plans: 5000, populationThreshold: "2.0%" },
@@ -37,7 +37,7 @@ const STATE_CONFIG = {
     districtGeoJson: `${process.env.PUBLIC_URL}/data/ma_districts.geojson`,
     precinctTiles: tilesUrl("ma_precincts.pmtiles"),
     blockTiles: tilesUrl("ma_blocks.pmtiles"),
-    mapView: { center: [-71.8, 42.1], zoom: 6.5, minZoom: 5.5, maxZoom: 14 },
+    mapView: { center: [-71.8, 42.1], zoom: 7.5, minZoom: 6.5, maxZoom: 14 },
     redistrictingAuthority: "Democratic Legislature",
     ensembles: [
       { id: 1, type: "Race-Blind", plans: 5000, populationThreshold: "2.0%" },
