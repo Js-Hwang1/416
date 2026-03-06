@@ -152,7 +152,7 @@ function useFetchJson(url) {
 }
 
 /* ---------- StateMap ---------- */
-function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) {
+function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect, districtParties }) {
   const [geojson, setGeojson] = useState(null);
   const hasFittedBoundsRef = useRef(false);
 
@@ -175,32 +175,57 @@ function StateMap({ geojsonPath, mapView, selectedDistrict, onDistrictSelect }) 
     };
   }, [geojsonPath]);
 
+  /* Build district → party + margin lookup */
+  const districtInfo = useMemo(() => {
+    const map = {};
+    if (districtParties) {
+      for (const rep of districtParties) {
+        map[rep.district] = { party: rep.party, margin: rep.vote_margin_pct ?? 0 };
+      }
+    }
+    return map;
+  }, [districtParties]);
+
+  const getDistrictColor = (districtNumber) => {
+    const info = districtInfo[districtNumber];
+    if (!info) return "#ccc";
+    // t ranges from 0.3 (very competitive) to 1.0 (safe/uncontested)
+    const t = 0.3 + 0.7 * Math.min(info.margin / 60, 1);
+    if (info.party === "Democrat") {
+      // Light blue → deep blue
+      const r = Math.round(220 - 130 * t);
+      const g = Math.round(225 - 100 * t);
+      const b = Math.round(255 - 40 * t);
+      return `rgb(${r},${g},${b})`;
+    }
+    if (info.party === "Republican") {
+      // Light red → deep red
+      const r = Math.round(255 - 40 * t);
+      const g = Math.round(225 - 130 * t);
+      const b = Math.round(220 - 130 * t);
+      return `rgb(${r},${g},${b})`;
+    }
+    return "#ccc";
+  };
+
   const styleFeature = (feature) => {
     const districtNumber = parseDistrictNumber(feature);
-    const colorIndex = Number.isFinite(districtNumber)
-      ? Math.abs(districtNumber - 1) % DISTRICT_COLORS.length
-      : 0;
-
     return {
       weight: 1.5,
       color: "#1a1a1a",
-      fillColor: DISTRICT_COLORS[colorIndex],
-      fillOpacity: 0.82,
+      fillColor: getDistrictColor(districtNumber),
+      fillOpacity: 0.72,
       smoothFactor: 0,
     };
   };
 
   const selectedDistrictStyle = (feature) => {
     const districtNumber = parseDistrictNumber(feature);
-    const colorIndex = Number.isFinite(districtNumber)
-      ? Math.abs(districtNumber - 1) % DISTRICT_COLORS.length
-      : 0;
-
     return {
       weight: 4,
       color: "#f97316",
-      fillColor: DISTRICT_COLORS[colorIndex],
-      fillOpacity: 0.95,
+      fillColor: getDistrictColor(districtNumber),
+      fillOpacity: 0.9,
       smoothFactor: 0,
     };
   };
@@ -568,6 +593,7 @@ export default function StatePage() {
                   mapView={cfg.mapView}
                   selectedDistrict={selectedDistrict}
                   onDistrictSelect={setSelectedDistrict}
+                  districtParties={reps?.representatives}
                 />
               </div>
               <div className="interesting-plan-controls">
@@ -664,12 +690,15 @@ export default function StatePage() {
                     <article className="overview-card">
                       <h3 className="overview-card-title">Racial/Ethnic Population Share</h3>
                       <dl className="overview-kv-list">
-                        {Object.entries(ov.populationByGroup).map(([group, value]) => (
-                          <div className="overview-kv-row" key={group}>
-                            <dt>{group}</dt>
-                            <dd>{formatNumber(value)}</dd>
-                          </div>
-                        ))}
+                        {Object.entries(ov.populationByGroup).map(([group, value]) => {
+                          const pct = ov.totalPopulation ? ((value / ov.totalPopulation) * 100).toFixed(1) : "0.0";
+                          return (
+                            <div className="overview-kv-row" key={group}>
+                              <dt>{group}</dt>
+                              <dd>{formatNumber(value)} <span className="overview-pct">({pct}%)</span></dd>
+                            </div>
+                          );
+                        })}
                       </dl>
                     </article>
 

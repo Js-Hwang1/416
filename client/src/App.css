@@ -583,14 +583,19 @@
 
 .plan-explorer-content .state-info-panel {
   height: 100%;
-  overflow: hidden;
+  overflow-y: auto;
   padding-right: 4px;
   margin: 0;
   padding-top: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.plan-explorer-content .state-info-panel::-webkit-scrollbar {
+  display: none;
 }
 
 .plan-explorer-content .state-section {
-  height: 100%;
   display: flex;
   flex-direction: column;
   margin: 0;
@@ -598,14 +603,7 @@
 }
 
 .plan-explorer-content .overview-cards {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior-y: contain;
-  overscroll-behavior: contain;
   padding-right: 4px;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
 }
 
 .plan-explorer-content .overview-cards::-webkit-scrollbar {
@@ -954,9 +952,7 @@
 .overview-cards {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 4px;
-  flex: 1;
-  min-height: 0;
+  gap: 10px;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -996,8 +992,8 @@
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 12px;
   align-items: center;
-  min-height: 22px;
-  padding: 3px 0;
+  min-height: 28px;
+  padding: 5px 0;
   border-top: 1px solid #f0f0f0;
 }
 
@@ -1024,6 +1020,13 @@
   font-weight: 500;
   color: #232323;
   text-align: right;
+}
+
+.overview-pct {
+  color: #232323;
+  font-size: 0.82rem;
+  font-weight: 500;
+  margin-left: 4px;
 }
 
 .overview-card-wide {
@@ -1083,6 +1086,7 @@
   background: #fff;
   border: 1px solid #ddd;
   table-layout: fixed;
+  flex-shrink: 0;
 }
 
 .district-col-number {
@@ -1190,8 +1194,6 @@
 }
 
 .plan-explorer-content .district-table-wrapper {
-  flex: 1;
-  min-height: 0;
   overflow-y: auto;
   scrollbar-width: none;
   -ms-overflow-style: none;
