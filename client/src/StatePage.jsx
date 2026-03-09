@@ -354,18 +354,20 @@ export default function StatePage() {
 
   /* ---- fetch data from API ---- */
   const stateData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}`) : null);
-  const analysisData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis`) : null);
 
-  /* ---- derive analysis sub-data (same variable names as before) ---- */
-  const ginglesData = analysisData?.ginglesPrecinct;
-  const regressionData = analysisData?.ginglesRegression;
-  const enactedDemo = analysisData?.enactedDemographics;
-  const ensembleBarData = analysisData?.ensembleBar;
-  const ensembleBoxData = analysisData?.ensembleBox;
-  const eiCurvesData = analysisData?.eiCurves;
-  const eiSummaryData = analysisData?.eiSummary;
-  const eiKdeData = analysisData?.eiKde;
-  const voteSeatData = analysisData?.voteSeat;
+  /* ---- lazy-fetch only what the active chart needs ---- */
+  const isDemo = activeView === "demographics";
+  const analysisBase = cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis`) : null;
+
+  const ginglesData = useFetchJson(isDemo && demoPanelChart === "gingles" ? `${analysisBase}/gingles-precinct` : null);
+  const regressionData = useFetchJson(isDemo && demoPanelChart === "gingles" ? `${analysisBase}/gingles-regression` : null);
+  const enactedDemo = useFetchJson(isDemo && demoPanelChart === "boxwhisker" ? `${analysisBase}/enacted-demographics` : null);
+  const ensembleBoxData = useFetchJson(isDemo && demoPanelChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
+  const ensembleBarData = useFetchJson(isDemo && demoPanelChart === "seatSplits" ? `${analysisBase}/ensemble-bar` : null);
+  const voteSeatData = useFetchJson(isDemo && demoPanelChart === "fairness" ? `${analysisBase}/vote-seat` : null);
+  const eiCurvesData = useFetchJson(isDemo && demoPanelChart === "ei" && eiSubView === "curves" ? `${analysisBase}/ei-curves` : null);
+  const eiSummaryData = useFetchJson(isDemo && demoPanelChart === "ei" && eiSubView === "bar" ? `${analysisBase}/ei-summary` : null);
+  const eiKdeData = useFetchJson(isDemo && demoPanelChart === "ei" && eiSubView === "kde" ? `${analysisBase}/ei-kde` : null);
 
   const reps = stateData?.representatives;
 
