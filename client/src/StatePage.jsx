@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import axios from "axios";
 import { useParams, useNavigate } from "react-router-dom";
 import { Map as MapGL, Source, Layer, NavigationControl } from "react-map-gl/maplibre";
 import BoxPlotChart from './box_and_whisker';
@@ -145,20 +146,12 @@ function formatPct1(value) {
   return `${Number(value).toFixed(1)}%`;
 }
 
-/* ---------- helper: fetch JSON with abort support ---------- */
+/* ---------- helper: fetch JSON ---------- */
 function useFetchJson(url) {
   const [data, setData] = useState(null);
   useEffect(() => {
-    setData(null);
     if (!url) return;
-    const controller = new AbortController();
-    fetch(url, { signal: controller.signal })
-      .then((r) => r.json())
-      .then(setData)
-      .catch((err) => {
-        if (err.name !== "AbortError") console.error("fetch error", url, err);
-      });
-    return () => controller.abort();
+    axios.get(url).then((res) => setData(res.data));
   }, [url]);
   return data;
 }
