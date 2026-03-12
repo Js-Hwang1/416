@@ -4,6 +4,8 @@ import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.springframework.stereotype.Service;
 import tigers.redistricting.model.AnalysisData;
+import tigers.redistricting.model.PrecinctPoint;
+import tigers.redistricting.model.RegressionPoint;
 import tigers.redistricting.repository.AnalysisDataRepository;
 
 import java.util.*;
@@ -23,20 +25,16 @@ public class AnalysisService {
         return analysisDataRepository.findById(stateAbbr);
     }
 
-    // Returns {group -> [{x, y}]} 
-    @SuppressWarnings("unchecked")
+    // Returns {group -> [{x, y}]}
     public Optional<Map<String, Object>> getGinglesPrecinct(String stateAbbr) {
         return analysisDataRepository.findById(stateAbbr).map(ad -> {
-            Object raw = ad.getGinglesPrecinct();
-            if (!(raw instanceof Map)) return null;
-            Map<String, Object> byGroup = (Map<String, Object>) raw;
+            Map<String, List<PrecinctPoint>> byGroup = ad.getGinglesPrecinct();
+            if (byGroup == null) return null;
             Map<String, Object> result = new LinkedHashMap<>();
-            for (Map.Entry<String, Object> groupEntry : byGroup.entrySet()) {
-                List<?> rawPoints = (List<?>) groupEntry.getValue();
+            for (Map.Entry<String, List<PrecinctPoint>> groupEntry : byGroup.entrySet()) {
                 List<Map<String, Object>> points = new ArrayList<>();
-                for (Object rawPoint : rawPoints) {
-                    Map<String, Object> precinct = (Map<String, Object>) rawPoint;
-                    points.add(Map.of("x", precinct.get("minority_vap_pct"), "y", precinct.get("d_vote_share")));
+                for (PrecinctPoint precinct : groupEntry.getValue()) {
+                    points.add(Map.of("x", precinct.minority_vap_pct, "y", precinct.d_vote_share));
                 }
                 result.put(groupEntry.getKey(), points);
             }
@@ -44,22 +42,19 @@ public class AnalysisService {
         });
     }
 
-    // Returns {group -> [a0, a1, a2, a3]} 
-    @SuppressWarnings("unchecked")
+    // Returns {group -> [a0, a1, a2, a3]} polynomial coefficients fitted to the stored regression curve
     public Optional<Map<String, Object>> getGinglesRegression(String stateAbbr) {
         return analysisDataRepository.findById(stateAbbr).map(ad -> {
-            Object raw = ad.getGinglesRegression();
-            if (!(raw instanceof Map)) return null;
-            Map<String, Object> byGroup = (Map<String, Object>) raw;
+            Map<String, List<RegressionPoint>> byGroup = ad.getGinglesRegression();
+            if (byGroup == null) return null;
             Map<String, Object> result = new LinkedHashMap<>();
-            for (Map.Entry<String, Object> groupEntry : byGroup.entrySet()) {
-                List<?> rawPoints = (List<?>) groupEntry.getValue();
+            for (Map.Entry<String, List<RegressionPoint>> groupEntry : byGroup.entrySet()) {
+                List<RegressionPoint> rawPoints = groupEntry.getValue();
                 double[] xs = new double[rawPoints.size()];
                 double[] ys = new double[rawPoints.size()];
                 for (int i = 0; i < rawPoints.size(); i++) {
-                    Map<String, Object> point = (Map<String, Object>) rawPoints.get(i);
-                    xs[i] = ((Number) point.get("x")).doubleValue();
-                    ys[i] = ((Number) point.get("y")).doubleValue();
+                    xs[i] = rawPoints.get(i).x;
+                    ys[i] = rawPoints.get(i).y;
                 }
                 result.put(groupEntry.getKey(), fitPolynomial(xs, ys));
             }

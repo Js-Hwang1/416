@@ -3,6 +3,9 @@ package tigers.redistricting.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
+import java.util.Map;
+
 @Document(collection = "analysisData")
 public class AnalysisData {
 
@@ -10,8 +13,8 @@ public class AnalysisData {
     private String id;
 
     private String stateAbbr;
-    private Object ginglesPrecinct;
-    private Object ginglesRegression;
+    private Map<String, List<PrecinctPoint>> ginglesPrecinct;
+    private Map<String, List<RegressionPoint>> ginglesRegression;
     private Object enactedDemographics;
     private Object ensembleBar;
     private Object ensembleBox;
@@ -26,11 +29,11 @@ public class AnalysisData {
     public String getStateAbbr() { return stateAbbr; }
     public void setStateAbbr(String stateAbbr) { this.stateAbbr = stateAbbr; }
 
-    public Object getGinglesPrecinct() { return ginglesPrecinct; }
-    public void setGinglesPrecinct(Object ginglesPrecinct) { this.ginglesPrecinct = ginglesPrecinct; }
+    public Map<String, List<PrecinctPoint>> getGinglesPrecinct() { return ginglesPrecinct; }
+    public void setGinglesPrecinct(Map<String, List<PrecinctPoint>> ginglesPrecinct) { this.ginglesPrecinct = ginglesPrecinct; }
 
-    public Object getGinglesRegression() { return ginglesRegression; }
-    public void setGinglesRegression(Object ginglesRegression) { this.ginglesRegression = ginglesRegression; }
+    public Map<String, List<RegressionPoint>> getGinglesRegression() { return ginglesRegression; }
+    public void setGinglesRegression(Map<String, List<RegressionPoint>> ginglesRegression) { this.ginglesRegression = ginglesRegression; }
 
     public Object getEnactedDemographics() { return enactedDemographics; }
     public void setEnactedDemographics(Object enactedDemographics) { this.enactedDemographics = enactedDemographics; }
