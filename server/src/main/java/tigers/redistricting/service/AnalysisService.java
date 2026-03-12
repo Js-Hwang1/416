@@ -23,53 +23,53 @@ public class AnalysisService {
         return analysisDataRepository.findById(stateAbbr);
     }
 
+    // Returns {group -> [{x, y}]} 
     @SuppressWarnings("unchecked")
     public Optional<Map<String, Object>> getGinglesPrecinct(String stateAbbr) {
         return analysisDataRepository.findById(stateAbbr).map(ad -> {
             Object raw = ad.getGinglesPrecinct();
             if (!(raw instanceof Map)) return null;
-            Map<String, Object> groups = (Map<String, Object>) raw;
+            Map<String, Object> byGroup = (Map<String, Object>) raw;
             Map<String, Object> result = new LinkedHashMap<>();
-            for (Map.Entry<String, Object> entry : groups.entrySet()) {
-                List<?> points = (List<?>) entry.getValue();
-                List<Map<String, Object>> compact = new ArrayList<>();
-                for (Object p : points) {
-                    Map<String, Object> point = (Map<String, Object>) p;
-                    compact.add(Map.of("x", point.get("minority_vap_pct"), "y", point.get("d_vote_share")));
+            for (Map.Entry<String, Object> groupEntry : byGroup.entrySet()) {
+                List<?> rawPoints = (List<?>) groupEntry.getValue();
+                List<Map<String, Object>> points = new ArrayList<>();
+                for (Object rawPoint : rawPoints) {
+                    Map<String, Object> precinct = (Map<String, Object>) rawPoint;
+                    points.add(Map.of("x", precinct.get("minority_vap_pct"), "y", precinct.get("d_vote_share")));
                 }
-                result.put(entry.getKey(), compact);
+                result.put(groupEntry.getKey(), points);
             }
             return result;
         });
     }
 
+    // Returns {group -> [a0, a1, a2, a3]} 
     @SuppressWarnings("unchecked")
     public Optional<Map<String, Object>> getGinglesRegression(String stateAbbr) {
         return analysisDataRepository.findById(stateAbbr).map(ad -> {
             Object raw = ad.getGinglesRegression();
             if (!(raw instanceof Map)) return null;
-            Map<String, Object> groups = (Map<String, Object>) raw;
+            Map<String, Object> byGroup = (Map<String, Object>) raw;
             Map<String, Object> result = new LinkedHashMap<>();
-            for (Map.Entry<String, Object> entry : groups.entrySet()) {
-                List<?> points = (List<?>) entry.getValue();
-                double[] xs = new double[points.size()];
-                double[] ys = new double[points.size()];
-                for (int i = 0; i < points.size(); i++) {
-                    Map<String, Object> p = (Map<String, Object>) points.get(i);
-                    xs[i] = ((Number) p.get("x")).doubleValue();
-                    ys[i] = ((Number) p.get("y")).doubleValue();
+            for (Map.Entry<String, Object> groupEntry : byGroup.entrySet()) {
+                List<?> rawPoints = (List<?>) groupEntry.getValue();
+                double[] xs = new double[rawPoints.size()];
+                double[] ys = new double[rawPoints.size()];
+                for (int i = 0; i < rawPoints.size(); i++) {
+                    Map<String, Object> point = (Map<String, Object>) rawPoints.get(i);
+                    xs[i] = ((Number) point.get("x")).doubleValue();
+                    ys[i] = ((Number) point.get("y")).doubleValue();
                 }
-                result.put(entry.getKey(), fitPolynomial(xs, ys));
+                result.put(groupEntry.getKey(), fitPolynomial(xs, ys));
             }
             return result;
         });
     }
 
     private double[] fitPolynomial(double[] xs, double[] ys) {
-        WeightedObservedPoints obs = new WeightedObservedPoints();
-        for (int i = 0; i < xs.length; i++) {
-            obs.add(xs[i], ys[i]);
-        }
-        return PolynomialCurveFitter.create(POLY_DEGREE).fit(obs.toList());
+        WeightedObservedPoints points = new WeightedObservedPoints();
+        for (int i = 0; i < xs.length; i++) points.add(xs[i], ys[i]);
+        return PolynomialCurveFitter.create(POLY_DEGREE).fit(points.toList());
     }
 }
