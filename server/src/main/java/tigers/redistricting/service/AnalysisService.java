@@ -1,5 +1,7 @@
 package tigers.redistricting.service;
 
+import org.apache.commons.math3.fitting.PolynomialCurveFitter;
+import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.springframework.stereotype.Service;
 import tigers.redistricting.model.AnalysisData;
 import tigers.redistricting.repository.AnalysisDataRepository;
@@ -68,7 +70,7 @@ public class AnalysisService {
                     if (x < xMin) xMin = x;
                     if (x > xMax) xMax = x;
                 }
-                double[] coeffs = fitPolynomial(xs, ys, POLY_DEGREE);
+                double[] coeffs = fitPolynomial(xs, ys);
                 Map<String, Object> poly = new LinkedHashMap<>();
                 poly.put("coeffs", coeffs);
                 poly.put("xMin", xMin);
@@ -79,44 +81,9 @@ public class AnalysisService {
         });
     }
 
-    private double[] fitPolynomial(double[] xs, double[] ys, int degree) {
-        int n = degree + 1;
-        double[][] A = new double[n][n];
-        double[] b = new double[n];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < n; j++) {
-                double sum = 0;
-                for (double x : xs) sum += Math.pow(x, i + j);
-                A[i][j] = sum;
-            }
-            double sum = 0;
-            for (int k = 0; k < xs.length; k++) sum += Math.pow(xs[k], i) * ys[k];
-            b[i] = sum;
-        }
-        return gaussianElimination(A, b);
-    }
-
-    private double[] gaussianElimination(double[][] A, double[] b) {
-        int n = b.length;
-        for (int col = 0; col < n; col++) {
-            int pivot = col;
-            for (int row = col + 1; row < n; row++) {
-                if (Math.abs(A[row][col]) > Math.abs(A[pivot][col])) pivot = row;
-            }
-            double[] tmp = A[col]; A[col] = A[pivot]; A[pivot] = tmp;
-            double t = b[col]; b[col] = b[pivot]; b[pivot] = t;
-            for (int row = col + 1; row < n; row++) {
-                double factor = A[row][col] / A[col][col];
-                b[row] -= factor * b[col];
-                for (int j = col; j < n; j++) A[row][j] -= factor * A[col][j];
-            }
-        }
-        double[] x = new double[n];
-        for (int i = n - 1; i >= 0; i--) {
-            x[i] = b[i];
-            for (int j = i + 1; j < n; j++) x[i] -= A[i][j] * x[j];
-            x[i] /= A[i][i];
-        }
-        return x;
+    private double[] fitPolynomial(double[] xs, double[] ys) {
+        WeightedObservedPoints obs = new WeightedObservedPoints();
+        for (int i = 0; i < xs.length; i++) obs.add(xs[i], ys[i]);
+        return PolynomialCurveFitter.create(POLY_DEGREE).fit(obs.toList());
     }
 }

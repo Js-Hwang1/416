@@ -25,6 +25,7 @@ repositories {
 dependencies {
 	implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
 	implementation("org.springframework.boot:spring-boot-starter-webmvc")
+	implementation("org.apache.commons:commons-math3:3.6.1")
 	testImplementation("org.springframework.boot:spring-boot-starter-data-mongodb-test")
 	testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
 	testRuntimeOnly("org.junit.platform:junit-platform-launcher")
