@@ -438,9 +438,9 @@ export default function StatePage() {
     if (!ginglesSort.key) return ginglesPoints;
     const sorted = [...ginglesPoints];
     const accessor =
-      ginglesSort.key === "minority" ? (r) => r.minority_vap_pct
-      : ginglesSort.key === "dem" ? (r) => r.d_vote_share
-      : (r) => 1 - r.d_vote_share;
+      ginglesSort.key === "minority" ? (r) => r.x
+      : ginglesSort.key === "dem" ? (r) => r.y
+      : (r) => 1 - r.y;
     sorted.sort((a, b) => {
       const diff = accessor(a) - accessor(b);
       return ginglesSort.dir === "asc" ? diff : -diff;
@@ -1044,12 +1044,12 @@ export default function StatePage() {
                             <tr
                               key={globalIdx}
                               className={hoveredPrecinct?._idx === globalIdx ? "precinct-row-hovered" : ""}
-                              onMouseEnter={() => setHoveredPrecinct({ name: row.name, precinct_id: row.precinct_id, pop: row.total_pop, _idx: globalIdx })}
+                              onMouseEnter={() => setHoveredPrecinct({ name: row.name, precinct_id: row.id, pop: row.pop, _idx: globalIdx })}
                             >
                               <td>{(ginglesPage * GINGLES_PAGE_SIZE + idx + 1).toLocaleString()}</td>
-                              <td>{(Math.min(row.minority_vap_pct, 1) * 100).toFixed(1)}%</td>
-                              <td>{(Math.min(row.d_vote_share, 1) * 100).toFixed(1)}%</td>
-                              <td>{(Math.min(1 - row.d_vote_share, 1) * 100).toFixed(1)}%</td>
+                              <td>{(Math.min(row.x, 1) * 100).toFixed(1)}%</td>
+                              <td>{(Math.min(row.y, 1) * 100).toFixed(1)}%</td>
+                              <td>{(Math.min(1 - row.y, 1) * 100).toFixed(1)}%</td>
                             </tr>
                             );
                           })}

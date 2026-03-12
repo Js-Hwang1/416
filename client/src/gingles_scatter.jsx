@@ -41,39 +41,36 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
     const clamp = (v) => Math.max(0, Math.min(v, 100));
 
     const marks = [
-      // Dem vote scatter (blue)
       Plot.dot(points, {
-        x: d => clamp(d.minority_vap_pct * 100),
-        y: d => clamp(d.d_vote_share * 100),
+        x: d => clamp(d.x * 100),
+        y: d => clamp(d.y * 100),
         fill: "steelblue",
         fillOpacity: 0.18,
         r: 2.5,
       }),
-      // Rep vote scatter (red) — mirror of Dem
       Plot.dot(points, {
-        x: d => clamp(d.minority_vap_pct * 100),
-        y: d => clamp((1 - d.d_vote_share) * 100),
+        x: d => clamp(d.x * 100),
+        y: d => clamp((1 - d.y) * 100),
         fill: "tomato",
         fillOpacity: 0.18,
         r: 2.5,
       }),
     ];
 
-    // Highlight selected point
     if (selectedIdx !== null && selectedIdx !== undefined && points[selectedIdx]) {
       const sel = points[selectedIdx];
       marks.push(
         Plot.dot([sel], {
-          x: d => clamp(d.minority_vap_pct * 100),
-          y: d => clamp(d.d_vote_share * 100),
+          x: d => clamp(d.x * 100),
+          y: d => clamp(d.y * 100),
           fill: "steelblue",
           stroke: "#000",
           strokeWidth: 2,
           r: 6,
         }),
         Plot.dot([sel], {
-          x: d => clamp(d.minority_vap_pct * 100),
-          y: d => clamp((1 - d.d_vote_share) * 100),
+          x: d => clamp(d.x * 100),
+          y: d => clamp((1 - d.y) * 100),
           fill: "tomato",
           stroke: "#000",
           strokeWidth: 2,
@@ -82,22 +79,24 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
       );
     }
 
-    // Add regression curves if available
-    if (regression && regression.length > 0) {
+    if (regression?.coeffs?.length > 0) {
+      const { coeffs, xMin, xMax } = regression;
+      const evalPoly = (x) => coeffs.reduce((sum, c, i) => sum + c * Math.pow(x, i), 0);
+      const regPoints = Array.from({ length: 200 }, (_, i) => {
+        const x = xMin + (xMax - xMin) * i / 199;
+        return { x, y: evalPoly(x) };
+      });
       marks.push(
-        Plot.line(regression, {
+        Plot.line(regPoints, {
           x: d => d.x * 100,
-          y: d => d.y * 100,
+          y: d => clamp(d.y * 100),
           stroke: "steelblue",
           strokeWidth: 2.5,
           curve: "catmull-rom",
-        })
-      );
-      // Mirror regression for Rep
-      marks.push(
-        Plot.line(regression, {
+        }),
+        Plot.line(regPoints, {
           x: d => d.x * 100,
-          y: d => (1 - d.y) * 100,
+          y: d => clamp((1 - d.y) * 100),
           stroke: "tomato",
           strokeWidth: 2.5,
           curve: "catmull-rom",
@@ -178,8 +177,8 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
           const innerH = plotHeight - marginTop - marginBottom - 2 * inset;
 
           for (let i = 0; i < points.length; i++) {
-            const px = marginLeft + inset + (points[i].minority_vap_pct * 100 / 100) * innerW;
-            const py = marginTop + inset + (1 - points[i].d_vote_share) * innerH;
+            const px = marginLeft + inset + points[i].x * innerW;
+            const py = marginTop + inset + (1 - points[i].y) * innerH;
             const dist = Math.hypot(svgX - px, svgY - py);
             if (dist < bestDist) {
               bestDist = dist;
@@ -201,7 +200,7 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
       <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "14px", marginTop: "8px", fontSize: "11px" }}>
         <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "steelblue", marginRight: 4 }} />Dem Vote Share</span>
         <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "tomato", marginRight: 4 }} />Rep Vote Share</span>
-        {regression && regression.length > 0 && (
+        {regression?.coeffs?.length > 0 && (
           <span><span style={{ display: "inline-block", width: 16, height: 2, background: "steelblue", marginRight: 4, verticalAlign: "middle" }} />Regression</span>
         )}
       </div>

@@ -24,12 +24,16 @@ public class AnalysisController {
 
     @GetMapping("/gingles-precinct")
     public ResponseEntity<Object> getGinglesPrecinct(@PathVariable String stateId) {
-        return getField(stateId, AnalysisData::getGinglesPrecinct);
+        return analysisService.getGinglesPrecinct(stateId.toUpperCase())
+                .map(data -> ResponseEntity.ok((Object) data))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/gingles-regression")
     public ResponseEntity<Object> getGinglesRegression(@PathVariable String stateId) {
-        return getField(stateId, AnalysisData::getGinglesRegression);
+        return analysisService.getGinglesRegression(stateId.toUpperCase())
+                .map(data -> ResponseEntity.ok((Object) data))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/enacted-demographics")
