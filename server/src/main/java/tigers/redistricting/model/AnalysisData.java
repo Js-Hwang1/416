@@ -5,6 +5,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.util.List;
 import java.util.Map;
+import tigers.redistricting.model.PrecinctPoint;
+import tigers.redistricting.model.RegressionPoint;
 
 @Document(collection = "analysisData")
 public class AnalysisData {
