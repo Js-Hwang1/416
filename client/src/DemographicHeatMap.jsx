@@ -132,7 +132,7 @@ export default function DemographicHeatMap({
           name: props.name || `District ${props.district}`,
           districtNum: dNum,
           party: rep?.party || "N/A",
-          representative: rep?.representative || "N/A",
+          representative: rep?.name || "N/A",
         });
       } else {
         setHoverInfo({
