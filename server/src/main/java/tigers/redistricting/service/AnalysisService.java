@@ -35,13 +35,7 @@ public class AnalysisService {
                 List<Map<String, Object>> compact = new ArrayList<>();
                 for (Object p : points) {
                     Map<String, Object> point = (Map<String, Object>) p;
-                    Map<String, Object> c = new LinkedHashMap<>();
-                    c.put("x", point.get("minority_vap_pct"));
-                    c.put("y", point.get("d_vote_share"));
-                    c.put("name", point.get("name"));
-                    c.put("id", point.get("precinct_id"));
-                    c.put("pop", point.get("total_pop"));
-                    compact.add(c);
+                    compact.add(Map.of("x", point.get("minority_vap_pct"), "y", point.get("d_vote_share")));
                 }
                 result.put(entry.getKey(), compact);
             }
@@ -83,7 +77,9 @@ public class AnalysisService {
 
     private double[] fitPolynomial(double[] xs, double[] ys) {
         WeightedObservedPoints obs = new WeightedObservedPoints();
-        for (int i = 0; i < xs.length; i++) obs.add(xs[i], ys[i]);
+        for (int i = 0; i < xs.length; i++) {
+            obs.add(xs[i], ys[i]);
+        }
         return PolynomialCurveFitter.create(POLY_DEGREE).fit(obs.toList());
     }
 }

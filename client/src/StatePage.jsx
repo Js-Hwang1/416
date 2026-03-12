@@ -335,7 +335,6 @@ export default function StatePage() {
   const [eiSubView, setEiSubView] = useState("curves");
   const [ginglesPage, setGinglesPage] = useState(0);
   const [ginglesSort, setGinglesSort] = useState({ key: null, dir: "asc" });
-  const [hoveredPrecinct, setHoveredPrecinct] = useState(null);
   const [ginglesTableOpen, setGinglesTableOpen] = useState(true);
   const [districtPage, setDistrictPage] = useState(0);
 
@@ -972,7 +971,6 @@ export default function StatePage() {
                   minorityGroups={heatmapMinorityGroups}
                   selectedGroup={demoGroup}
                   heatmapLevel={heatmapLevel}
-                  highlightedPrecinct={hoveredPrecinct}
                 />
               </div>
             </div>
@@ -1037,14 +1035,12 @@ export default function StatePage() {
                             </th>
                           </tr>
                         </thead>
-                        <tbody onMouseLeave={() => setHoveredPrecinct(null)}>
+                        <tbody>
                           {ginglesPageRows.map((row, idx) => {
                             const globalIdx = ginglesPage * GINGLES_PAGE_SIZE + idx;
                             return (
                             <tr
                               key={globalIdx}
-                              className={hoveredPrecinct?._idx === globalIdx ? "precinct-row-hovered" : ""}
-                              onMouseEnter={() => setHoveredPrecinct({ name: row.name, precinct_id: row.id, pop: row.pop, _idx: globalIdx })}
                             >
                               <td>{(ginglesPage * GINGLES_PAGE_SIZE + idx + 1).toLocaleString()}</td>
                               <td>{(Math.min(row.x, 1) * 100).toFixed(1)}%</td>
