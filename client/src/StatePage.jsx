@@ -146,7 +146,6 @@ function formatPct1(value) {
   return `${Number(value).toFixed(1)}%`;
 }
 
-/* ---------- helper: fetch JSON ---------- */
 function useFetchJson(url) {
   const [data, setData] = useState(null);
   useEffect(() => {
