@@ -845,33 +845,32 @@ def step10_vote_margins(ma, tx):
         reps = json.load(f)
 
     def compute_margins(gdf, state_abbr, n_districts):
-        """Compute vote margins from GCON columns."""
+        """Compute district vote margins from 2024 presidential columns."""
         margins = {}
 
-        # Find all GCON columns
-        gcon_cols = [c for c in gdf.columns if c.startswith("GCON")]
-        if not gcon_cols:
-            report(f"  {state_abbr}: No GCON columns found")
+        if "CONG_DIST" not in gdf.columns:
+            report(f"  {state_abbr}: No CONG_DIST column found")
             return margins
 
-        # Parse district numbers from column names: GCON{DD}{party}{name}
-        # Group columns by district
-        dist_cols = {}
-        for col in gcon_cols:
-            m = re.match(r"GCON(\d{2})([DR])", col)
-            if m:
-                dist_num = int(m.group(1))
-                party = m.group(2)
-                if dist_num not in dist_cols:
-                    dist_cols[dist_num] = {"D": [], "R": []}
-                dist_cols[dist_num][party].append(col)
+        d_cols = [c for c in gdf.columns if c.startswith("G24PRED")]
+        r_cols = [c for c in gdf.columns if c.startswith("G24PRER")]
+        if not d_cols and not r_cols:
+            report(f"  {state_abbr}: No G24PRE D/R columns found")
+            return margins
 
-        for dist_num in sorted(dist_cols.keys()):
-            d_cols = dist_cols[dist_num].get("D", [])
-            r_cols = dist_cols[dist_num].get("R", [])
+        valid = gdf[gdf["CONG_DIST"].astype(str).str.strip() != ""].copy()
+        if valid.empty:
+            report(f"  {state_abbr}: No rows with CONG_DIST values")
+            return margins
 
-            dem_votes = sum(int(gdf[c].sum()) for c in d_cols)
-            rep_votes = sum(int(gdf[c].sum()) for c in r_cols)
+        valid["_cd"] = (
+            valid["CONG_DIST"].astype(str).str.strip().str.lstrip("0").replace("", "0")
+        )
+
+        for dist_num in range(1, n_districts + 1):
+            district_rows = valid[valid["_cd"] == str(dist_num)]
+            dem_votes = sum(int(district_rows[c].fillna(0).sum()) for c in d_cols)
+            rep_votes = sum(int(district_rows[c].fillna(0).sum()) for c in r_cols)
             total_votes = dem_votes + rep_votes
 
             if total_votes > 0:
@@ -906,12 +905,12 @@ def step10_vote_margins(ma, tx):
                 rep_entry["total_votes"] = m["total_votes"]
                 rep_entry["vote_margin_pct"] = m["vote_margin_pct"]
             else:
-                # Unopposed race — no GCON data available
+                # No district-level senate totals available
                 rep_entry["dem_votes"] = 0
                 rep_entry["rep_votes"] = 0
                 rep_entry["total_votes"] = 0
-                rep_entry["vote_margin_pct"] = 100.0
-                report(f"  {state_abbr}-{dist:02d}: Unopposed (no GCON data)")
+                rep_entry["vote_margin_pct"] = 0.0
+                report(f"  {state_abbr}-{dist:02d}: Missing district totals")
 
     with open(REPS_FILE, "w") as f:
         json.dump(reps, f, indent=2)
