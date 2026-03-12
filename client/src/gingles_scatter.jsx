@@ -79,11 +79,10 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
       );
     }
 
-    if (regression?.coeffs?.length > 0) {
-      const { coeffs, xMin, xMax } = regression;
-      const evalPoly = (x) => coeffs.reduce((sum, c, i) => sum + c * Math.pow(x, i), 0);
+    if (regression?.length > 0) {
+      const evalPoly = (x) => regression.reduce((sum, c, i) => sum + c * Math.pow(x, i), 0);
       const regPoints = Array.from({ length: 200 }, (_, i) => {
-        const x = xMin + (xMax - xMin) * i / 199;
+        const x = i / 199;
         return { x, y: evalPoly(x) };
       });
       marks.push(
@@ -200,7 +199,7 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
       <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "14px", marginTop: "8px", fontSize: "11px" }}>
         <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "steelblue", marginRight: 4 }} />Dem Vote Share</span>
         <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "tomato", marginRight: 4 }} />Rep Vote Share</span>
-        {regression?.coeffs?.length > 0 && (
+        {regression?.length > 0 && (
           <span><span style={{ display: "inline-block", width: 16, height: 2, background: "steelblue", marginRight: 4, verticalAlign: "middle" }} />Regression</span>
         )}
       </div>

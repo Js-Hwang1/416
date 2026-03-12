@@ -54,22 +54,12 @@ public class AnalysisService {
                 List<?> points = (List<?>) entry.getValue();
                 double[] xs = new double[points.size()];
                 double[] ys = new double[points.size()];
-                double xMin = Double.MAX_VALUE, xMax = -Double.MAX_VALUE;
                 for (int i = 0; i < points.size(); i++) {
                     Map<String, Object> p = (Map<String, Object>) points.get(i);
-                    double x = ((Number) p.get("x")).doubleValue();
-                    double y = ((Number) p.get("y")).doubleValue();
-                    xs[i] = x;
-                    ys[i] = y;
-                    if (x < xMin) xMin = x;
-                    if (x > xMax) xMax = x;
+                    xs[i] = ((Number) p.get("x")).doubleValue();
+                    ys[i] = ((Number) p.get("y")).doubleValue();
                 }
-                double[] coeffs = fitPolynomial(xs, ys);
-                Map<String, Object> poly = new LinkedHashMap<>();
-                poly.put("coeffs", coeffs);
-                poly.put("xMin", xMin);
-                poly.put("xMax", xMax);
-                result.put(entry.getKey(), poly);
+                result.put(entry.getKey(), fitPolynomial(xs, ys));
             }
             return result;
         });
