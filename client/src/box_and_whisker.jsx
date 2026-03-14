@@ -59,10 +59,23 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .nice()
       .range([height - marginBottom, marginTop]);
 
-    const g = svg.append("g");
+    const gridLayer = svg.append("g");
+    const axisLayer = svg.append("g");
+    const plotLayer = svg.append("g");
+
+    // Y grid first so plot marks render on top of it.
+    gridLayer
+      .append("g")
+      .attr("transform", `translate(${marginLeft},0)`)
+      .call(d3.axisLeft(y).ticks(8).tickFormat(() => "").tickSize(-width + marginLeft + marginRight))
+      .call(g => {
+        g.select(".domain").remove();
+        g.selectAll(".tick line").attr("stroke", "#f0f0f0");
+        g.selectAll(".tick text").remove();
+      });
 
     // Whiskers (min to max)
-    g.selectAll(".whisker")
+    plotLayer.selectAll(".whisker")
       .data(districts)
       .join("line")
       .attr("x1", d => x(d.district) + x.bandwidth() / 2)
@@ -72,7 +85,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .attr("stroke", "#888");
 
     // Whisker caps
-    g.selectAll(".cap-min")
+    plotLayer.selectAll(".cap-min")
       .data(districts)
       .join("line")
       .attr("x1", d => x(d.district) + x.bandwidth() * 0.15)
@@ -81,7 +94,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .attr("y2", d => y(d.min))
       .attr("stroke", "#888");
 
-    g.selectAll(".cap-max")
+    plotLayer.selectAll(".cap-max")
       .data(districts)
       .join("line")
       .attr("x1", d => x(d.district) + x.bandwidth() * 0.15)
@@ -91,7 +104,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .attr("stroke", "#888");
 
     // Box (Q1 to Q3)
-    g.selectAll(".box")
+    plotLayer.selectAll(".box")
       .data(districts)
       .join("rect")
       .attr("x", d => x(d.district))
@@ -103,7 +116,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .attr("stroke-width", 0.8);
 
     // Median line
-    g.selectAll(".median")
+    plotLayer.selectAll(".median")
       .data(districts)
       .join("line")
       .attr("x1", d => x(d.district))
@@ -134,7 +147,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       }));
     }
 
-    g.selectAll(".enacted-dot")
+    plotLayer.selectAll(".enacted-dot")
       .data(enactedDots)
       .join("circle")
       .attr("cx", d => x(d.district) + x.bandwidth() / 2)
@@ -145,15 +158,18 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .attr("stroke-width", 0.8);
 
     // X Axis
-    svg
+    axisLayer
       .append("g")
       .attr("transform", `translate(0,${height - marginBottom})`)
       .call(d3.axisBottom(x).tickSize(0))
-      .call(g => g.select(".domain").attr("stroke", "#ccc"))
-      .selectAll("text")
-      .style("font-family", "'Verdana', sans-serif")
-      .style("font-size", "10px")
-      .style("fill", "#000").style("font-weight", "700");
+      .call(g => {
+        g.select(".domain").attr("stroke", "#ccc");
+        g.selectAll("text")
+          .style("font-family", "'Verdana', sans-serif")
+          .style("font-size", "10px")
+          .style("fill", "#000")
+          .style("font-weight", "700");
+      });
 
     // X Axis label
     svg
@@ -168,13 +184,13 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .text("Districts (ordered by increasing % of selected group)");
 
     // Y Axis
-    svg
+    axisLayer
       .append("g")
       .attr("transform", `translate(${marginLeft},0)`)
       .call(d3.axisLeft(y).ticks(8).tickFormat(d => `${d}%`).tickSize(-width + marginLeft + marginRight))
       .call(g => {
         g.select(".domain").attr("stroke", "#ccc");
-        g.selectAll(".tick line").attr("stroke", "#f0f0f0");
+        g.selectAll(".tick line").remove();
         g.selectAll(".tick text")
           .style("font-family", "'Verdana', sans-serif")
           .style("font-size", "10px")
