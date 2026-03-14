@@ -50,13 +50,21 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .range([marginLeft, width - marginRight])
       .padding(0.4);
 
+    const yMin = Math.max(0, d3.min(districts, d => d.min));
+    const dataMax = Math.min(100, d3.max(districts, d => d.max));
+    const baseTicks = d3.ticks(yMin, dataMax, 8);
+    const tickStep = baseTicks.length > 1 ? baseTicks[1] - baseTicks[0] : Math.max(1, Math.ceil((dataMax - yMin) || 1));
+    const lastBaseTick = baseTicks.at(-1) ?? dataMax;
+    const provisionalDisplayMax = Math.min(
+      100,
+      lastBaseTick >= dataMax ? lastBaseTick : lastBaseTick + tickStep
+    );
+    const tickValues = d3.ticks(yMin, provisionalDisplayMax, 8);
+    const displayMax = tickValues.at(-1) ?? provisionalDisplayMax;
+
     const y = d3
       .scaleLinear()
-      .domain([
-        Math.max(0, d3.min(districts, d => d.min) - 2),
-        d3.max(districts, d => d.max) + 2
-      ])
-      .nice()
+      .domain([yMin, displayMax])
       .range([height - marginBottom, marginTop]);
 
     const gridLayer = svg.append("g");
@@ -67,7 +75,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
     gridLayer
       .append("g")
       .attr("transform", `translate(${marginLeft},0)`)
-      .call(d3.axisLeft(y).ticks(8).tickFormat(() => "").tickSize(-width + marginLeft + marginRight))
+      .call(d3.axisLeft(y).tickValues(tickValues).tickFormat(() => "").tickSize(-width + marginLeft + marginRight))
       .call(g => {
         g.select(".domain").remove();
         g.selectAll(".tick line").attr("stroke", "#f0f0f0");
@@ -187,7 +195,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
     axisLayer
       .append("g")
       .attr("transform", `translate(${marginLeft},0)`)
-      .call(d3.axisLeft(y).ticks(8).tickFormat(d => `${d}%`).tickSize(-width + marginLeft + marginRight))
+      .call(d3.axisLeft(y).tickValues(tickValues).tickFormat(d => `${d}%`).tickSize(-width + marginLeft + marginRight))
       .call(g => {
         g.select(".domain").attr("stroke", "#ccc");
         g.selectAll(".tick line").remove();
