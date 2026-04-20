@@ -1,6 +1,5 @@
 package tigers.redistricting.service;
 
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import tigers.redistricting.dto.StateSummary;
 import tigers.redistricting.enums.StateId;
@@ -19,17 +18,14 @@ public class StateService {
         this.stateRepository = stateRepository;
     }
 
-    @Cacheable("allStates")
     public List<State> getAllStates() {
         return stateRepository.findAll();
     }
 
-    @Cacheable("stateById")
     public Optional<State> getStateById(StateId id) {
         return stateRepository.findById(id);
     }
 
-    @Cacheable("stateSummary")
     public Optional<StateSummary> getStateSummaryById(StateId id) {
         return stateRepository.findById(id).map(s -> new StateSummary(
             s.getId(),

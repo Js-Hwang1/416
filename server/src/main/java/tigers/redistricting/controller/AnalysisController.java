@@ -1,5 +1,6 @@
 package tigers.redistricting.controller;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tigers.redistricting.model.AnalysisData;
@@ -22,6 +23,7 @@ public class AnalysisController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("ginglesPrecinct")
     @GetMapping("/gingles-precinct")
     public ResponseEntity<Object> getGinglesPrecinct(@PathVariable String stateId) {
         return analysisService.getGinglesPrecinct(stateId.toUpperCase())
@@ -29,6 +31,7 @@ public class AnalysisController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("ginglesRegression")
     @GetMapping("/gingles-regression")
     public ResponseEntity<Object> getGinglesRegression(@PathVariable String stateId) {
         return analysisService.getGinglesRegression(stateId.toUpperCase())

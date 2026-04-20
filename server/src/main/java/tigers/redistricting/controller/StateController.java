@@ -1,5 +1,6 @@
 package tigers.redistricting.controller;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tigers.redistricting.dto.StateSummary;
@@ -19,11 +20,13 @@ public class StateController {
         this.stateService = stateService;
     }
 
+    @Cacheable("allStates")
     @GetMapping
     public List<State> getAllStates() {
         return stateService.getAllStates();
     }
 
+    @Cacheable("stateById")
     @GetMapping("/{id}")
     public ResponseEntity<State> getState(@PathVariable StateId id) {
         return stateService.getStateById(id)
@@ -31,6 +34,7 @@ public class StateController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("stateSummary")
     @GetMapping("/{id}/summary")
     public ResponseEntity<StateSummary> getStateSummary(@PathVariable StateId id) {
         return stateService.getStateSummaryById(id)
