@@ -2,6 +2,7 @@ package tigers.redistricting.service;
 
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import tigers.redistricting.model.AnalysisData;
 import tigers.redistricting.model.PrecinctPoint;
@@ -29,6 +30,7 @@ public class AnalysisService {
      * MongoDB: { hispanic: [{ precinct_id, name, total_pop, minority_pop, minority_vap_pct, d_vote_share }, ...], ... }
      * Response: { hispanic: [{ x: minority_vap_pct, y: d_vote_share }, ...], ... }
      */
+    @Cacheable("ginglesPrecinct")
     public Optional<Map<String, Object>> getGinglesPrecinct(String stateAbbr) {
         return analysisDataRepository.findById(stateAbbr).map(ad -> {
             Map<String, List<PrecinctPoint>> byGroup = ad.getGinglesPrecinct();
@@ -52,6 +54,7 @@ public class AnalysisService {
      * Fits a degree-3 polynomial to those points per group
      * Response: { hispanic: [a0, a1, a2, a3], ... }  (frontend evaluates y = a0 + a1x + a2x² + a3x³)
      */
+    @Cacheable("ginglesRegression")
     public Optional<Map<String, Object>> getGinglesRegression(String stateAbbr) {
         return analysisDataRepository.findById(stateAbbr).map(ad -> {
             Map<String, List<RegressionPoint>> byGroup = ad.getGinglesRegression();

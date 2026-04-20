@@ -1,11 +1,13 @@
 package tigers.redistricting.dto;
 
+import tigers.redistricting.enums.StateId;
+
 import java.util.List;
 import java.util.Map;
 
-public class StateSummaryDTO {
+public class StateSummary {
 
-    private String id;
+    private StateId id;
     private String name;
     private String abbreviation;
     private int totalPopulation;
@@ -16,7 +18,7 @@ public class StateSummaryDTO {
     private Map<String, Integer> partySplit;
     private List<String> feasibleDemographicGroups;
 
-    public StateSummaryDTO(String id, String name, String abbreviation,
+    public StateSummary(StateId id, String name, String abbreviation,
                            int totalPopulation, int votingAgePopulation,
                            int numCongressionalDistricts,
                            Map<String, Integer> populationByGroup,
@@ -35,7 +37,7 @@ public class StateSummaryDTO {
         this.feasibleDemographicGroups = feasibleDemographicGroups;
     }
 
-    public String getId() { return id; }
+    public StateId getId() { return id; }
     public String getName() { return name; }
     public String getAbbreviation() { return abbreviation; }
     public int getTotalPopulation() { return totalPopulation; }

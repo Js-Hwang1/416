@@ -2,6 +2,7 @@ package tigers.redistricting.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import tigers.redistricting.enums.StateId;
 
 import java.util.List;
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.Map;
 public class State {
 
     @Id
-    private String id;
+    private StateId id;
 
     private String state;
     private String state_abbr;
@@ -24,8 +25,8 @@ public class State {
     private List<String> feasible_demographic_groups;
     private List<Map<String, Object>> representatives;
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public StateId getId() { return id; }
+    public void setId(StateId id) { this.id = id; }
 
     public String getState() { return state; }
     public void setState(String state) { this.state = state; }
