@@ -345,6 +345,7 @@ export default function StatePage() {
 
   /* ---- fetch data from API ---- */
   const stateData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}`) : null);
+  const summaryData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/summary`) : null);
 
   /* ---- lazy-fetch only what the active chart needs ---- */
   const isDemo = activeView === "demographics";
@@ -371,26 +372,26 @@ export default function StatePage() {
 
   /* ---- minority groups available for heatmap dropdown ---- */
   const heatmapMinorityGroups = useMemo(() => {
-    if (!stateData?.population_by_group) return [];
+    if (!summaryData?.populationByGroup) return [];
     const MINORITY_LABELS = {
       hispanic: "Latino",
       black: "Black",
       asian: "Asian",
     };
-    return Object.entries(stateData.population_by_group)
+    return Object.entries(summaryData.populationByGroup)
       .filter(([g, pop]) => g in MINORITY_LABELS && pop > 0)
       .map(([g]) => ({ key: g, label: MINORITY_LABELS[g] }));
-  }, [stateData]);
+  }, [summaryData]);
 
-  /* ---- build overview from fetched state data ---- */
+  /* ---- build overview from fetched summary data ---- */
   const overview = useMemo(() => {
-    if (!stateData) return null;
-    const pop = stateData.population_by_group || {};
-    const pres = stateData.presidential_2024 || {};
+    if (!summaryData) return null;
+    const pop = summaryData.populationByGroup || {};
+    const pres = summaryData.presidential2024 || {};
     const otherPct = Math.max(0, 100 - (pres.dem_pct || 0) - (pres.rep_pct || 0));
     return {
-      totalPopulation: stateData.total_population,
-      votingAgePopulation: stateData.voting_age_population,
+      totalPopulation: summaryData.totalPopulation,
+      votingAgePopulation: summaryData.votingAgePopulation,
       populationByGroup: {
         White: pop.white ?? 0,
         Black: pop.black ?? 0,
@@ -403,9 +404,9 @@ export default function StatePage() {
         republican: pres.rep_pct ?? 0,
         other: Math.round(otherPct * 10) / 10,
       },
-      congressionalByParty: stateData.party_split ?? {},
+      congressionalByParty: summaryData.partySplit ?? {},
     };
-  }, [stateData]);
+  }, [summaryData]);
 
   /* ---- build district table rows from reps ---- */
   const districtTableRows = useMemo(() => {
