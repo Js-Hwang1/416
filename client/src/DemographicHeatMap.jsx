@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Map as MapGL, Source, Layer, NavigationControl } from "react-map-gl/maplibre";
 
 const GROUP_LABELS = {
@@ -85,9 +85,9 @@ function buildDistrictFillExpr(numDistricts, districtParties) {
 }
 
 export default function DemographicHeatMap({
-  precinctTilesUrl,
+  districtGeoJsonData,
+  precinctGeoJsonData,
   blockTilesUrl,
-  districtGeoJson,
   districtParties,
   numDistricts,
   mapView,
@@ -96,7 +96,6 @@ export default function DemographicHeatMap({
   highlightedPrecinct,
 }) {
   const [hoverInfo, setHoverInfo] = useState(null);
-  const [districtGeojsonData, setDistrictGeojsonData] = useState(null);
 
   const fillColorExpr = useMemo(
     () => buildFillColorExpr(selectedGroup),
@@ -105,15 +104,6 @@ export default function DemographicHeatMap({
 
   const isDistrict = heatmapLevel === "district";
   const isBlock = heatmapLevel === "block";
-
-  /* Fetch district GeoJSON when needed */
-  useEffect(() => {
-    if (!districtGeoJson) return;
-    fetch(districtGeoJson)
-      .then((r) => r.json())
-      .then(setDistrictGeojsonData)
-      .catch((err) => console.error("Failed to load district geojson for heatmap", err));
-  }, [districtGeoJson]);
 
   const districtFillExpr = useMemo(
     () => buildDistrictFillExpr(numDistricts || 0, districtParties),
@@ -190,51 +180,49 @@ export default function DemographicHeatMap({
         >
           <NavigationControl position="top-right" />
 
-          {/* Precinct source — always loaded */}
-          <Source id="precinct-source" type="vector" url={precinctTilesUrl}>
-            <Layer
-              id="precinct-fill"
-              type="fill"
-              source-layer="precincts"
-              layout={{ visibility: precinctVisibility }}
-              paint={{
-                "fill-color": fillColorExpr,
-                "fill-opacity": 0.85,
-              }}
-            />
-            <Layer
-              id="precinct-line"
-              type="line"
-              source-layer="precincts"
-              layout={{ visibility: precinctVisibility }}
-              paint={{
-                "line-color": "#666",
-                "line-width": 0.3,
-              }}
-            />
-            <Layer
-              id="precinct-highlight-fill"
-              type="fill"
-              source-layer="precincts"
-              layout={{ visibility: precinctVisibility }}
-              filter={highlightFilter}
-              paint={{
-                "fill-color": "#f97316",
-                "fill-opacity": 0.35,
-              }}
-            />
-            <Layer
-              id="precinct-highlight"
-              type="line"
-              source-layer="precincts"
-              layout={{ visibility: precinctVisibility }}
-              filter={highlightFilter}
-              paint={{
-                "line-color": "#f97316",
-                "line-width": 3,
-              }}
-            />
-          </Source>
+          {/* Precinct source — GeoJSON from API */}
+          {precinctGeoJsonData && (
+            <Source id="precinct-source" type="geojson" data={precinctGeoJsonData}>
+              <Layer
+                id="precinct-fill"
+                type="fill"
+                layout={{ visibility: precinctVisibility }}
+                paint={{
+                  "fill-color": fillColorExpr,
+                  "fill-opacity": 0.85,
+                }}
+              />
+              <Layer
+                id="precinct-line"
+                type="line"
+                layout={{ visibility: precinctVisibility }}
+                paint={{
+                  "line-color": "#666",
+                  "line-width": 0.3,
+                }}
+              />
+              <Layer
+                id="precinct-highlight-fill"
+                type="fill"
+                layout={{ visibility: precinctVisibility }}
+                filter={highlightFilter}
+                paint={{
+                  "fill-color": "#f97316",
+                  "fill-opacity": 0.35,
+                }}
+              />
+              <Layer
+                id="precinct-highlight"
+                type="line"
+                layout={{ visibility: precinctVisibility }}
+                filter={highlightFilter}
+                paint={{
+                  "line-color": "#f97316",
+                  "line-width": 3,
+                }}
+              />
+            </Source>
+          )}
 
           {/* Block source — always loaded */}
           <Source id="block-source" type="vector" url={blockTilesUrl}>
@@ -261,8 +249,8 @@ export default function DemographicHeatMap({
           </Source>
 
           {/* District source — GeoJSON */}
-          {districtGeojsonData && (
-            <Source id="district-source" type="geojson" data={districtGeojsonData}>
+          {districtGeoJsonData && (
+            <Source id="district-source" type="geojson" data={districtGeoJsonData}>
               <Layer
                 id="district-fill"
                 type="fill"

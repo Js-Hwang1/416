@@ -2,6 +2,7 @@ package tigers.redistricting.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import tigers.redistricting.enums.StateId;
 
 import java.util.List;
 import java.util.Map;
@@ -12,7 +13,7 @@ import tigers.redistricting.model.RegressionPoint;
 public class AnalysisData {
 
     @Id
-    private String id;
+    private StateId id;
 
     private String stateAbbr;
     private Map<String, List<PrecinctPoint>> ginglesPrecinct;
@@ -25,8 +26,8 @@ public class AnalysisData {
     private Object eiSummary;
     private Object voteSeat;
 
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
+    public StateId getId() { return id; }
+    public void setId(StateId id) { this.id = id; }
 
     public String getStateAbbr() { return stateAbbr; }
     public void setStateAbbr(String stateAbbr) { this.stateAbbr = stateAbbr; }

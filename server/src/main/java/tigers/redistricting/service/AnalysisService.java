@@ -3,6 +3,7 @@ package tigers.redistricting.service;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.springframework.stereotype.Service;
+import tigers.redistricting.enums.StateId;
 import tigers.redistricting.model.AnalysisData;
 import tigers.redistricting.model.PrecinctPoint;
 import tigers.redistricting.model.RegressionPoint;
@@ -21,16 +22,16 @@ public class AnalysisService {
         this.analysisDataRepository = analysisDataRepository;
     }
 
-    public Optional<AnalysisData> getByState(String stateAbbr) {
-        return analysisDataRepository.findById(stateAbbr);
+    public Optional<AnalysisData> getByState(StateId id) {
+        return analysisDataRepository.findById(id);
     }
 
     /*
      * MongoDB: { hispanic: [{ precinct_id, name, total_pop, minority_pop, minority_vap_pct, d_vote_share }, ...], ... }
      * Response: { hispanic: [{ x: minority_vap_pct, y: d_vote_share }, ...], ... }
      */
-    public Optional<Map<String, Object>> getGinglesPrecinct(String stateAbbr) {
-        return analysisDataRepository.findById(stateAbbr).map(ad -> {
+    public Optional<Map<String, Object>> getGinglesPrecinct(StateId id) {
+        return analysisDataRepository.findById(id).map(ad -> {
             Map<String, List<PrecinctPoint>> byGroup = ad.getGinglesPrecinct();
             if (byGroup == null) return null;
 
@@ -52,8 +53,8 @@ public class AnalysisService {
      * Fits a degree-3 polynomial to those points per group
      * Response: { hispanic: [a0, a1, a2, a3], ... }  (frontend evaluates y = a0 + a1x + a2x² + a3x³)
      */
-    public Optional<Map<String, Object>> getGinglesRegression(String stateAbbr) {
-        return analysisDataRepository.findById(stateAbbr).map(ad -> {
+    public Optional<Map<String, Object>> getGinglesRegression(StateId id) {
+        return analysisDataRepository.findById(id).map(ad -> {
             Map<String, List<RegressionPoint>> byGroup = ad.getGinglesRegression();
             if (byGroup == null) return null;
 

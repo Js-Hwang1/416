@@ -10,7 +10,7 @@ import DemographicHeatMap from "./DemographicHeatMap";
 import VoteSeatChart from "./VoteSeatChart";
 import EISupportSummary from "./EISupportSummary";
 import EIKDEChart from "./EIKDEChart";
-import { apiUrl, tilesUrl } from "./api";
+import { apiUrl, tilesUrl, useFetchJson } from "./api";
 
 const STATE_CONFIG = {
   texas: {
@@ -20,7 +20,7 @@ const STATE_CONFIG = {
     fips: 48,
     districts: 38,
     districtGeoJson: apiUrl(`/api/states/TX/geojson/districts`),
-    precinctTiles: tilesUrl("tx_precincts.pmtiles"),
+    precinctGeoJsonUrl: apiUrl(`/api/states/TX/geojson/precincts`),
     blockTiles: tilesUrl("tx_blocks.pmtiles"),
     mapView: { center: [-99.5, 31.0], zoom: 5.2, minZoom: 4.5, maxZoom: 14 },
     redistrictingAuthority: "Republican Legislature",
@@ -36,7 +36,7 @@ const STATE_CONFIG = {
     fips: 25,
     districts: 9,
     districtGeoJson: apiUrl(`/api/states/MA/geojson/districts`),
-    precinctTiles: tilesUrl("ma_precincts.pmtiles"),
+    precinctGeoJsonUrl: apiUrl(`/api/states/MA/geojson/precincts`),
     blockTiles: tilesUrl("ma_blocks.pmtiles"),
     mapView: { center: [-71.8, 42.1], zoom: 7.5, minZoom: 6.5, maxZoom: 14 },
     redistrictingAuthority: "Democratic Legislature",
@@ -146,36 +146,10 @@ function formatPct1(value) {
   return `${Number(value).toFixed(1)}%`;
 }
 
-function useFetchJson(url) {
-  const [data, setData] = useState(null);
-  useEffect(() => {
-    if (!url) return;
-    axios.get(url).then((res) => setData(res.data));
-  }, [url]);
-  return data;
-}
 
 /* ---------- StateMap (MapLibre GL + GeoJSON direct) ---------- */
-function StateMap({ cfg, selectedDistrict, onDistrictSelect, districtParties }) {
+function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtParties }) {
   const [hoveredDistrict, setHoveredDistrict] = useState(null);
-  const [geojson, setGeojson] = useState(null);
-
-  /* Fetch district GeoJSON directly (only 9-38 features, no need for tiles) */
-  const districtGeoJsonUrl = cfg.districtGeoJson;
-  useEffect(() => {
-    setGeojson(null);
-    if (!districtGeoJsonUrl) return;
-    fetch(districtGeoJsonUrl)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data) => {
-        console.log("District GeoJSON loaded:", data.features?.length, "features");
-        setGeojson(data);
-      })
-      .catch((err) => console.error("Failed to load district geojson", err));
-  }, [districtGeoJsonUrl]);
 
   const districtInfo = useMemo(() => {
     const map = {};
@@ -346,6 +320,8 @@ export default function StatePage() {
   /* ---- fetch data from API ---- */
   const stateData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}`) : null);
   const summaryData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/summary`) : null);
+  const districtGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/districts`) : null);
+  const precinctGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/precincts`) : null);
 
   /* ---- lazy-fetch only what the active chart needs ---- */
   const isDemo = activeView === "demographics";
@@ -574,6 +550,7 @@ export default function StatePage() {
               <h2 className="section-title compare-map-title">Enacted</h2>
               <div className="compare-map-wrapper">
                 <StateMap
+                  geojson={districtGeoJsonData}
                   cfg={cfg}
                   selectedDistrict={selectedDistrict}
                   onDistrictSelect={setSelectedDistrict}
@@ -597,6 +574,7 @@ export default function StatePage() {
               </h2>
               <div className="compare-map-wrapper">
                 <StateMap
+                  geojson={districtGeoJsonData}
                   cfg={cfg}
                   selectedDistrict={selectedDistrict}
                   onDistrictSelect={setSelectedDistrict}
@@ -663,6 +641,7 @@ export default function StatePage() {
               <h2 className="section-title">Congressional Districts</h2>
               <div className="state-map-wrapper">
                 <StateMap
+                  geojson={districtGeoJsonData}
                   cfg={cfg}
                   selectedDistrict={selectedDistrict}
                   onDistrictSelect={setSelectedDistrict}
@@ -963,9 +942,9 @@ export default function StatePage() {
               <div className="demo-heatmap-wrapper">
                 <DemographicHeatMap
                   key={stateSlug}
-                  precinctTilesUrl={cfg.precinctTiles}
+                  districtGeoJsonData={districtGeoJsonData}
+                  precinctGeoJsonData={precinctGeoJsonData}
                   blockTilesUrl={cfg.blockTiles}
-                  districtGeoJson={cfg.districtGeoJson}
                   districtParties={reps}
                   numDistricts={cfg.districts}
                   mapView={cfg.mapView}
