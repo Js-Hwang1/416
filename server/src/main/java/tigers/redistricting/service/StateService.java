@@ -7,6 +7,7 @@ import tigers.redistricting.model.State;
 import tigers.redistricting.repository.StateRepository;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -39,5 +40,29 @@ public class StateService {
             s.getParty_split(),
             s.getFeasible_demographic_groups()
         ));
+    }
+
+    public Optional<Map<String, Object>> getPresidentialResults(StateId id) {
+        return stateRepository.findById(id).map(State::getPresidential_2024);
+    }
+
+    public Optional<List<Map<String, Object>>> getRepresentatives(StateId id) {
+        return stateRepository.findById(id).map(State::getRepresentatives);
+    }
+
+    public Optional<Map<String, Integer>> getPopulationByGroup(StateId id) {
+        return stateRepository.findById(id).map(State::getPopulation_by_group);
+    }
+
+    public Optional<Map<String, Integer>> getVapByGroup(StateId id) {
+        return stateRepository.findById(id).map(State::getVap_by_group);
+    }
+
+    public Optional<Map<String, Integer>> getPartySplit(StateId id) {
+        return stateRepository.findById(id).map(State::getParty_split);
+    }
+
+    public Optional<List<String>> getFeasibleDemographicGroups(StateId id) {
+        return stateRepository.findById(id).map(State::getFeasible_demographic_groups);
     }
 }
