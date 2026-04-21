@@ -4,11 +4,11 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tigers.redistricting.enums.StateId;
-import tigers.redistricting.model.AnalysisData;
-import tigers.redistricting.model.EICurve;
+import tigers.redistricting.model.*;
 import tigers.redistricting.service.AnalysisService;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/states/{id}/analysis")
@@ -20,75 +20,75 @@ public class AnalysisController {
         this.analysisService = analysisService;
     }
 
-    @GetMapping
-    public ResponseEntity<AnalysisData> getAllAnalysis(@PathVariable StateId id) {
-        return analysisService.getByState(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
     @Cacheable("ginglesPrecinct")
     @GetMapping("/gingles-precinct")
-    public ResponseEntity<Object> getGinglesPrecinct(@PathVariable StateId id) {
+    public ResponseEntity<Map<String, List<Map<String, Object>>>> getGinglesPrecinct(@PathVariable StateId id) {
         return analysisService.getGinglesPrecinct(id)
-                .map(data -> ResponseEntity.ok((Object) data))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @Cacheable("ginglesRegression")
     @GetMapping("/gingles-regression")
-    public ResponseEntity<Object> getGinglesRegression(@PathVariable StateId id) {
+    public ResponseEntity<Map<String, double[]>> getGinglesRegression(@PathVariable StateId id) {
         return analysisService.getGinglesRegression(id)
-                .map(data -> ResponseEntity.ok((Object) data))
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("enactedDemographics")
     @GetMapping("/enacted-demographics")
-    public ResponseEntity<Object> getEnactedDemographics(@PathVariable StateId id) {
-        return getField(id, AnalysisData::getEnactedDemographics);
+    public ResponseEntity<EnactedDemographicsData> getEnactedDemographics(@PathVariable StateId id) {
+        return analysisService.getEnactedDemographics(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("ensembleBar")
     @GetMapping("/ensemble-bar")
-    public ResponseEntity<Object> getEnsembleBar(@PathVariable StateId id) {
-        return getField(id, AnalysisData::getEnsembleBar);
+    public ResponseEntity<EnsembleBarData> getEnsembleBar(@PathVariable StateId id) {
+        return analysisService.getEnsembleBar(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("ensembleBox")
     @GetMapping("/ensemble-box")
-    public ResponseEntity<Object> getEnsembleBox(@PathVariable StateId id) {
-        return getField(id, AnalysisData::getEnsembleBox);
+    public ResponseEntity<EnsembleBoxData> getEnsembleBox(@PathVariable StateId id) {
+        return analysisService.getEnsembleBox(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("eiCurves")
     @GetMapping("/ei-curves")
     public ResponseEntity<List<EICurve>> getEiCurves(@PathVariable StateId id) {
-        return analysisService.getByState(id)
-                .map(ad -> ResponseEntity.ok(ad.getEiCurves()))
+        return analysisService.getEiCurves(id)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("eiKde")
     @GetMapping("/ei-kde")
-    public ResponseEntity<Object> getEiKde(@PathVariable StateId id) {
-        return getField(id, AnalysisData::getEiKde);
+    public ResponseEntity<EiKdeData> getEiKde(@PathVariable StateId id) {
+        return analysisService.getEiKde(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("eiSummary")
     @GetMapping("/ei-summary")
-    public ResponseEntity<Object> getEiSummary(@PathVariable StateId id) {
-        return getField(id, AnalysisData::getEiSummary);
+    public ResponseEntity<List<EiSupportEntry>> getEiSummary(@PathVariable StateId id) {
+        return analysisService.getEiSummary(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("voteSeat")
     @GetMapping("/vote-seat")
-    public ResponseEntity<Object> getVoteSeat(@PathVariable StateId id) {
-        return getField(id, AnalysisData::getVoteSeat);
-    }
-
-    private ResponseEntity<Object> getField(StateId id,
-                                             java.util.function.Function<AnalysisData, Object> extractor) {
-        return analysisService.getByState(id)
-                .map(ad -> {
-                    Object value = extractor.apply(ad);
-                    return value != null
-                            ? ResponseEntity.ok(value)
-                            : ResponseEntity.notFound().<Object>build();
-                })
+    public ResponseEntity<VoteSeatData> getVoteSeat(@PathVariable StateId id) {
+        return analysisService.getVoteSeat(id)
+                .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 }
