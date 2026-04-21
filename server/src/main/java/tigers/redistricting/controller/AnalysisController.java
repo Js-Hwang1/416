@@ -38,7 +38,7 @@ public class AnalysisController {
 
     @Cacheable("enactedDemographics")
     @GetMapping("/enacted-demographics")
-    public ResponseEntity<List<DistrictDemographics>> getEnactedDemographics(@PathVariable StateId id) {
+    public ResponseEntity<EnactedDemographicsData> getEnactedDemographics(@PathVariable StateId id) {
         return analysisService.getEnactedDemographics(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());

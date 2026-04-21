@@ -16,7 +16,7 @@ public class AnalysisData {
     private String stateAbbr;
     private Map<String, List<PrecinctPoint>> ginglesPrecinct;
     private Map<String, List<RegressionPoint>> ginglesRegression;
-    private List<DistrictDemographics> enactedDemographics;
+    private EnactedDemographicsData enactedDemographics;
     private EnsembleBarData ensembleBar;
     private EnsembleBoxData ensembleBox;
     private List<EICurve> eiCurves;
@@ -37,8 +37,8 @@ public class AnalysisData {
     public Map<String, List<RegressionPoint>> getGinglesRegression() { return ginglesRegression; }
     public void setGinglesRegression(Map<String, List<RegressionPoint>> ginglesRegression) { this.ginglesRegression = ginglesRegression; }
 
-    public List<DistrictDemographics> getEnactedDemographics() { return enactedDemographics; }
-    public void setEnactedDemographics(List<DistrictDemographics> enactedDemographics) { this.enactedDemographics = enactedDemographics; }
+    public EnactedDemographicsData getEnactedDemographics() { return enactedDemographics; }
+    public void setEnactedDemographics(EnactedDemographicsData enactedDemographics) { this.enactedDemographics = enactedDemographics; }
 
     public EnsembleBarData getEnsembleBar() { return ensembleBar; }
     public void setEnsembleBar(EnsembleBarData ensembleBar) { this.ensembleBar = ensembleBar; }
