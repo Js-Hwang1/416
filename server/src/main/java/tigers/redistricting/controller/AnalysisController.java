@@ -91,4 +91,12 @@ public class AnalysisController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @Cacheable("minorityEffectiveness")
+    @GetMapping("/minority-effectiveness")
+    public ResponseEntity<MinorityEffectivenessData> getMinorityEffectiveness(@PathVariable StateId id) {
+        return analysisService.getMinorityEffectiveness(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

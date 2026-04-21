@@ -23,6 +23,7 @@ public class AnalysisData {
     private EiKdeData eiKde;
     private List<EiSupportEntry> eiSummary;
     private VoteSeatData voteSeat;
+    private MinorityEffectivenessData minorityEffectiveness;
 
     public StateId getId() { return id; }
     public void setId(StateId id) { this.id = id; }
@@ -56,4 +57,7 @@ public class AnalysisData {
 
     public VoteSeatData getVoteSeat() { return voteSeat; }
     public void setVoteSeat(VoteSeatData voteSeat) { this.voteSeat = voteSeat; }
+
+    public MinorityEffectivenessData getMinorityEffectiveness() { return minorityEffectiveness; }
+    public void setMinorityEffectiveness(MinorityEffectivenessData minorityEffectiveness) { this.minorityEffectiveness = minorityEffectiveness; }
 }

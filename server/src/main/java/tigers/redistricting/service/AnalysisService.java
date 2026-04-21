@@ -94,6 +94,10 @@ public class AnalysisService {
         return analysisDataRepository.findById(id).map(AnalysisData::getVoteSeat);
     }
 
+    public Optional<MinorityEffectivenessData> getMinorityEffectiveness(StateId id) {
+        return analysisDataRepository.findById(id).map(AnalysisData::getMinorityEffectiveness);
+    }
+
     private double[] fitPolynomial(double[] xs, double[] ys) {
         WeightedObservedPoints points = new WeightedObservedPoints();
         for (int i = 0; i < xs.length; i++) points.add(xs[i], ys[i]);
