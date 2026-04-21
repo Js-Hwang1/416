@@ -2,6 +2,7 @@ package tigers.redistricting.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import tigers.redistricting.enums.Party;
 import tigers.redistricting.enums.StateId;
 
 import java.util.List;
@@ -19,11 +20,11 @@ public class State {
     private int voting_age_population;
     private Map<String, Integer> population_by_group;
     private Map<String, Integer> vap_by_group;
-    private Map<String, Object> presidential_2024;
+    private Presidential2024 presidential_2024;
     private int num_congressional_districts;
-    private Map<String, Integer> party_split;
+    private Map<Party, Integer> party_split;
     private List<String> feasible_demographic_groups;
-    private List<Map<String, Object>> representatives;
+    private List<Representative> representatives;
 
     public StateId getId() { return id; }
     public void setId(StateId id) { this.id = id; }
@@ -46,18 +47,18 @@ public class State {
     public Map<String, Integer> getVap_by_group() { return vap_by_group; }
     public void setVap_by_group(Map<String, Integer> vap_by_group) { this.vap_by_group = vap_by_group; }
 
-    public Map<String, Object> getPresidential_2024() { return presidential_2024; }
-    public void setPresidential_2024(Map<String, Object> presidential_2024) { this.presidential_2024 = presidential_2024; }
+    public Presidential2024 getPresidential_2024() { return presidential_2024; }
+    public void setPresidential_2024(Presidential2024 presidential_2024) { this.presidential_2024 = presidential_2024; }
 
     public int getNum_congressional_districts() { return num_congressional_districts; }
     public void setNum_congressional_districts(int num_congressional_districts) { this.num_congressional_districts = num_congressional_districts; }
 
-    public Map<String, Integer> getParty_split() { return party_split; }
-    public void setParty_split(Map<String, Integer> party_split) { this.party_split = party_split; }
+    public Map<Party, Integer> getParty_split() { return party_split; }
+    public void setParty_split(Map<Party, Integer> party_split) { this.party_split = party_split; }
 
     public List<String> getFeasible_demographic_groups() { return feasible_demographic_groups; }
     public void setFeasible_demographic_groups(List<String> feasible_demographic_groups) { this.feasible_demographic_groups = feasible_demographic_groups; }
 
-    public List<Map<String, Object>> getRepresentatives() { return representatives; }
-    public void setRepresentatives(List<Map<String, Object>> representatives) { this.representatives = representatives; }
+    public List<Representative> getRepresentatives() { return representatives; }
+    public void setRepresentatives(List<Representative> representatives) { this.representatives = representatives; }
 }

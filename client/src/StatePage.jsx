@@ -319,7 +319,10 @@ export default function StatePage() {
 
   /* ---- fetch data from API ---- */
   const stateData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}`) : null);
-  const summaryData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/summary`) : null);
+  const representativesData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/representatives`) : null);
+  const populationByGroupData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/population-by-group`) : null);
+  const presidentialResultsData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/presidential-results`) : null);
+  const partySplitData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/party-split`) : null);
   const districtGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/districts`) : null);
   const precinctGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/precincts`) : null);
 
@@ -337,7 +340,7 @@ export default function StatePage() {
   const eiSummaryData = useFetchJson(isDemo && demoPanelChart === "ei" && eiSubView === "bar" ? `${analysisBase}/ei-summary` : null);
   const eiKdeData = useFetchJson(isDemo && demoPanelChart === "ei" && eiSubView === "kde" ? `${analysisBase}/ei-kde` : null);
 
-  const reps = stateData?.representatives;
+  const reps = representativesData;
 
   /* ---- compute district parties for selected plan ---- */
   const activePlanParties = useMemo(() => {
@@ -348,26 +351,26 @@ export default function StatePage() {
 
   /* ---- minority groups available for heatmap dropdown ---- */
   const heatmapMinorityGroups = useMemo(() => {
-    if (!summaryData?.populationByGroup) return [];
+    if (!populationByGroupData) return [];
     const MINORITY_LABELS = {
       hispanic: "Latino",
       black: "Black",
       asian: "Asian",
     };
-    return Object.entries(summaryData.populationByGroup)
+    return Object.entries(populationByGroupData)
       .filter(([g, pop]) => g in MINORITY_LABELS && pop > 0)
       .map(([g]) => ({ key: g, label: MINORITY_LABELS[g] }));
-  }, [summaryData]);
+  }, [populationByGroupData]);
 
-  /* ---- build overview from fetched summary data ---- */
+  /* ---- build overview from fetched data ---- */
   const overview = useMemo(() => {
-    if (!summaryData) return null;
-    const pop = summaryData.populationByGroup || {};
-    const pres = summaryData.presidential2024 || {};
+    if (!stateData || !populationByGroupData || !presidentialResultsData || !partySplitData) return null;
+    const pop = populationByGroupData || {};
+    const pres = presidentialResultsData || {};
     const otherPct = Math.max(0, 100 - (pres.dem_pct || 0) - (pres.rep_pct || 0));
     return {
-      totalPopulation: summaryData.totalPopulation,
-      votingAgePopulation: summaryData.votingAgePopulation,
+      totalPopulation: stateData.total_population,
+      votingAgePopulation: stateData.voting_age_population,
       populationByGroup: {
         White: pop.white ?? 0,
         Black: pop.black ?? 0,
@@ -380,9 +383,9 @@ export default function StatePage() {
         republican: pres.rep_pct ?? 0,
         other: Math.round(otherPct * 10) / 10,
       },
-      congressionalByParty: summaryData.partySplit ?? {},
+      congressionalByParty: partySplitData ?? {},
     };
-  }, [summaryData]);
+  }, [stateData, populationByGroupData, presidentialResultsData, partySplitData]);
 
   /* ---- build district table rows from reps ---- */
   const districtTableRows = useMemo(() => {

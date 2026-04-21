@@ -1,8 +1,10 @@
 package tigers.redistricting.service;
 
 import org.springframework.stereotype.Service;
-import tigers.redistricting.dto.StateSummary;
+import tigers.redistricting.enums.Party;
 import tigers.redistricting.enums.StateId;
+import tigers.redistricting.model.Presidential2024;
+import tigers.redistricting.model.Representative;
 import tigers.redistricting.model.State;
 import tigers.redistricting.repository.StateRepository;
 
@@ -19,34 +21,15 @@ public class StateService {
         this.stateRepository = stateRepository;
     }
 
-    public List<State> getAllStates() {
-        return stateRepository.findAll();
-    }
-
     public Optional<State> getStateById(StateId id) {
         return stateRepository.findById(id);
     }
 
-    public Optional<StateSummary> getStateSummaryById(StateId id) {
-        return stateRepository.findById(id).map(s -> new StateSummary(
-            s.getId(),
-            s.getState(),
-            s.getState_abbr(),
-            s.getTotal_population(),
-            s.getVoting_age_population(),
-            s.getNum_congressional_districts(),
-            s.getPopulation_by_group(),
-            s.getPresidential_2024(),
-            s.getParty_split(),
-            s.getFeasible_demographic_groups()
-        ));
-    }
-
-    public Optional<Map<String, Object>> getPresidentialResults(StateId id) {
+    public Optional<Presidential2024> getPresidentialResults(StateId id) {
         return stateRepository.findById(id).map(State::getPresidential_2024);
     }
 
-    public Optional<List<Map<String, Object>>> getRepresentatives(StateId id) {
+    public Optional<List<Representative>> getRepresentatives(StateId id) {
         return stateRepository.findById(id).map(State::getRepresentatives);
     }
 
@@ -58,7 +41,7 @@ public class StateService {
         return stateRepository.findById(id).map(State::getVap_by_group);
     }
 
-    public Optional<Map<String, Integer>> getPartySplit(StateId id) {
+    public Optional<Map<Party, Integer>> getPartySplit(StateId id) {
         return stateRepository.findById(id).map(State::getParty_split);
     }
 
