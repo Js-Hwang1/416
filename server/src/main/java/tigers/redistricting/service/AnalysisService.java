@@ -66,7 +66,7 @@ public class AnalysisService {
         });
     }
 
-    public Optional<EnactedDemographicsData> getEnactedDemographics(StateId id) {
+    public Optional<List<DistrictDemographics>> getEnactedDemographics(StateId id) {
         return analysisDataRepository.findById(id).map(AnalysisData::getEnactedDemographics);
     }
 
