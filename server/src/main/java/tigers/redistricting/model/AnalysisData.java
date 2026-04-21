@@ -21,7 +21,7 @@ public class AnalysisData {
     private Object enactedDemographics;
     private Object ensembleBar;
     private Object ensembleBox;
-    private Object eiCurves;
+    private List<EICurve> eiCurves;
     private Object eiKde;
     private Object eiSummary;
     private Object voteSeat;
@@ -47,8 +47,8 @@ public class AnalysisData {
     public Object getEnsembleBox() { return ensembleBox; }
     public void setEnsembleBox(Object ensembleBox) { this.ensembleBox = ensembleBox; }
 
-    public Object getEiCurves() { return eiCurves; }
-    public void setEiCurves(Object eiCurves) { this.eiCurves = eiCurves; }
+    public List<EICurve> getEiCurves() { return eiCurves; }
+    public void setEiCurves(List<EICurve> eiCurves) { this.eiCurves = eiCurves; }
 
     public Object getEiKde() { return eiKde; }
     public void setEiKde(Object eiKde) { this.eiKde = eiKde; }

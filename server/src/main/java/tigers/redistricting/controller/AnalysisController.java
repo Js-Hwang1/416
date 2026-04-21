@@ -5,7 +5,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tigers.redistricting.enums.StateId;
 import tigers.redistricting.model.AnalysisData;
+import tigers.redistricting.model.EICurve;
 import tigers.redistricting.service.AnalysisService;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/states/{id}/analysis")
@@ -56,8 +59,10 @@ public class AnalysisController {
     }
 
     @GetMapping("/ei-curves")
-    public ResponseEntity<Object> getEiCurves(@PathVariable StateId id) {
-        return getField(id, AnalysisData::getEiCurves);
+    public ResponseEntity<List<EICurve>> getEiCurves(@PathVariable StateId id) {
+        return analysisService.getByState(id)
+                .map(ad -> ResponseEntity.ok(ad.getEiCurves()))
+                .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/ei-kde")
