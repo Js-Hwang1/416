@@ -32,11 +32,12 @@ function buildRegressionPoints(coeffs) {
   return points;
 }
 
-const GinglesScatterPlot = ({ points, regression, group, selectedIdx, onPointClick }) => {
+const GinglesScatterPlot = ({ points, regression, group }) => {
   const containerRef = useRef();
   const plotRef = useRef();
   const [dims, setDims] = useState({ width: 600, height: 350 });
 
+  // Boilerplate to make the chart resizable
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new ResizeObserver(entries => {
@@ -48,6 +49,7 @@ const GinglesScatterPlot = ({ points, regression, group, selectedIdx, onPointCli
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+  
 
   useEffect(() => {
     if (!plotRef.current) return;
@@ -57,11 +59,6 @@ const GinglesScatterPlot = ({ points, regression, group, selectedIdx, onPointCli
     const marks = [
       // --- scatter points ---
       ...partyDots(points, { fillOpacity: 0.18, r: 2.5, clip: true }),
-
-      // --- selected point highlight ---
-      ...(selectedIdx != null && points[selectedIdx]
-        ? partyDots([points[selectedIdx]], { stroke: "#000", strokeWidth: 2, r: 6, clip: true })
-        : []),
 
       // --- regression lines ---
       ...(regression?.length > 0 ? partyLines(buildRegressionPoints(regression)) : []),
@@ -100,37 +97,7 @@ const GinglesScatterPlot = ({ points, regression, group, selectedIdx, onPointCli
     });
 
     plotRef.current.appendChild(plot);
-
-    if (!onPointClick || points.length === 0) return;
-
-    const svg = plotRef.current.querySelector("svg");
-    if (!svg) return;
-    svg.style.cursor = "crosshair";
-
-    const handleClick = (e) => {
-      const rect = svg.getBoundingClientRect();
-      const svgX = e.clientX - rect.left;
-      const svgY = e.clientY - rect.top;
-
-      const inset = 10;
-      const marginLeft = 40, marginRight = 20, marginTop = 20, marginBottom = 30;
-      const innerW = dims.width - marginLeft - marginRight - 2 * inset;
-      const innerH = Math.max(dims.height - legendHeight - marginTop - marginBottom - 2 * inset, 150);
-
-      let bestIdx = -1;
-      let bestDist = Infinity;
-      for (let i = 0; i < points.length; i++) {
-        const px = marginLeft + inset + points[i].x * innerW;
-        const py = marginTop + inset + (1 - points[i].y) * innerH;
-        const dist = Math.hypot(svgX - px, svgY - py);
-        if (dist < bestDist) { bestDist = dist; bestIdx = i; }
-      }
-      if (bestIdx >= 0 && bestDist < 15) onPointClick(bestIdx);
-    };
-
-    svg.addEventListener("click", handleClick);
-    return () => svg.removeEventListener("click", handleClick);
-  }, [points, regression, group, dims, selectedIdx, onPointClick]);
+  }, [points, regression, group, dims]);
 
   return (
     <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
