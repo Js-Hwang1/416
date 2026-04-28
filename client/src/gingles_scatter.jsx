@@ -7,20 +7,17 @@ const GROUP_LABELS = {
   asian: "Asian",
 };
 
-const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointClick }) => {
+const GinglesScatterPlot = ({ points, regression, group, selectedIdx, onPointClick }) => {
   const containerRef = useRef();
   const plotRef = useRef();
   const [dims, setDims] = useState({ width: 600, height: 350 });
 
-  // Track container size responsively
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
-        if (width > 0 && height > 0) {
-          setDims({ width, height });
-        }
+        if (width > 0 && height > 0) setDims({ width, height });
       }
     });
     observer.observe(containerRef.current);
@@ -30,14 +27,9 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
   useEffect(() => {
     if (!plotRef.current) return;
     plotRef.current.innerHTML = "";
-
-    if (!points || points.length === 0) {
-      return;
-    }
+    if (!points || points.length === 0) return;
 
     const groupLabel = GROUP_LABELS[group] || group;
-
-    /* Clamp values to [0,100] — some TX VTDs have corrupt census data */
     const clamp = (v) => Math.max(0, Math.min(v, 100));
 
     const marks = [
@@ -103,13 +95,8 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
       );
     }
 
-    // 50% threshold line
     marks.push(
-      Plot.ruleY([50], { stroke: "#999", strokeDasharray: "4,4", strokeWidth: 1 })
-    );
-
-    // Precinct count label — centered at the top, at y-axis label height
-    marks.push(
+      Plot.ruleY([50], { stroke: "#999", strokeDasharray: "4,4", strokeWidth: 1 }),
       Plot.text([`${points.length.toLocaleString()} precincts`], {
         frameAnchor: "top",
         dy: -5,
@@ -149,49 +136,45 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
 
     plotRef.current.appendChild(plot);
 
-    // Add click handler to find nearest point
-    if (onPointClick && points.length > 0) {
-      const svg = plotRef.current.querySelector("svg");
-      if (svg) {
-        svg.style.cursor = "crosshair";
-        const handleClick = (e) => {
-          const rect = svg.getBoundingClientRect();
-          const svgX = e.clientX - rect.left;
-          const svgY = e.clientY - rect.top;
+    if (!onPointClick || points.length === 0) return;
 
-          // Find all circle elements (dots) and measure distance
-          let bestIdx = -1;
-          let bestDist = Infinity;
-          // Use the plot's scales to convert data → pixel coords
-          const plotWidth = dims.width;
-          const legendH = 36;
-          const plotHeight = Math.max(Math.min(Math.round(dims.width * 0.55), dims.height - legendH), 150);
-          const inset = 10;
-          // Approximate margins from Observable Plot defaults
-          const marginLeft = 40;
-          const marginRight = 20;
-          const marginTop = 20;
-          const marginBottom = 30;
-          const innerW = plotWidth - marginLeft - marginRight - 2 * inset;
-          const innerH = plotHeight - marginTop - marginBottom - 2 * inset;
+    const svg = plotRef.current.querySelector("svg");
+    if (!svg) return;
 
-          for (let i = 0; i < points.length; i++) {
-            const px = marginLeft + inset + points[i].x * innerW;
-            const py = marginTop + inset + (1 - points[i].y) * innerH;
-            const dist = Math.hypot(svgX - px, svgY - py);
-            if (dist < bestDist) {
-              bestDist = dist;
-              bestIdx = i;
-            }
-          }
-          // Only select if within 15px of a point
-          if (bestIdx >= 0 && bestDist < 15) {
-            onPointClick(bestIdx);
-          }
-        };
-        svg.addEventListener("click", handleClick);
+    svg.style.cursor = "crosshair";
+
+    const handleClick = (e) => {
+      const rect = svg.getBoundingClientRect();
+      const svgX = e.clientX - rect.left;
+      const svgY = e.clientY - rect.top;
+
+      const plotWidth = dims.width;
+      const legendH = 36;
+      const ph = Math.max(Math.min(Math.round(plotWidth * 0.55), dims.height - legendH), 150);
+      const inset = 10;
+      const marginLeft = 40;
+      const marginRight = 20;
+      const marginTop = 20;
+      const marginBottom = 30;
+      const innerW = plotWidth - marginLeft - marginRight - 2 * inset;
+      const innerH = ph - marginTop - marginBottom - 2 * inset;
+
+      let bestIdx = -1;
+      let bestDist = Infinity;
+      for (let i = 0; i < points.length; i++) {
+        const px = marginLeft + inset + points[i].x * innerW;
+        const py = marginTop + inset + (1 - points[i].y) * innerH;
+        const dist = Math.hypot(svgX - px, svgY - py);
+        if (dist < bestDist) {
+          bestDist = dist;
+          bestIdx = i;
+        }
       }
-    }
+      if (bestIdx >= 0 && bestDist < 15) onPointClick(bestIdx);
+    };
+
+    svg.addEventListener("click", handleClick);
+    return () => svg.removeEventListener("click", handleClick);
   }, [points, regression, group, dims, selectedIdx, onPointClick]);
 
   return (
@@ -208,4 +191,4 @@ const GinglessScatterPlot = ({ points, regression, group, selectedIdx, onPointCl
   );
 };
 
-export default GinglessScatterPlot;
+export default GinglesScatterPlot;
