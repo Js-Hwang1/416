@@ -1,23 +1,72 @@
 import { useRef, useEffect, useState } from "react";
 import * as d3 from "d3";
 
+const GROUP_LABELS = { hispanic: "Latino", black: "Black", asian: "Asian" };
+
+const MARGIN = { top: 20, right: 30, bottom: 50, left: 60 };
+
+// D3 text style helpers — use with .call(applyLabelStyle) or .call(applyTickStyle)
+const applyLabelStyle = (sel) =>
+  sel.style("font-family", "'Verdana', sans-serif")
+     .style("font-size", "11px")
+     .style("font-weight", "700")
+     .style("fill", "#000");
+
+const applyTickStyle = (sel) =>
+  sel.style("font-family", "'Verdana', sans-serif")
+     .style("font-size", "10px")
+     .style("font-weight", "700")
+     .style("fill", "#000");
+
+// Computes a y scale whose upper bound lands on a clean tick value just above dataMax
+function buildYScale(districts, height) {
+  const yMin = Math.max(0, d3.min(districts, d => d.min));
+  const dataMax = Math.min(100, d3.max(districts, d => d.max));
+  const baseTicks = d3.ticks(yMin, dataMax, 8);
+  const tickStep = baseTicks.length > 1
+    ? baseTicks[1] - baseTicks[0]
+    : Math.max(1, Math.ceil((dataMax - yMin) || 1));
+  const lastBaseTick = baseTicks.at(-1) ?? dataMax;
+  const provisionalMax = Math.min(100, lastBaseTick >= dataMax ? lastBaseTick : lastBaseTick + tickStep);
+  const tickValues = d3.ticks(yMin, provisionalMax, 8);
+  const displayMax = tickValues.at(-1) ?? provisionalMax;
+
+  const scale = d3.scaleLinear()
+    .domain([yMin, displayMax])
+    .range([height - MARGIN.bottom, MARGIN.top]);
+
+  return { scale, tickValues };
+}
+
+// Maps enacted plan data onto the sorted district order used by the box plot
+function buildEnactedDots(districts, enactedData, selectedGroup) {
+  const enactedDistricts = enactedData?.districts;
+  if (enactedDistricts) {
+    const sorted = [...enactedDistricts]
+      .map(ed => ({ district: ed.district, pct: ed.groups?.[selectedGroup]?.pct ?? 0 }))
+      .sort((a, b) => a.pct - b.pct);
+    return districts.map((d, i) => ({
+      district: d.district,
+      value: i < sorted.length ? sorted[i].pct : d.median,
+    }));
+  }
+  return districts.map(d => ({ district: d.district, value: d.median * 1.05 }));
+}
+
 export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hispanic" }) {
   const svgRef = useRef();
   const containerRef = useRef();
   const [dims, setDims] = useState({ width: 800, height: 400 });
 
-  const GROUP_LABELS = { hispanic: "Latino", black: "Black", asian: "Asian" };
-
   const districts = boxData?.[selectedGroup] ?? [];
 
+  // Boilerplate to make the chart resizable
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
-        if (width > 0 && height > 0) {
-          setDims({ width, height });
-        }
+        if (width > 0 && height > 0) setDims({ width, height });
       }
     });
     observer.observe(containerRef.current);
@@ -27,55 +76,32 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
   useEffect(() => {
     if (!districts || districts.length === 0) return;
 
-    const width = dims.width;
-    const height = dims.height;
-    const marginTop = 20;
-    const marginRight = 30;
-    const marginBottom = 50;
-    const marginLeft = 60;
+    const { width, height } = dims;
+    d3.select(svgRef.current).selectAll("*").remove(); // clean up old svg
 
-    d3.select(svgRef.current).selectAll("*").remove();
-
-    const svg = d3
-      .select(svgRef.current)
+    const svg = d3.select(svgRef.current)
       .attr("width", width)
       .attr("height", height)
       .attr("viewBox", [0, 0, width, height])
       .style("max-width", "100%")
       .style("height", "auto");
 
-    const x = d3
-      .scaleBand()
+    const x = d3.scaleBand()
       .domain(districts.map(d => d.district))
-      .range([marginLeft, width - marginRight])
+      .range([MARGIN.left, width - MARGIN.right])
       .padding(0.4);
 
-    const yMin = Math.max(0, d3.min(districts, d => d.min));
-    const dataMax = Math.min(100, d3.max(districts, d => d.max));
-    const baseTicks = d3.ticks(yMin, dataMax, 8);
-    const tickStep = baseTicks.length > 1 ? baseTicks[1] - baseTicks[0] : Math.max(1, Math.ceil((dataMax - yMin) || 1));
-    const lastBaseTick = baseTicks.at(-1) ?? dataMax;
-    const provisionalDisplayMax = Math.min(
-      100,
-      lastBaseTick >= dataMax ? lastBaseTick : lastBaseTick + tickStep
-    );
-    const tickValues = d3.ticks(yMin, provisionalDisplayMax, 8);
-    const displayMax = tickValues.at(-1) ?? provisionalDisplayMax;
-
-    const y = d3
-      .scaleLinear()
-      .domain([yMin, displayMax])
-      .range([height - marginBottom, marginTop]);
+    const { scale: y, tickValues } = buildYScale(districts, height);
+    const enactedDots = buildEnactedDots(districts, enactedData, selectedGroup);
 
     const gridLayer = svg.append("g");
     const axisLayer = svg.append("g");
     const plotLayer = svg.append("g");
 
-    // Y grid first so plot marks render on top of it.
-    gridLayer
-      .append("g")
-      .attr("transform", `translate(${marginLeft},0)`)
-      .call(d3.axisLeft(y).tickValues(tickValues).tickFormat(() => "").tickSize(-width + marginLeft + marginRight))
+    // Y grid — drawn first so plot marks render on top
+    gridLayer.append("g")
+      .attr("transform", `translate(${MARGIN.left},0)`)
+      .call(d3.axisLeft(y).tickValues(tickValues).tickFormat(() => "").tickSize(-width + MARGIN.left + MARGIN.right))
       .call(g => {
         g.select(".domain").remove();
         g.selectAll(".tick line").attr("stroke", "#f0f0f0");
@@ -83,9 +109,7 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       });
 
     // Whiskers (min to max)
-    plotLayer.selectAll(".whisker")
-      .data(districts)
-      .join("line")
+    plotLayer.selectAll(".whisker").data(districts).join("line")
       .attr("x1", d => x(d.district) + x.bandwidth() / 2)
       .attr("x2", d => x(d.district) + x.bandwidth() / 2)
       .attr("y1", d => y(d.min))
@@ -93,28 +117,20 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .attr("stroke", "#888");
 
     // Whisker caps
-    plotLayer.selectAll(".cap-min")
-      .data(districts)
-      .join("line")
+    plotLayer.selectAll(".cap-min").data(districts).join("line")
       .attr("x1", d => x(d.district) + x.bandwidth() * 0.15)
       .attr("x2", d => x(d.district) + x.bandwidth() * 0.85)
-      .attr("y1", d => y(d.min))
-      .attr("y2", d => y(d.min))
+      .attr("y1", d => y(d.min)).attr("y2", d => y(d.min))
       .attr("stroke", "#888");
 
-    plotLayer.selectAll(".cap-max")
-      .data(districts)
-      .join("line")
+    plotLayer.selectAll(".cap-max").data(districts).join("line")
       .attr("x1", d => x(d.district) + x.bandwidth() * 0.15)
       .attr("x2", d => x(d.district) + x.bandwidth() * 0.85)
-      .attr("y1", d => y(d.max))
-      .attr("y2", d => y(d.max))
+      .attr("y1", d => y(d.max)).attr("y2", d => y(d.max))
       .attr("stroke", "#888");
 
-    // Box (Q1 to Q3)
-    plotLayer.selectAll(".box")
-      .data(districts)
-      .join("rect")
+    // Box (IQR)
+    plotLayer.selectAll(".box").data(districts).join("rect")
       .attr("x", d => x(d.district))
       .attr("width", x.bandwidth())
       .attr("y", d => y(d.hqr))
@@ -124,40 +140,14 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .attr("stroke-width", 0.8);
 
     // Median line
-    plotLayer.selectAll(".median")
-      .data(districts)
-      .join("line")
-      .attr("x1", d => x(d.district))
-      .attr("x2", d => x(d.district) + x.bandwidth())
-      .attr("y1", d => y(d.median))
-      .attr("y2", d => y(d.median))
+    plotLayer.selectAll(".median").data(districts).join("line")
+      .attr("x1", d => x(d.district)).attr("x2", d => x(d.district) + x.bandwidth())
+      .attr("y1", d => y(d.median)).attr("y2", d => y(d.median))
       .attr("stroke", "#1a1a1a")
       .attr("stroke-width", 1.8);
 
-    // Enacted plan dots — use real enacted demographics
-    const enactedDistricts = enactedData?.districts;
-    let enactedDots = [];
-    if (enactedDistricts) {
-      const sorted = [...enactedDistricts]
-        .map(ed => ({
-          district: ed.district,
-          pct: ed.groups?.[selectedGroup]?.pct ?? 0,
-        }))
-        .sort((a, b) => a.pct - b.pct);
-      enactedDots = districts.map((d, i) => ({
-        district: d.district,
-        value: i < sorted.length ? sorted[i].pct : d.median,
-      }));
-    } else {
-      enactedDots = districts.map(d => ({
-        district: d.district,
-        value: d.median * 1.05,
-      }));
-    }
-
-    plotLayer.selectAll(".enacted-dot")
-      .data(enactedDots)
-      .join("circle")
+    // Enacted plan dots
+    plotLayer.selectAll(".enacted-dot").data(enactedDots).join("circle")
       .attr("cx", d => x(d.district) + x.bandwidth() / 2)
       .attr("cy", d => y(d.value))
       .attr("r", 3.5)
@@ -165,57 +155,36 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .attr("stroke", "#fff")
       .attr("stroke-width", 0.8);
 
-    // X Axis
-    axisLayer
-      .append("g")
-      .attr("transform", `translate(0,${height - marginBottom})`)
+    // X axis
+    axisLayer.append("g")
+      .attr("transform", `translate(0,${height - MARGIN.bottom})`)
       .call(d3.axisBottom(x).tickSize(0))
       .call(g => {
         g.select(".domain").attr("stroke", "#ccc");
-        g.selectAll("text")
-          .style("font-family", "'Verdana', sans-serif")
-          .style("font-size", "10px")
-          .style("fill", "#000")
-          .style("font-weight", "700");
+        g.selectAll("text").call(applyTickStyle);
       });
 
-    // X Axis label
-    svg
-      .append("text")
-      .attr("x", width / 2)
-      .attr("y", height - 8)
+    svg.append("text")
+      .attr("x", width / 2).attr("y", height - 8)
       .attr("text-anchor", "middle")
-      .style("font-family", "'Verdana', sans-serif")
-      .style("font-size", "11px")
-      .style("font-weight", "700")
-      .style("fill", "#000").style("font-weight", "700")
+      .call(applyLabelStyle)
       .text("Districts (ordered by increasing % of selected group)");
 
-    // Y Axis
-    axisLayer
-      .append("g")
-      .attr("transform", `translate(${marginLeft},0)`)
-      .call(d3.axisLeft(y).tickValues(tickValues).tickFormat(d => `${d}%`).tickSize(-width + marginLeft + marginRight))
+    // Y axis
+    axisLayer.append("g")
+      .attr("transform", `translate(${MARGIN.left},0)`)
+      .call(d3.axisLeft(y).tickValues(tickValues).tickFormat(d => `${d}%`).tickSize(-width + MARGIN.left + MARGIN.right))
       .call(g => {
         g.select(".domain").attr("stroke", "#ccc");
         g.selectAll(".tick line").remove();
-        g.selectAll(".tick text")
-          .style("font-family", "'Verdana', sans-serif")
-          .style("font-size", "10px")
-          .style("fill", "#000").style("font-weight", "700");
+        g.selectAll(".tick text").call(applyTickStyle);
       });
 
-    // Y Axis label
-    svg
-      .append("text")
+    svg.append("text")
       .attr("transform", "rotate(-90)")
-      .attr("x", -(height / 2))
-      .attr("y", 14)
+      .attr("x", -(height / 2)).attr("y", 14)
       .attr("text-anchor", "middle")
-      .style("font-family", "'Verdana', sans-serif")
-      .style("font-size", "11px")
-      .style("font-weight", "700")
-      .style("fill", "#000").style("font-weight", "700")
+      .call(applyLabelStyle)
       .text(`${GROUP_LABELS[selectedGroup] || selectedGroup} Population %`);
 
   }, [districts, selectedGroup, enactedData, dims]);
@@ -224,19 +193,19 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       <div className="chart-legend">
         <div className="chart-legend-item">
-          <span className="chart-legend-box" style={{ background: "#c8d0da" }}></span>
+          <span className="chart-legend-box" style={{ background: "#c8d0da" }} />
           IQR (25th-75th)
         </div>
         <div className="chart-legend-item">
-          <span className="chart-legend-line" style={{ background: "#1a1a1a" }}></span>
+          <span className="chart-legend-line" style={{ background: "#1a1a1a" }} />
           Median
         </div>
         <div className="chart-legend-item">
-          <span className="chart-legend-line" style={{ background: "#888" }}></span>
+          <span className="chart-legend-line" style={{ background: "#888" }} />
           Min / Max
         </div>
         <div className="chart-legend-item">
-          <span className="chart-legend-dot" style={{ background: "#c0392b" }}></span>
+          <span className="chart-legend-dot" style={{ background: "#c0392b" }} />
           Enacted Plan
         </div>
       </div>

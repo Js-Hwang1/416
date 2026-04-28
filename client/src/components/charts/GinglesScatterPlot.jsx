@@ -2,12 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import * as Plot from "@observablehq/plot";
 
 const GROUP_LABELS = { hispanic: "Latino", black: "Black", asian: "Asian" };
+const LEGEND_HEIGHT = 36;
 
 // Each pair produces one dem (steelblue) mark and one rep (tomato) mark
 function partyDots(data, opts) {
   return [
-    Plot.dot(data, { x: d => d.x * 100, y: d => d.y * 100,         fill: "steelblue", ...opts }),
-    Plot.dot(data, { x: d => d.x * 100, y: d => (1 - d.y) * 100,   fill: "tomato",    ...opts }),
+    Plot.dot(data, { x: d => d.x * 100, y: d => d.y * 100,       fill: "steelblue", ...opts }),
+    Plot.dot(data, { x: d => d.x * 100, y: d => (1 - d.y) * 100, fill: "tomato",    ...opts }),
   ];
 }
 
@@ -32,6 +33,44 @@ function buildRegressionPoints(coeffs) {
   return points;
 }
 
+function buildMarks(points, regression, group) {
+  return [
+    ...partyDots(points, { fillOpacity: 0.18, r: 2.5, clip: true }),
+    ...(regression?.length > 0 ? partyLines(buildRegressionPoints(regression)) : []),
+    Plot.ruleY([50], { stroke: "#999", strokeDasharray: "4,4", strokeWidth: 1 }),
+    Plot.text([`${points.length.toLocaleString()} precincts`], {
+      frameAnchor: "top", dy: -5, textAnchor: "middle",
+      fill: "#555", fontSize: 12, fontFamily: "Verdana, sans-serif",
+    }),
+  ];
+}
+
+function buildPlotConfig(dims, group, marks) {
+  return {
+    width: dims.width,
+    height: Math.max(dims.height - LEGEND_HEIGHT, 150),
+    inset: 10,
+    grid: true,
+    marginLeft: 60,
+    marginBottom: 50,
+    style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent", color: "#000" },
+    x: {
+      label: `Percent ${GROUP_LABELS[group] ?? group}`,
+      tickFormat: d => `${d}%`,
+      domain: [0, 100],
+      labelAnchor: "center",
+      labelOffset: 40,
+    },
+    y: {
+      label: "Party Vote Share (%)",
+      domain: [0, 100],
+      labelAnchor: "center",
+      labelOffset: 56,
+    },
+    marks,
+  };
+}
+
 const GinglesScatterPlot = ({ points, regression, group }) => {
   const containerRef = useRef();
   const plotRef = useRef();
@@ -49,53 +88,11 @@ const GinglesScatterPlot = ({ points, regression, group }) => {
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
-  
 
   useEffect(() => {
-    if (!plotRef.current) return;
-    plotRef.current.innerHTML = "";
-    if (!points || points.length === 0) return;
-
-    const marks = [
-      // --- scatter points ---
-      ...partyDots(points, { fillOpacity: 0.18, r: 2.5, clip: true }),
-
-      // --- regression lines ---
-      ...(regression?.length > 0 ? partyLines(buildRegressionPoints(regression)) : []),
-
-      // --- annotations ---
-      Plot.ruleY([50], { stroke: "#999", strokeDasharray: "4,4", strokeWidth: 1 }),
-      Plot.text([`${points.length.toLocaleString()} precincts`], {
-        frameAnchor: "top", dy: -5, textAnchor: "middle",
-        fill: "#555", fontSize: 12, fontFamily: "Verdana, sans-serif",
-      }),
-    ];
-
-    const legendHeight = 36;
-    const plot = Plot.plot({
-      width: dims.width,
-      height: Math.max(dims.height - legendHeight, 150),
-      inset: 10,
-      grid: true,
-      marginLeft: 60,
-      marginBottom: 50,
-      style: { fontFamily: "Verdana, sans-serif", fontSize: "12px", background: "transparent", color: "#000" },
-      x: {
-        label: `Percent ${GROUP_LABELS[group] ?? group}`,
-        tickFormat: d => `${d}%`,
-        domain: [0, 100],
-        labelAnchor: "center",
-        labelOffset: 40,
-      },
-      y: {
-        label: "Party Vote Share (%)",
-        domain: [0, 100],
-        labelAnchor: "center",
-        labelOffset: 56,
-      },
-      marks,
-    });
-
+    if (!plotRef.current || !points?.length) return;
+    plotRef.current.innerHTML = ""; // clean up old svg from Plot
+    const plot = Plot.plot(buildPlotConfig(dims, group, buildMarks(points, regression, group)));
     plotRef.current.appendChild(plot);
   }, [points, regression, group, dims]);
 
