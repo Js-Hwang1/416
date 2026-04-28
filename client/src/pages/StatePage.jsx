@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import DemographicHeatMap from "./DemographicHeatMap";
-import StateMap from "./StateMap";
-import StateOverviewCards from "./StateOverviewCards";
-import DistrictTable from "./DistrictTable";
-import ComparePlansView from "./ComparePlansView";
-import DemographicsAnalysisPanel from "./DemographicsAnalysisPanel";
-import InterestingPlanDropdown from "./InterestingPlanDropdown";
-import { generateDummyPlanData } from "./utils/planData";
-import { apiUrl, tilesUrl, useFetchJson } from "./api";
+import DemographicHeatMap from "../components/maps/DemographicHeatMap";
+import StateMap from "../components/maps/StateMap";
+import StateOverviewCards from "../components/state/StateOverviewCards";
+import DistrictTable from "../components/state/DistrictTable";
+import ComparePlansView from "../components/planExplorer/ComparePlansView";
+import DemographicsAnalysisPanel from "../components/analysis/DemographicsAnalysisPanel";
+import InterestingPlanDropdown from "../components/ui/InterestingPlanDropdown";
+import { generateDummyPlanData } from "../utils/planData";
+import { apiUrl, tilesUrl, useFetchJson } from "../api";
 
 const STATE_CONFIG = {
   texas: {

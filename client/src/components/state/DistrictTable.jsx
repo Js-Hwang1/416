@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import Pagination from "./Pagination";
+import Pagination from "../ui/Pagination";
 
 const PAGE_SIZE = 10;
 

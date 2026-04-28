@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./App.css";
 import "./mapSetup";
-import SplashPage from "./SplashPage";
-import StatePage from "./StatePage";
+import SplashPage from "./pages/SplashPage";
+import StatePage from "./pages/StatePage";
 
 function AppHeader() {
   const navigate = useNavigate();

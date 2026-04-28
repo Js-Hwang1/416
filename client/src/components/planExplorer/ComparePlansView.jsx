@@ -1,6 +1,6 @@
 import React from "react";
-import StateMap from "./StateMap";
-import InterestingPlanDropdown from "./InterestingPlanDropdown";
+import StateMap from "../maps/StateMap";
+import InterestingPlanDropdown from "../ui/InterestingPlanDropdown";
 
 const ComparePlansView = ({
   districtGeoJsonData,

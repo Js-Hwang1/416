@@ -1,11 +1,11 @@
 import React from "react";
-import BoxPlotChart from "./box_and_whisker";
-import BarChart from "./bar_chart";
-import ProbabilityChart from "./probability_curve";
+import BoxPlotChart from "../charts/BoxAndWhisker";
+import BarChart from "../charts/BarChart";
+import ProbabilityChart from "../charts/ProbabilityCurve";
 import GinglesSection from "./GinglesSection";
-import EISupportSummary from "./EISupportSummary";
-import EIKDEChart from "./EIKDEChart";
-import VoteSeatChart from "./VoteSeatChart";
+import EISupportSummary from "../charts/EISupportSummary";
+import EIKDEChart from "../charts/EIKDEChart";
+import VoteSeatChart from "../charts/VoteSeatChart";
 
 const DEMO_CHART_OPTIONS = [
   { value: "gingles", label: "Voter Cohesion" },
