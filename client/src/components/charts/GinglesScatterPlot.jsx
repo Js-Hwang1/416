@@ -19,12 +19,17 @@ function partyLines(data) {
   ];
 }
 
+// coeffs = [a, b, c, ...] → evaluates a + b·x + c·x² + ...
 function buildRegressionPoints(coeffs) {
-  const evalPoly = (x) => coeffs.reduce((sum, c, i) => sum + c * Math.pow(x, i), 0);
-  return Array.from({ length: 200 }, (_, i) => {
-    const x = i / 199;
-    return { x, y: evalPoly(x) };
-  });
+  const evalAt = (x) =>
+    coeffs.reduce((sum, coeff, power) => sum + coeff * Math.pow(x, power), 0);
+
+  const points = [];
+  for (let i = 0; i <= 199; i++) {
+    const x = i / 199; // 200 evenly spaced samples from 0 to 1
+    points.push({ x, y: evalAt(x) });
+  }
+  return points;
 }
 
 const GinglesScatterPlot = ({ points, regression, group, selectedIdx, onPointClick }) => {
