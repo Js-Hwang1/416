@@ -47,7 +47,7 @@ const STATE_CONFIG = {
 
 const VIEWS = [
   { id: "planExplorer", label: "Plan Explorer" },
-  { id: "demographics", label: "Analysis" },
+  { id: "analysis", label: "Analysis" },
 ];
 
 const INTERESTING_PLAN_OPTIONS = [
@@ -90,18 +90,18 @@ export default function StatePage() {
   const precinctGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/precincts`) : null);
 
   /* ---- lazy-fetch only what the active chart needs ---- */
-  const isDemo = activeView === "demographics";
   const analysisBase = cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis`) : null;
+  const isAnalysis = activeView === "analysis";
 
-  const ginglesData = useFetchJson(isDemo && demoPanelChart === "gingles" ? `${analysisBase}/gingles-precinct` : null);
-  const regressionData = useFetchJson(isDemo && demoPanelChart === "gingles" ? `${analysisBase}/gingles-regression` : null);
-  const enactedDemo = useFetchJson(isDemo && demoPanelChart === "boxwhisker" ? `${analysisBase}/enacted-demographics` : null);
-  const ensembleBoxData = useFetchJson(isDemo && demoPanelChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
-  const ensembleBarData = useFetchJson(isDemo && demoPanelChart === "seatSplits" ? `${analysisBase}/ensemble-bar` : null);
-  const voteSeatData = useFetchJson(isDemo && demoPanelChart === "fairness" ? `${analysisBase}/vote-seat` : null);
-  const eiCurvesData = useFetchJson(isDemo && demoPanelChart === "ei" && eiSubView === "curves" ? `${analysisBase}/ei-curves` : null);
-  const eiSummaryData = useFetchJson(isDemo && demoPanelChart === "ei" && eiSubView === "bar" ? `${analysisBase}/ei-summary` : null);
-  const eiKdeData = useFetchJson(isDemo && demoPanelChart === "ei" && eiSubView === "kde" ? `${analysisBase}/ei-kde` : null);
+  const ginglesData = useFetchJson(isAnalysis && demoPanelChart === "gingles" ? `${analysisBase}/gingles-precinct` : null);
+  const regressionData = useFetchJson(isAnalysis && demoPanelChart === "gingles" ? `${analysisBase}/gingles-regression` : null);
+  const enactedDemo = useFetchJson(isAnalysis && demoPanelChart === "boxwhisker" ? `${analysisBase}/enacted-demographics` : null);
+  const ensembleBoxData = useFetchJson(isAnalysis && demoPanelChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
+  const ensembleBarData = useFetchJson(isAnalysis && demoPanelChart === "seatSplits" ? `${analysisBase}/ensemble-bar` : null);
+  const voteSeatData = useFetchJson(isAnalysis && demoPanelChart === "fairness" ? `${analysisBase}/vote-seat` : null);
+  const eiCurvesData = useFetchJson(isAnalysis && demoPanelChart === "ei" && eiSubView === "curves" ? `${analysisBase}/ei-curves` : null);
+  const eiSummaryData = useFetchJson(isAnalysis && demoPanelChart === "ei" && eiSubView === "bar" ? `${analysisBase}/ei-summary` : null);
+  const eiKdeData = useFetchJson(isAnalysis && demoPanelChart === "ei" && eiSubView === "kde" ? `${analysisBase}/ei-kde` : null);
 
   const reps = representativesData;
 
@@ -219,7 +219,7 @@ export default function StatePage() {
         </div>
       </nav>
 
-      <main className={`state-content${activeView === "planExplorer" ? " plan-explorer-content" : ""}${activeView === "demographics" ? " demographics-content" : ""}`}>
+      <main className={`state-content${activeView === "planExplorer" ? " plan-explorer-content" : ""}${activeView === "analysis" ? " demographics-content" : ""}`}>
 
         {activeView === "planExplorer" && showCompare && selectedInterestingPlan !== "enacted" && (
           <ComparePlansView
@@ -295,7 +295,7 @@ export default function StatePage() {
           </div>
         )}
 
-        {activeView === "demographics" && (
+        {activeView === "analysis" && (
           <div className="state-layout demographics-layout">
             <div className="state-map-panel">
               <div className="demo-map-toolbar">
