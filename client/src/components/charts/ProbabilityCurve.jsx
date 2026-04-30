@@ -90,7 +90,7 @@ const ProbabilityChart = ({ data }) => {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+    <div className="probability-curve-container">
       <div className="chart-controls">
         <span className="chart-controls-label">Party:</span>
         {allCandidates.map(cand => (
@@ -102,7 +102,7 @@ const ProbabilityChart = ({ data }) => {
             {getPartyLabel(cand)}
           </button>
         ))}
-        <span className="chart-controls-label" style={{ marginLeft: 16 }}>Groups:</span>
+        <span className="chart-controls-label chart-controls-label--spaced">Groups:</span>
         {allRaces.map(race => (
           <label key={race} className="chart-control-checkbox">
             <input type="checkbox" checked={selectedRaces.includes(race)} onChange={() => handleRaceToggle(race)} />
@@ -114,7 +114,7 @@ const ProbabilityChart = ({ data }) => {
       <Plot
         data={buildTraces(filteredData)}
         layout={buildLayout(selectedCandidate)}
-        style={{ width: "100%", flex: 1, minHeight: 0 }}
+        className="probability-curve-plot"
         useResizeHandler={true}
         config={{ responsive: true, displayModeBar: false }}
       />

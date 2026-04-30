@@ -190,26 +190,26 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
   }, [districts, selectedGroup, enactedData, dims]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+    <div className="box-whisker-container">
       <div className="chart-legend">
         <div className="chart-legend-item">
-          <span className="chart-legend-box" style={{ background: "#c8d0da" }} />
+          <span className="chart-legend-box box-legend-iqr" />
           IQR (25th-75th)
         </div>
         <div className="chart-legend-item">
-          <span className="chart-legend-line" style={{ background: "#1a1a1a" }} />
+          <span className="chart-legend-line box-legend-median" />
           Median
         </div>
         <div className="chart-legend-item">
-          <span className="chart-legend-line" style={{ background: "#888" }} />
+          <span className="chart-legend-line box-legend-whisker" />
           Min / Max
         </div>
         <div className="chart-legend-item">
-          <span className="chart-legend-dot" style={{ background: "#c0392b" }} />
+          <span className="chart-legend-dot box-legend-enacted" />
           Enacted Plan
         </div>
       </div>
-      <div ref={containerRef} style={{ flex: 1, minHeight: 0 }}>
+      <div ref={containerRef} className="box-whisker-plot-wrapper">
         <svg ref={svgRef} />
       </div>
     </div>

@@ -137,7 +137,7 @@ export default function EISupportSummary({ data }) {
   }
 
   return (
-    <div ref={containerRef} style={{ width: "100%", flex: 1, minHeight: 0 }}>
+    <div ref={containerRef} className="ei-support-container">
       <svg ref={svgRef} />
     </div>
   );

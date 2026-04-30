@@ -47,10 +47,10 @@ const GinglesPrecinctTable = ({ points, group, minorityGroups }) => {
     <>
       <table className="district-table" aria-label="Precinct data table">
         <colgroup>
-          <col style={{ width: "10%" }} />
-          <col style={{ width: "30%" }} />
-          <col style={{ width: "30%" }} />
-          <col style={{ width: "30%" }} />
+          <col className="precinct-col-index" />
+          <col className="precinct-col-minority" />
+          <col className="precinct-col-dem" />
+          <col className="precinct-col-rep" />
         </colgroup>
         <thead>
           <tr>

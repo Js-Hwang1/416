@@ -101,11 +101,11 @@ const BarChart = ({ data }) => {
   });
 
   return (
-    <div style={{ display: 'flex', gap: '24px', flex: 1, minHeight: 0 }}>
-      <div style={{ flex: 1, border: '1px solid #e8e8e8', padding: '16px', position: 'relative', minHeight: 0 }}>
+    <div className="bar-chart-wrapper">
+      <div className="bar-chart-panel">
         <Bar data={raceBlindChart} options={makeOptions("Race-Blind Ensemble")} />
       </div>
-      <div style={{ flex: 1, border: '1px solid #e8e8e8', padding: '16px', position: 'relative', minHeight: 0 }}>
+      <div className="bar-chart-panel">
         <Bar data={vraChart} options={makeOptions("VRA-Constrained Ensemble")} />
       </div>
     </div>

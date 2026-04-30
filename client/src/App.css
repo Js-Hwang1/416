@@ -1879,3 +1879,192 @@
   background: #fff3e0 !important;
   font-weight: 600;
 }
+
+/* ── GinglesScatterPlot ──────────────────────────── */
+.gingles-scatter-container {
+  width: 100%;
+  height: 100%;
+}
+
+.gingles-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-bottom: 14px;
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.gingles-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 4px;
+}
+
+.gingles-legend-dot--dem {
+  background: steelblue;
+}
+
+.gingles-legend-dot--rep {
+  background: tomato;
+}
+
+.gingles-legend-line {
+  display: inline-block;
+  width: 16px;
+  height: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.gingles-legend-line--dem {
+  background: steelblue;
+}
+
+/* ── GinglesPrecinctTable ────────────────────────── */
+.precinct-col-index {
+  width: 10%;
+}
+
+.precinct-col-minority {
+  width: 30%;
+}
+
+.precinct-col-dem {
+  width: 30%;
+}
+
+.precinct-col-rep {
+  width: 30%;
+}
+
+/* ── BarChart ────────────────────────────────────── */
+.bar-chart-wrapper {
+  display: flex;
+  gap: 24px;
+  flex: 1;
+  min-height: 0;
+}
+
+.bar-chart-panel {
+  flex: 1;
+  border: 1px solid #e8e8e8;
+  padding: 16px;
+  position: relative;
+  min-height: 0;
+}
+
+/* ── VoteSeatChart ───────────────────────────────── */
+.vote-seat-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.vote-seat-legend {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.vote-seat-legend-line {
+  display: inline-block;
+  width: 16px;
+  height: 2px;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
+.vote-seat-legend-line--dem {
+  background: #2c7bb6;
+}
+
+.vote-seat-legend-line--rep {
+  background: #c0392b;
+}
+
+.vote-seat-legend-line--prop {
+  background: #ccc;
+  border-bottom: 1px dashed #ccc;
+}
+
+.vote-seat-plot {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── EIKDEChart ──────────────────────────────────── */
+.ei-kde-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.ei-kde-plot-wrapper {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── BoxAndWhisker ───────────────────────────────── */
+.box-whisker-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.box-whisker-plot-wrapper {
+  flex: 1;
+  min-height: 0;
+}
+
+.box-legend-iqr {
+  background: #c8d0da;
+}
+
+.box-legend-median {
+  background: #1a1a1a;
+}
+
+.box-legend-whisker {
+  background: #888;
+}
+
+.box-legend-enacted {
+  background: #c0392b;
+}
+
+/* ── ProbabilityCurve ────────────────────────────── */
+.probability-curve-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.probability-curve-plot {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── EISupportSummary ────────────────────────────── */
+.ei-support-container {
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Shared: spaced secondary label in chart controls */
+.chart-controls-label--spaced {
+  margin-left: 16px;
+}

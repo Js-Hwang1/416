@@ -71,13 +71,13 @@ export default function VoteSeatChart({ data }) {
   }
 
   return (
-    <div ref={containerRef} style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-      <div style={{ display: "flex", gap: "16px", justifyContent: "center", alignItems: "center", marginTop: "12px", marginBottom: "6px", fontSize: "11px", flexShrink: 0 }}>
-        <span><span style={{ display: "inline-block", width: 16, height: 2, background: "#2c7bb6", marginRight: 4, verticalAlign: "middle" }} />Democratic</span>
-        <span><span style={{ display: "inline-block", width: 16, height: 2, background: "#c0392b", marginRight: 4, verticalAlign: "middle" }} />Republican</span>
-        <span><span style={{ display: "inline-block", width: 16, height: 2, background: "#ccc", marginRight: 4, verticalAlign: "middle", borderBottom: "1px dashed #ccc" }} />Proportional</span>
+    <div ref={containerRef} className="vote-seat-container">
+      <div className="vote-seat-legend">
+        <span><span className="vote-seat-legend-line vote-seat-legend-line--dem" />Democratic</span>
+        <span><span className="vote-seat-legend-line vote-seat-legend-line--rep" />Republican</span>
+        <span><span className="vote-seat-legend-line vote-seat-legend-line--prop" />Proportional</span>
       </div>
-      <div ref={plotRef} style={{ flex: 1, minHeight: 0 }} />
+      <div ref={plotRef} className="vote-seat-plot" />
     </div>
   );
 }

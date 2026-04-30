@@ -134,18 +134,18 @@ export default function EIKDEChart({ data }) {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+    <div className="ei-kde-container">
       <div className="chart-controls">
         <span className="chart-controls-label">Group 1:</span>
         <select className="heatmap-group-select" value={group1} onChange={e => setGroup1(e.target.value)}>
           {allGroups.map(g => <option key={g} value={g}>{displayName(g)}</option>)}
         </select>
-        <span className="chart-controls-label" style={{ marginLeft: 16 }}>Group 2:</span>
+        <span className="chart-controls-label chart-controls-label--spaced">Group 2:</span>
         <select className="heatmap-group-select" value={group2} onChange={e => setGroup2(e.target.value)}>
           {allGroups.map(g => <option key={g} value={g}>{displayName(g)}</option>)}
         </select>
       </div>
-      <div ref={containerRef} style={{ flex: 1, minHeight: 0 }}>
+      <div ref={containerRef} className="ei-kde-plot-wrapper">
         <svg ref={svgRef} />
       </div>
     </div>

@@ -107,12 +107,12 @@ const GinglesScatterPlot = ({ points, regression, group }) => {
   }, [points, regression, group, dims]);
 
   return (
-    <div ref={containerRef} style={{ width: "100%", height: "100%" }}>
-      <div style={{ display: "flex", gap: "16px", justifyContent: "center", marginBottom: "14px", marginTop: "8px", fontSize: "11px" }}>
-        <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "steelblue", marginRight: 4 }} />Dem Vote Share</span>
-        <span><span style={{ display: "inline-block", width: 10, height: 10, borderRadius: "50%", background: "tomato",    marginRight: 4 }} />Rep Vote Share</span>
+    <div ref={containerRef} className="gingles-scatter-container">
+      <div className="gingles-legend">
+        <span><span className="gingles-legend-dot gingles-legend-dot--dem" />Dem Vote Share</span>
+        <span><span className="gingles-legend-dot gingles-legend-dot--rep" />Rep Vote Share</span>
         {regression?.length > 0 && (
-          <span><span style={{ display: "inline-block", width: 16, height: 2, background: "steelblue", marginRight: 4, verticalAlign: "middle" }} />Regression</span>
+          <span><span className="gingles-legend-line gingles-legend-line--dem" />Regression</span>
         )}
       </div>
       <div ref={plotRef} />
