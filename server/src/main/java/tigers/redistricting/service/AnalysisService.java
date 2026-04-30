@@ -27,9 +27,9 @@ public class AnalysisService {
     public Optional<Map<String, List<Map<String, Object>>>> getGinglesPrecinct(StateId id) {
         return analysisDataRepository.findById(id).map(ad -> {
             Map<String, List<PrecinctPoint>> byGroup = ad.getGinglesPrecinct();
-            if (byGroup == null) return null;
+            if (byGroup == null) return null; // prevents crashing if mongo doesn't have the data
 
-            Map<String, List<Map<String, Object>>> result = new LinkedHashMap<>();
+            Map<String, List<Map<String, Object>>> result = new HashMap<>();
             for (Map.Entry<String, List<PrecinctPoint>> groupEntry : byGroup.entrySet()) {
                 List<Map<String, Object>> points = new ArrayList<>();
                 for (PrecinctPoint precinct : groupEntry.getValue()) {
@@ -51,7 +51,7 @@ public class AnalysisService {
             Map<String, List<RegressionPoint>> byGroup = ad.getGinglesRegression();
             if (byGroup == null) return null;
 
-            Map<String, double[]> result = new LinkedHashMap<>();
+            Map<String, double[]> result = new HashMap<>();
             for (Map.Entry<String, List<RegressionPoint>> groupEntry : byGroup.entrySet()) {
                 List<RegressionPoint> rawPoints = groupEntry.getValue();
                 double[] xs = new double[rawPoints.size()];

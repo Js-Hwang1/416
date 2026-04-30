@@ -20,15 +20,12 @@ function partyLines(data) {
   ];
 }
 
-// coeffs = [a, b, c, ...] → evaluates a + b·x + c·x² + ...
-function buildRegressionPoints(coeffs) {
-  const evalAt = (x) =>
-    coeffs.reduce((sum, coeff, power) => sum + coeff * Math.pow(x, power), 0);
-
+function buildRegressionPoints([a, b, c, d]) {
   const points = [];
   for (let i = 0; i <= 199; i++) {
-    const x = i / 199; // 200 evenly spaced samples from 0 to 1
-    points.push({ x, y: evalAt(x) });
+    const x = i / 199;
+    const y = a + b*x + c*x*x + d*x*x*x;
+    points.push({ x, y });
   }
   return points;
 }
