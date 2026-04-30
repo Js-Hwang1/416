@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import * as Plot from "@observablehq/plot";
 
 const GROUP_LABELS = { hispanic: "Latino", black: "Black", asian: "Asian" };
@@ -79,35 +79,30 @@ function buildPlotConfig(dims, group, marks) {
 }
 
 const GinglesScatterPlot = ({ points, regression, group }) => {
-  const containerRef = useRef();
-  const plotRef = useRef();
+  const [containerEl, setContainerEl] = useState(null);
+  const [plotEl, setPlotEl] = useState(null);
   const [dims, setDims] = useState({ width: 600, height: 350 });
 
-  // Boilerplate to make the chart resizable
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerEl) return;
     const observer = new ResizeObserver(entries => {
       for (const entry of entries) {
         const { width, height } = entry.contentRect;
         if (width > 0 && height > 0) setDims({ width, height });
       }
     });
-    observer.observe(containerRef.current);
+    observer.observe(containerEl);
     return () => observer.disconnect();
-  }, []);
+  }, [containerEl]);
 
   useEffect(() => {
-    if (!plotRef.current || !points?.length) return;
-    
-    plotRef.current.innerHTML = ""; // clean up old svg from Plot
-    
-    const plot = Plot.plot(buildPlotConfig(dims, group, buildMarks(points, regression)));
-    
-    plotRef.current.appendChild(plot);
-  }, [points, regression, group, dims]);
+    if (!plotEl || !points?.length) return;
+    plotEl.innerHTML = ""; // cleanup old svg
+    plotEl.appendChild(Plot.plot(buildPlotConfig(dims, group, buildMarks(points, regression))));
+  }, [plotEl, points, regression, group, dims]);
 
   return (
-    <div ref={containerRef} className="gingles-scatter-container">
+    <div ref={setContainerEl} className="gingles-scatter-container">
       <div className="gingles-legend">
         <span><span className="gingles-legend-dot gingles-legend-dot--dem" />Dem Vote Share</span>
         <span><span className="gingles-legend-dot gingles-legend-dot--rep" />Rep Vote Share</span>
@@ -115,7 +110,7 @@ const GinglesScatterPlot = ({ points, regression, group }) => {
           <span><span className="gingles-legend-line gingles-legend-line--dem" />Regression</span>
         )}
       </div>
-      <div ref={plotRef} />
+      <div ref={setPlotEl} />
     </div>
   );
 };
