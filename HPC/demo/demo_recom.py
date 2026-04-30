@@ -1,19 +1,4 @@
 #!/usr/bin/env python3
-"""
-GerryChain ReCom Demo — Massachusetts Congressional Districts
-
-Runs 250 steps of the ReCom (Recombination) Markov chain on MA's 9
-congressional districts, tracking:
-  - Population balance per district
-  - 2024 Presidential election outcomes (Harris vs Trump)
-  - Demographic composition (White, Black, Hispanic, Asian VAP)
-  - Cut edges (a proxy for compactness)
-
-Output: HPC/demo_results.json
-
-This is a "small" version of what we'd run on SeaWulf at scale
-(tens of thousands of steps across multiple states).
-"""
 
 import json
 import os

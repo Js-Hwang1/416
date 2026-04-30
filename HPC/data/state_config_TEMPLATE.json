@@ -4,7 +4,7 @@
   "num_districts": 9,
   "graph_path": "data/ma_precinct_graph.json",
   "pop_tolerance": 0.05,
-  "effectiveness_threshold": 0.5,
+  "effectiveness_threshold": 0.6,
   "opportunity_threshold": 0.5,
   "ensemble_size": 5000,
   "test_ensemble_size": 250,

@@ -7,7 +7,7 @@
 #SBATCH --time=01:00:00
 #SBATCH --output=logs/setup_gc_%j.out
 
-# ── Install GerryChain + deps into the existing venv ──
+# Install GerryChain + Geo stack + tqdm into the existing venv (after setup.slurm).
 
 WORK_DIR=/lustre/nvwulf/scratch/jungshwang/HPC
 SIF=${WORK_DIR}/pyei.sif
@@ -32,14 +32,16 @@ singularity exec --bind ${WORK_DIR}:${WORK_DIR} --pwd ${WORK_DIR} "$SIF" \
             'gerrychain>=0.3.1' \
             'geopandas>=0.13' \
             'networkx>=3.0' \
-            'shapely>=2.0' && \
+            'shapely>=2.0' \
+            'tqdm' && \
         echo '' && \
         echo 'Verifying imports...' && \
         python3 -c 'from gerrychain import Graph, MarkovChain, Partition; print(\"GerryChain OK\")' && \
         python3 -c 'import geopandas; print(\"GeoPandas OK\")' && \
+        python3 -c 'from tqdm import tqdm; print(\"tqdm OK\")' && \
         echo '' && \
         echo 'Installed packages:' && \
-        pip list | grep -iE 'gerry|geopandas|networkx|shapely|fiona'
+        pip list | grep -iE 'gerry|geopandas|networkx|shapely|fiona|tqdm'
     "
 
 if [ $? -eq 0 ]; then

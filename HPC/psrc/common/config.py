@@ -1,31 +1,3 @@
-"""
-config.py -- State configuration and constants for SeaWulf ensemble generation.
-
-Defines all parameters needed to run GerryChain ensembles:
-  - Graph column names (node attributes expected in the dual graph)
-  - Feasible minority groups and their party of choice
-  - Effectiveness and population thresholds
-  - Ensemble sizes
-
-The user creates a StateConfig for their specific state(s) via
-  load_state_config(path)   -- from a JSON file, OR
-  make_config(state, ...)   -- programmatically.
-
-EXPECTED NODE ATTRIBUTES IN THE DUAL GRAPH
--------------------------------------------
-  TOTPOP    : int   total population
-  VAP       : int   voting-age population
-  BVAP      : int   Black VAP
-  HVAP      : int   Hispanic/Latino VAP
-  ASIANVAP  : int   Asian VAP
-  WVAP      : int   White VAP
-  OTHERVAP  : int   Other VAP
-  PRES24D   : int   2024 Presidential Democratic votes
-  PRES24R   : int   2024 Presidential Republican votes
-  CD        : int/str  enacted congressional district assignment
-  COUNTY    : str   county identifier (optional, for county-split constraint)
-"""
-
 import json
 import os
 from dataclasses import dataclass, field
@@ -60,10 +32,11 @@ MINORITY_VAP_COLS = {
 @dataclass
 class MinorityGroup:
     """Configuration for a single feasible minority group."""
-    name: str               # e.g. "Black", "Hispanic", "Asian"
-    vap_col: str            # node attribute for this group's VAP
-    party_of_choice: str    # "Democratic" or "Republican"
-    ei_confidence: float    # confidence score from EI (0-1)
+
+    name: str  # e.g. "Black", "Hispanic", "Asian"
+    vap_col: str  # node attribute for this group's VAP
+    party_of_choice: str  # "Democratic" or "Republican"
+    ei_confidence: float  # confidence score from EI (0-1)
 
 
 @dataclass
@@ -71,29 +44,29 @@ class StateConfig:
     """All parameters for a single state's ensemble run."""
 
     # ── Identity ─────────────────────────────────────────────────────
-    state_name: str                     # e.g. "Massachusetts"
-    state_abbr: str                     # e.g. "MA"
-    num_districts: int                  # number of congressional districts
+    state_name: str  # e.g. "Massachusetts"
+    state_abbr: str  # e.g. "MA"
+    num_districts: int  # number of congressional districts
 
     # ── File paths ───────────────────────────────────────────────────
-    graph_path: str                     # path to dual-graph JSON/SHP
+    graph_path: str  # path to dual-graph JSON/SHP
 
     # ── Feasible minority groups ─────────────────────────────────────
     # Groups with statewide population >= 400,000
     minority_groups: List[MinorityGroup] = field(default_factory=list)
 
     # ── Thresholds ───────────────────────────────────────────────────
-    pop_tolerance: float = 0.05         # +/- 5% population deviation
-    effectiveness_threshold: float = 0.5  # district effective if score >= this
+    pop_tolerance: float = 0.05  # +/- 5% population deviation
+    effectiveness_threshold: float = 0.6  # VRA / effectiveness cutoff (score >= this)
     opportunity_threshold: float = 0.5  # majority-minority if group VAP >= this
 
     # ── Ensemble sizing ──────────────────────────────────────────────
-    ensemble_size: int = 5000           # plans for final presentation
-    test_ensemble_size: int = 250       # plans for testing
+    ensemble_size: int = 5000  # plans for final presentation
+    test_ensemble_size: int = 250  # plans for testing
 
     # ── ReCom parameters ─────────────────────────────────────────────
-    node_repeats: int = 2               # spanning-tree resampling attempts
-    random_seed: Optional[int] = 42     # base random seed (each core offsets)
+    node_repeats: int = 2  # spanning-tree resampling attempts
+    random_seed: Optional[int] = 42  # base random seed (each core offsets)
 
     # ── Benchmark (filled at runtime from enacted plan) ──────────────
     benchmark_effective: Dict[str, int] = field(default_factory=dict)
@@ -113,7 +86,7 @@ def load_state_config(path: str) -> StateConfig:
       "num_districts": 9,
       "graph_path": "../data/ma_precinct_graph.json",
       "pop_tolerance": 0.05,
-      "effectiveness_threshold": 0.5,
+      "effectiveness_threshold": 0.6,
       "opportunity_threshold": 0.5,
       "ensemble_size": 5000,
       "test_ensemble_size": 250,
@@ -131,9 +104,7 @@ def load_state_config(path: str) -> StateConfig:
     with open(path) as f:
         data = json.load(f)
 
-    groups = [
-        MinorityGroup(**g) for g in data.pop("minority_groups", [])
-    ]
+    groups = [MinorityGroup(**g) for g in data.pop("minority_groups", [])]
 
     return StateConfig(minority_groups=groups, **data)
 

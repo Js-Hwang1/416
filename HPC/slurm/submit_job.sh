@@ -1,10 +1,12 @@
 #!/bin/bash
 #============================================================================
-# submit_job.sh -- SLURM batch script for SeaWulf ensemble generation
+# submit_job.sh -- Legacy SLURM wrapper (same idea as ensemble.slurm)
 #
-# Runs GerryChain ReCom on a single SeaWulf node with multiple cores.
-# Each core runs an independent Markov chain.  After all cores finish,
-# the aggregate script combines the results.
+# Prefer the maintained scripts in this directory:
+#   setup.slurm / setup_gerrychain.slurm — environment
+#   ei.slurm                               — PyEI (Prepro-9)
+#   ensemble.slurm                         — GerryChain ensemble (+ optional JSON export)
+#   test.slurm                             — short smoke test
 #
 # Usage:
 #   sbatch submit_job.sh                    # defaults: race_blind, 250 plans
@@ -27,7 +29,7 @@ NUM_CORES=${SLURM_CPUS_PER_TASK:-28}
 
 # ── Paths ────────────────────────────────────────────────────────────
 HPC_DIR="$(cd "$(dirname "$0")" && pwd)"
-SCRIPTS_DIR="${HPC_DIR}/scripts"
+PSRC_DIR="${HPC_DIR}/psrc"
 RESULTS_DIR="${HPC_DIR}/results"
 CONFIG="${HPC_DIR}/data/state_config.json"
 
@@ -61,7 +63,7 @@ echo "Launching ${NUM_CORES} parallel processes ..."
 START_TIME=$(date +%s)
 
 for CORE_ID in $(seq 0 $((NUM_CORES - 1))); do
-    python3 "${SCRIPTS_DIR}/run_ensemble.py" \
+    python3 "${PSRC_DIR}/seawulf/run_ensemble.py" \
         --config "${CONFIG}" \
         --mode "${MODE}" \
         --core-id "${CORE_ID}" \
@@ -79,10 +81,8 @@ echo "All ${NUM_CORES} cores finished in ${ELAPSED}s"
 
 # ── Aggregate results ────────────────────────────────────────────────
 echo ""
-echo "Aggregating results ..."
-python3 "${SCRIPTS_DIR}/aggregate.py" \
-    --state "${STATE}" \
-    --mode "${MODE}" \
+echo "Writing frontend JSON via populate_from_hpc.py ..."
+python3 "${HPC_DIR}/populate_from_hpc.py" --json-only \
     --results-dir "${RESULTS_DIR}"
 
 echo ""
