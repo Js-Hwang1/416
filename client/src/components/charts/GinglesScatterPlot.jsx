@@ -4,20 +4,17 @@ import * as Plot from "@observablehq/plot";
 const GROUP_LABELS = { hispanic: "Latino", black: "Black", asian: "Asian" };
 const LEGEND_HEIGHT = 36;
 
-// Each pair produces one dem (steelblue) mark and one rep (tomato) mark
 function partyDots(data, opts) {
-  return [
-    Plot.dot(data, { x: d => d.x * 100, y: d => d.y * 100,       fill: "steelblue", ...opts }),
-    Plot.dot(data, { x: d => d.x * 100, y: d => (1 - d.y) * 100, fill: "tomato",    ...opts }),
-  ];
+  const demDot = Plot.dot(data, { x: d => d.x * 100, y: d => d.y * 100,       fill: "steelblue", ...opts });
+  const repDot = Plot.dot(data, { x: d => d.x * 100, y: d => (1 - d.y) * 100, fill: "tomato",    ...opts });
+  return [demDot, repDot];
 }
 
 function partyLines(data) {
-  const lineOpts = { x: d => d.x * 100, strokeWidth: 2.5, curve: "catmull-rom", clip: true };
-  return [
-    Plot.line(data, { ...lineOpts, y: d => d.y * 100,         stroke: "steelblue" }),
-    Plot.line(data, { ...lineOpts, y: d => (1 - d.y) * 100,   stroke: "tomato"    }),
-  ];
+  const shared = { x: d => d.x * 100, strokeWidth: 2.5, curve: "catmull-rom", clip: true };
+  const demLine = Plot.line(data, { ...shared, y: d => d.y * 100,         stroke: "steelblue" });
+  const repLine = Plot.line(data, { ...shared, y: d => (1 - d.y) * 100,   stroke: "tomato"    });
+  return [demLine, repLine];
 }
 
 function buildRegressionPoints([a, b, c, d]) {
@@ -30,16 +27,29 @@ function buildRegressionPoints([a, b, c, d]) {
   return points;
 }
 
-function buildMarks(points, regression, group) {
-  return [
-    ...partyDots(points, { fillOpacity: 0.18, r: 2.5, clip: true }),
-    ...(regression?.length > 0 ? partyLines(buildRegressionPoints(regression)) : []),
-    Plot.ruleY([50], { stroke: "#999", strokeDasharray: "4,4", strokeWidth: 1 }),
-    Plot.text([`${points.length.toLocaleString()} precincts`], {
-      frameAnchor: "top", dy: -5, textAnchor: "middle",
-      fill: "#555", fontSize: 12, fontFamily: "Verdana, sans-serif",
-    }),
-  ];
+function buildMarks(points, regression) {
+  const dots = partyDots(points, { fillOpacity: 0.18, r: 2.5, clip: true });
+
+  const lines = regression?.length > 0
+    ? partyLines(buildRegressionPoints(regression))
+    : [];
+
+  const midline = Plot.ruleY([50], {
+    stroke: "#999",
+    strokeDasharray: "4,4",
+    strokeWidth: 1,
+  });
+
+  const label = Plot.text([`${points.length.toLocaleString()} precincts`], {
+    frameAnchor: "top",
+    dy: -5,
+    textAnchor: "middle",
+    fill: "#555",
+    fontSize: 12,
+    fontFamily: "Verdana, sans-serif",
+  });
+
+  return [...dots, ...lines, midline, label];
 }
 
 function buildPlotConfig(dims, group, marks) {
@@ -88,8 +98,11 @@ const GinglesScatterPlot = ({ points, regression, group }) => {
 
   useEffect(() => {
     if (!plotRef.current || !points?.length) return;
+    
     plotRef.current.innerHTML = ""; // clean up old svg from Plot
-    const plot = Plot.plot(buildPlotConfig(dims, group, buildMarks(points, regression, group)));
+    
+    const plot = Plot.plot(buildPlotConfig(dims, group, buildMarks(points, regression)));
+    
     plotRef.current.appendChild(plot);
   }, [points, regression, group, dims]);
 
