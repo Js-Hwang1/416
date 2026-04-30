@@ -3,6 +3,7 @@ package tigers.redistricting.service;
 import org.apache.commons.math3.fitting.PolynomialCurveFitter;
 import org.apache.commons.math3.fitting.WeightedObservedPoints;
 import org.springframework.stereotype.Service;
+import tigers.redistricting.enums.Race;
 import tigers.redistricting.enums.StateId;
 import tigers.redistricting.model.*;
 import tigers.redistricting.repository.AnalysisDataRepository;
@@ -24,18 +25,18 @@ public class AnalysisService {
      * MongoDB: { hispanic: [{ precinct_id, name, total_pop, minority_pop, minority_vap_pct, d_vote_share }, ...], ... }
      * Response: { hispanic: [{ x: minority_vap_pct, y: d_vote_share }, ...], ... }
      */
-    public Optional<Map<String, List<Map<String, Object>>>> getGinglesPrecinct(StateId id) {
+    public Optional<Map<Race, List<Map<String, Object>>>> getGinglesPrecinct(StateId id) {
         return analysisDataRepository.findById(id).map(ad -> {
             Map<String, List<PrecinctPoint>> byGroup = ad.getGinglesPrecinct();
             if (byGroup == null) return null; // prevents crashing if mongo doesn't have the data
 
-            Map<String, List<Map<String, Object>>> result = new HashMap<>();
+            Map<Race, List<Map<String, Object>>> result = new HashMap<>();
             for (Map.Entry<String, List<PrecinctPoint>> groupEntry : byGroup.entrySet()) {
                 List<Map<String, Object>> points = new ArrayList<>();
                 for (PrecinctPoint precinct : groupEntry.getValue()) {
                     points.add(Map.of("x", precinct.minority_vap_pct, "y", precinct.d_vote_share));
                 }
-                result.put(groupEntry.getKey(), points);
+                result.put(Race.fromString(groupEntry.getKey()), points);
             }
             return result;
         });

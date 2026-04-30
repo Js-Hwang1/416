@@ -3,6 +3,7 @@ package tigers.redistricting.controller;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import tigers.redistricting.enums.Race;
 import tigers.redistricting.enums.StateId;
 import tigers.redistricting.model.*;
 import tigers.redistricting.service.AnalysisService;
@@ -22,7 +23,7 @@ public class AnalysisController {
 
     @Cacheable("ginglesPrecinct")
     @GetMapping("/gingles-precinct")
-    public ResponseEntity<Map<String, List<Map<String, Object>>>> getGinglesPrecinct(@PathVariable StateId id) {
+    public ResponseEntity<Map<Race, List<Map<String, Object>>>> getGinglesPrecinct(@PathVariable StateId id) {
         return analysisService.getGinglesPrecinct(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
