@@ -188,12 +188,30 @@ def load_precinct_data(path: str, state: str) -> pd.DataFrame:
 # EI model fitting
 
 
-def run_rxc_ei(df: pd.DataFrame, tune: int = 1500, draws: int = 1000):
+def run_rxc_ei(
+    df: pd.DataFrame,
+    tune: int = 1500,
+    draws: int = 1000,
+    nuts_sampler: str = "blackjax",
+    chain_method: str = "parallel",
+):
     """Run RxC Ecological Inference using PyEI.
+
+    PyEI 1.1 hardcodes ``nuts_sampler="numpyro"`` in
+    ``RowByColumnEI.fit()``. To allow other backends, we monkey-patch
+    ``pm.sample`` to override that kwarg before calling fit. Posteriors
+    are statistically equivalent across backends.
+
+    chain_method:
+      "parallel"   - one process per chain (CPU default; best on CPU)
+      "vectorized" - all chains as one vmapped program (GPU only;
+                     slower on CPU due to cache pressure)
+      "sequential" - chains one after another (no parallelism; for debug)
 
     Returns the fitted RowByColumnEI object.
     """
     from pyei.r_by_c import RowByColumnEI
+    import pymc as pm
 
     group_fractions = np.array(df[DEMOGRAPHIC_COLS]).T  # (4, p)
     votes_fractions = np.array(df[VOTE_COLS]).T  # (2, p)
@@ -208,7 +226,7 @@ def run_rxc_ei(df: pd.DataFrame, tune: int = 1500, draws: int = 1000):
     n_cand = len(CANDIDATE_NAMES)
     print(f"\nRunning RxC EI ({n_grp} groups x {n_cand} candidates) ...")
     print(f"  Precincts: {group_fractions.shape[1]}")
-    print(f"  Tune: {tune}, Draws: {draws}")
+    print(f"  Tune: {tune}, Draws: {draws}, Sampler: {nuts_sampler}")
 
     ei = RowByColumnEI(
         model_name="multinomial-dirichlet-modified",
@@ -216,19 +234,67 @@ def run_rxc_ei(df: pd.DataFrame, tune: int = 1500, draws: int = 1000):
         pareto_scale=5,
     )
 
-    t0 = time.time()
-    ei.fit(
-        group_fractions,
-        votes_fractions,
-        precinct_pops,
-        demographic_group_names=DEMOGRAPHIC_NAMES,
-        candidate_names=CANDIDATE_NAMES,
-        precinct_names=precinct_names,
-        target_accept=0.99,
-        tune=tune,
-        draws=draws,
-    )
-    elapsed = time.time() - t0
+    # Override PyEI's hardcoded numpyro sampler. For JAX-based backends
+    # also inject the requested chain_method (default "parallel" wins
+    # on CPU; "vectorized" is the GPU win path).
+    original_sample = pm.sample
+    jax_backends = {"numpyro", "blackjax"}
+
+    def patched_sample(*args, **kwargs):
+        kwargs["nuts_sampler"] = nuts_sampler
+        if nuts_sampler in jax_backends and chain_method != "parallel":
+            existing = kwargs.get("nuts_sampler_kwargs") or {}
+            existing.setdefault("chain_method", chain_method)
+            kwargs["nuts_sampler_kwargs"] = existing
+        return original_sample(*args, **kwargs)
+
+    pm.sample = patched_sample
+    try:
+        t0 = time.time()
+        try:
+            ei.fit(
+                group_fractions,
+                votes_fractions,
+                precinct_pops,
+                demographic_group_names=DEMOGRAPHIC_NAMES,
+                candidate_names=CANDIDATE_NAMES,
+                precinct_names=precinct_names,
+                target_accept=0.99,
+                tune=tune,
+                draws=draws,
+            )
+        except (ImportError, ValueError, ModuleNotFoundError) as e:
+            if nuts_sampler != "numpyro":
+                print(
+                    f"  WARNING: nuts_sampler={nuts_sampler} unavailable ({e}), "
+                    f"falling back to numpyro (PyEI default)"
+                )
+
+                def passthrough_sample(*args, **kwargs):
+                    kwargs["nuts_sampler"] = "numpyro"
+                    if chain_method != "parallel":
+                        existing = kwargs.get("nuts_sampler_kwargs") or {}
+                        existing.setdefault("chain_method", chain_method)
+                        kwargs["nuts_sampler_kwargs"] = existing
+                    return original_sample(*args, **kwargs)
+
+                pm.sample = passthrough_sample
+                ei.fit(
+                    group_fractions,
+                    votes_fractions,
+                    precinct_pops,
+                    demographic_group_names=DEMOGRAPHIC_NAMES,
+                    candidate_names=CANDIDATE_NAMES,
+                    precinct_names=precinct_names,
+                    target_accept=0.99,
+                    tune=tune,
+                    draws=draws,
+                )
+            else:
+                raise
+        elapsed = time.time() - t0
+    finally:
+        pm.sample = original_sample
     print(f"  EI fitting completed in {elapsed:.0f}s")
 
     return ei
@@ -560,7 +626,7 @@ def save_ei_plots(ei, output_dir: str, state: str):
 # Main CLI
 
 
-def main():
+def parse_args():
     p = argparse.ArgumentParser(
         description="Run PyEI Ecological Inference for redistricting analysis."
     )
@@ -592,6 +658,30 @@ def main():
         help="MCMC posterior draws (default: 1000)",
     )
     p.add_argument(
+        "--nuts-sampler",
+        default="blackjax",
+        choices=["blackjax", "numpyro", "nutpie", "pymc"],
+        help=(
+            "NUTS backend (overrides PyEI's hardcoded numpyro). "
+            "Measured on MA 2150 precincts / 200 tune+draws CPU: "
+            "blackjax 276s, numpyro 362s, nutpie 679s. "
+            "Posteriors are statistically equivalent across backends. "
+            "On GPU: use --nuts-sampler numpyro --chain-method vectorized."
+        ),
+    )
+    p.add_argument(
+        "--chain-method",
+        default="parallel",
+        choices=["parallel", "vectorized", "sequential"],
+        help=(
+            "How to run the 4 MCMC chains in JAX backends. "
+            "'parallel' (default): one process per chain — CPU win. "
+            "'vectorized': all chains as one vmapped program — GPU win, "
+            "but ~2.7x slower on CPU due to cache pressure. "
+            "'sequential': debug only."
+        ),
+    )
+    p.add_argument(
         "--skip-plots",
         action="store_true",
         help="Skip PNG plot generation",
@@ -606,23 +696,25 @@ def main():
         default=MONGO_URI,
         help="MongoDB connection URI when --update-db is set.",
     )
-    args = p.parse_args()
+    return p.parse_args()
 
-    prefix = args.state.lower()
-    print(f"=== PyEI Ecological Inference: {args.state} ===")
-    t0 = time.time()
 
-    # 1. Load data
-    df = load_precinct_data(args.precinct_data, args.state)
-
-    # 2. Run RxC EI
-    ei = run_rxc_ei(df, tune=args.tune, draws=args.draws)
-
-    # 3. Print summary
+def fit_ei(args, df):
+    """Fit the RxC EI model and print its summary."""
+    ei = run_rxc_ei(
+        df,
+        tune=args.tune,
+        draws=args.draws,
+        nuts_sampler=args.nuts_sampler,
+        chain_method=args.chain_method,
+    )
     print("\n── EI Summary ──")
     print(ei.summary())
+    return ei
 
-    # 4. Party of choice (for GerryChain)
+
+def report_party_of_choice(ei) -> dict:
+    """Extract the party-of-choice mapping and print one line per group."""
     print("\n── Party of Choice ──")
     poc = extract_party_of_choice(ei)
     for group, data in poc.items():
@@ -631,34 +723,51 @@ def main():
             f"  {group}: {data['party_of_choice']} "
             f"(confidence: {poc_pct:.1f}%)"
         )
+    return poc
 
-    # 5. Client-facing JSON outputs
+
+def _write_json(path: str, data, label: str, suffix: str = "") -> None:
+    """Dump JSON to disk and log the size."""
+    with open(path, "w") as f:
+        json.dump(data, f)
+    print(f"  {label} {path}{suffix}")
+
+
+def write_client_outputs(args, ei, df, poc, t0):
+    """Write all client-facing JSON files; return (curves, summary, kde, gc_config)."""
     print("\nBuilding client-facing outputs ...")
     os.makedirs(args.output_dir, exist_ok=True)
+    prefix = args.state.lower()
 
     ei_curves = build_ei_curves(ei)
-    curves_path = os.path.join(args.output_dir, f"{prefix}_ei_curves.json")
-    with open(curves_path, "w") as f:
-        json.dump(ei_curves, f)
-    print(f"  eiCurves:  {curves_path} ({len(ei_curves)} curves)")
+    _write_json(
+        os.path.join(args.output_dir, f"{prefix}_ei_curves.json"),
+        ei_curves,
+        "eiCurves: ",
+        f" ({len(ei_curves)} curves)",
+    )
 
     ei_summary = build_ei_summary(ei)
-    summary_path = os.path.join(args.output_dir, f"{prefix}_ei_summary.json")
-    with open(summary_path, "w") as f:
-        json.dump(ei_summary, f)
-    print(f"  eiSummary: {summary_path}")
+    _write_json(
+        os.path.join(args.output_dir, f"{prefix}_ei_summary.json"),
+        ei_summary,
+        "eiSummary:",
+    )
 
     ei_kde = build_ei_kde(ei)
-    kde_path = os.path.join(args.output_dir, f"{prefix}_ei_kde.json")
-    with open(kde_path, "w") as f:
-        json.dump(ei_kde, f)
-    print(f"  eiKde:     {kde_path}")
+    _write_json(
+        os.path.join(args.output_dir, f"{prefix}_ei_kde.json"),
+        ei_kde,
+        "eiKde:    ",
+    )
 
     precinct_est = extract_precinct_estimates(ei, df)
-    precinct_path = os.path.join(args.output_dir, f"{prefix}_ei_precinct.json")
-    with open(precinct_path, "w") as f:
-        json.dump(precinct_est, f)
-    print(f"  Precinct:  {precinct_path} ({len(precinct_est)} precincts)")
+    _write_json(
+        os.path.join(args.output_dir, f"{prefix}_ei_precinct.json"),
+        precinct_est,
+        "Precinct: ",
+        f" ({len(precinct_est)} precincts)",
+    )
 
     gc_config = generate_gerrychain_config(poc)
     ei_results = {
@@ -675,31 +784,61 @@ def main():
         json.dump(ei_results, f, indent=2)
     print(f"  Results:   {results_path}")
 
-    # 6. Update MongoDB (optional)
-    if args.update_db:
-        update_mongodb(
-            args.state, ei_curves, ei_summary, ei_kde, mongo_uri=args.mongo_uri
-        )
+    return ei_curves, ei_summary, ei_kde, gc_config
 
-    # 7. Save EI model (optional persistence)
+
+def maybe_update_db(args, ei_curves, ei_summary, ei_kde) -> None:
+    if not args.update_db:
+        return
+    update_mongodb(
+        args.state, ei_curves, ei_summary, ei_kde, mongo_uri=args.mongo_uri
+    )
+
+
+def maybe_save_model(args, ei) -> None:
+    """Persist the fitted EI model via netcdf, if available."""
     try:
         from pyei.io_utils import to_netcdf
 
+        prefix = args.state.lower()
         model_path = os.path.join(args.output_dir, f"{prefix}_ei_model")
         to_netcdf(ei, model_path)
         print(f"\nEI model saved: {model_path}")
     except Exception as e:
         print(f"  Warning: Could not save model via netcdf: {e}")
 
-    # 8. PNG plots (optional)
-    if not args.skip_plots:
-        print("\nGenerating PNG plots ...")
-        save_ei_plots(ei, args.output_dir, args.state)
 
+def maybe_save_plots(args, ei) -> None:
+    if args.skip_plots:
+        return
+    print("\nGenerating PNG plots ...")
+    save_ei_plots(ei, args.output_dir, args.state)
+
+
+def print_done(t0, gc_config) -> None:
     elapsed = time.time() - t0
     print("\nDone! Total time: {:.0f}s".format(elapsed))
     print("\n--- minority_groups for state_config.json ---")
     print(json.dumps(gc_config, indent=2))
+
+
+def main():
+    args = parse_args()
+    print(f"=== PyEI Ecological Inference: {args.state} ===")
+    t0 = time.time()
+
+    df = load_precinct_data(args.precinct_data, args.state)
+    ei = fit_ei(args, df)
+    poc = report_party_of_choice(ei)
+
+    ei_curves, ei_summary, ei_kde, gc_config = write_client_outputs(
+        args, ei, df, poc, t0
+    )
+
+    maybe_update_db(args, ei_curves, ei_summary, ei_kde)
+    maybe_save_model(args, ei)
+    maybe_save_plots(args, ei)
+    print_done(t0, gc_config)
 
 
 if __name__ == "__main__":

@@ -6,8 +6,16 @@ From: python:3.11-slim
         build-essential gcc g++ && \
     rm -rf /var/lib/apt/lists/*
 
+    # Install JAX with CUDA 12 support so numpyro can use GPU. The
+    # `[cuda12]` extra pulls cuDNN/cuBLAS plugins; falls back to CPU
+    # automatically if no GPU is visible.
     pip install --no-cache-dir \
+        "jax[cuda12]" \
         pyei>=1.1 \
+        blackjax \
+        numpyro \
+        fastprogress \
+        ipython \
         numpy \
         pandas \
         scipy \

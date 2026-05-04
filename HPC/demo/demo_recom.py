@@ -26,46 +26,48 @@ SHP_PATH = os.path.join(
 )
 OUTPUT_PATH = os.path.join(SCRIPT_DIR, "demo_results.json")
 
-random.seed(SEED)
 
+# ── Graph loading + connectivity fix ───────────────────────────────────
 
-def main():
-    t0 = time.time()
-
-    # ── 1. Load the dual graph ─────────────────────────────────────────
+def load_graph():
+    """Load the MA precinct graph from disk."""
     print("Loading MA precinct graph...")
     graph = Graph.from_file(SHP_PATH)
     print(f"  {len(graph.nodes)} nodes, {len(graph.edges)} edges")
+    return graph
 
-    # Fix connectivity — connect island nodes and heal district fragments.
-    # Some precincts (Gosnold, Nantucket, parts of Boston) aren't adjacent
-    # under rook contiguity. We add edges so every district is connected.
+
+def connect_islands(graph):
+    """Attach degree-zero nodes to their nearest neighbor by geometry."""
     islands = [n for n in graph.nodes if graph.degree(n) == 0]
-    if islands:
-        print(f"  Connecting {len(islands)} island node(s)...")
-        for island in islands:
-            best_dist, best_n = float("inf"), None
-            for n in graph.nodes:
-                if n == island:
-                    continue
-                d = graph.nodes[island]["geometry"].distance(graph.nodes[n]["geometry"])
-                if d < best_dist:
-                    best_dist, best_n = d, n
-            if best_n is not None:
-                graph.add_edge(island, best_n)
+    if not islands:
+        return 0
+    print(f"  Connecting {len(islands)} island node(s)...")
+    for island in islands:
+        best_dist, best_n = float("inf"), None
+        for n in graph.nodes:
+            if n == island:
+                continue
+            d = graph.nodes[island]["geometry"].distance(graph.nodes[n]["geometry"])
+            if d < best_dist:
+                best_dist, best_n = d, n
+        if best_n is not None:
+            graph.add_edge(island, best_n)
+    return len(islands)
 
-    # Ensure every district subgraph is connected
+
+def heal_district_fragments(graph):
+    """Stitch disconnected components within each district by nearest geometry."""
     districts_nodes = {}
     for n in graph.nodes:
         districts_nodes.setdefault(graph.nodes[n]["CD"], []).append(n)
 
     edges_added = 0
-    for cd, nodes in districts_nodes.items():
+    for _cd, nodes in districts_nodes.items():
         sub = graph.subgraph(nodes)
         components = list(nx.connected_components(sub))
         if len(components) <= 1:
             continue
-        # Connect each small component to the largest via nearest geometry
         main = max(components, key=len)
         for comp in components:
             if comp is main:
@@ -79,36 +81,44 @@ def main():
             if best_a is not None:
                 graph.add_edge(best_a, best_b)
                 edges_added += 1
+    return edges_added
 
-    print(f"  Fixed connectivity: added {edges_added + len(islands)} edge(s), "
+
+def fix_connectivity(graph):
+    """Connect islands and heal fragmented districts in-place."""
+    islands_added = connect_islands(graph)
+    fragment_edges = heal_district_fragments(graph)
+    print(f"  Fixed connectivity: added {islands_added + fragment_edges} edge(s), "
           f"graph now has {len(graph.edges)} edges")
 
-    # ── 2. Compute ideal population ────────────────────────────────────
+
+def compute_population_targets(graph):
+    """Return (num_districts, total_pop, ideal_pop) for the loaded graph."""
     districts = set(graph.nodes[n]["CD"] for n in graph.nodes)
     num_districts = len(districts)
     total_pop = sum(graph.nodes[n]["TOTPOP"] for n in graph.nodes)
     ideal_pop = total_pop / num_districts
     print(f"  {num_districts} districts, ideal pop = {ideal_pop:,.0f}")
+    return num_districts, total_pop, ideal_pop
 
-    # ── 3. Define updaters ─────────────────────────────────────────────
-    updaters = {
+
+# ── Chain construction ────────────────────────────────────────────────
+
+def build_updaters():
+    """Updaters for population, cut edges, two elections, and minority VAP."""
+    return {
         "population": Tally("TOTPOP", alias="population"),
         "cut_edges": cut_edges,
-
-        # 2024 Presidential
         "PRES24": Election(
             "2024 Presidential",
             {"Democratic": "G24PREDHAR", "Republican": "G24PRERTRU"},
             alias="PRES24",
         ),
-        # 2024 Senate
         "SEN24": Election(
             "2024 Senate",
             {"Democratic": "G24USSDWAR", "Republican": "G24USSRDEA"},
             alias="SEN24",
         ),
-
-        # Demographics (VAP)
         "VAP": Tally("VAP", alias="VAP"),
         "WVAP": Tally("WVAP", alias="WVAP"),
         "BVAP": Tally("BVAP", alias="BVAP"),
@@ -116,12 +126,17 @@ def main():
         "ASIANVAP": Tally("ASIANVAP", alias="ASIANVAP"),
     }
 
-    # ── 4. Initial partition from enacted congressional districts ──────
-    print("Creating initial partition from CD assignments...")
-    initial = Partition(graph, assignment="CD", updaters=updaters)
-    print(f"  Initial cut edges: {len(initial['cut_edges'])}")
 
-    # ── 5. Configure ReCom proposal ────────────────────────────────────
+def build_initial_partition(graph):
+    """Create the seed Partition from enacted CD assignments."""
+    print("Creating initial partition from CD assignments...")
+    initial = Partition(graph, assignment="CD", updaters=build_updaters())
+    print(f"  Initial cut edges: {len(initial['cut_edges'])}")
+    return initial
+
+
+def build_chain(initial, ideal_pop):
+    """Build the MarkovChain configured for ReCom."""
     proposal = partial(
         recom,
         pop_col="TOTPOP",
@@ -129,10 +144,8 @@ def main():
         epsilon=EPSILON,
         node_repeats=2,
     )
-
-    # ── 6. Build and run the chain ─────────────────────────────────────
     print(f"Running {NUM_STEPS} steps of ReCom (epsilon={EPSILON})...")
-    chain = MarkovChain(
+    return MarkovChain(
         proposal=proposal,
         constraints=[contiguous],
         accept=always_accept,
@@ -140,70 +153,84 @@ def main():
         total_steps=NUM_STEPS,
     )
 
-    # ── 7. Collect results ─────────────────────────────────────────────
-    steps = []
-    dem_seat_counts = []  # for summary histogram
 
-    for i, partition in enumerate(chain):
-        pop = dict(partition["population"])
+# ── Per-step metrics ──────────────────────────────────────────────────
 
-        # Population deviation
-        max_dev = max(abs(p - ideal_pop) / ideal_pop for p in pop.values())
+def compute_minority_vap_shares(partition):
+    """Per-district BVAP/HVAP/ASIANVAP percentages (of VAP)."""
+    vap = dict(partition["VAP"])
+    bvap = dict(partition["BVAP"])
+    hvap = dict(partition["HVAP"])
+    avap = dict(partition["ASIANVAP"])
+    pop = dict(partition["population"])
 
-        # Election outcomes
-        pres_result = partition["PRES24"]
-        sen_result = partition["SEN24"]
-        pres_dem_seats = pres_result.wins("Democratic")
-        sen_dem_seats = sen_result.wins("Democratic")
-
-        # Dem vote share per district
-        dem_pcts = pres_result.percents_for_party["Democratic"]
-
-        # Minority VAP shares by district
-        vap = dict(partition["VAP"])
-        bvap = dict(partition["BVAP"])
-        hvap = dict(partition["HVAP"])
-        avap = dict(partition["ASIANVAP"])
-
-        minority_vap_shares = {}
-        for d in pop:
-            v = vap[d] if vap[d] > 0 else 1
-            minority_vap_shares[d] = {
-                "BVAP_pct": round(100 * bvap[d] / v, 1),
-                "HVAP_pct": round(100 * hvap[d] / v, 1),
-                "ASIANVAP_pct": round(100 * avap[d] / v, 1),
-            }
-
-        step_data = {
-            "step": i,
-            "max_pop_deviation": round(max_dev, 4),
-            "cut_edges": len(partition["cut_edges"]),
-            "pres24_dem_seats": pres_dem_seats,
-            "sen24_dem_seats": sen_dem_seats,
-            "pres24_dem_vote_pct": {
-                d: round(v, 4) for d, v in dem_pcts.items()
-            },
-            "population": pop,
-            "minority_vap_shares": minority_vap_shares,
+    shares = {}
+    for d in pop:
+        v = vap[d] if vap[d] > 0 else 1
+        shares[d] = {
+            "BVAP_pct": round(100 * bvap[d] / v, 1),
+            "HVAP_pct": round(100 * hvap[d] / v, 1),
+            "ASIANVAP_pct": round(100 * avap[d] / v, 1),
         }
-        steps.append(step_data)
-        dem_seat_counts.append(pres_dem_seats)
+    return shares
 
-        if (i + 1) % 50 == 0:
-            elapsed = time.time() - t0
-            print(f"  Step {i+1}/{NUM_STEPS} | "
-                  f"Dem seats: {pres_dem_seats} | "
-                  f"Max dev: {max_dev:.3f} | "
-                  f"{elapsed:.1f}s elapsed")
 
-    # ── 8. Summary statistics ──────────────────────────────────────────
+def step_metrics(partition, step_index, ideal_pop):
+    """All metrics for one chain step."""
+    pop = dict(partition["population"])
+    max_dev = max(abs(p - ideal_pop) / ideal_pop for p in pop.values())
+
+    pres_result = partition["PRES24"]
+    sen_result = partition["SEN24"]
+    pres_dem_seats = pres_result.wins("Democratic")
+    sen_dem_seats = sen_result.wins("Democratic")
+    dem_pcts = pres_result.percents_for_party["Democratic"]
+
+    return {
+        "step": step_index,
+        "max_pop_deviation": round(max_dev, 4),
+        "cut_edges": len(partition["cut_edges"]),
+        "pres24_dem_seats": pres_dem_seats,
+        "sen24_dem_seats": sen_dem_seats,
+        "pres24_dem_vote_pct": {d: round(v, 4) for d, v in dem_pcts.items()},
+        "population": pop,
+        "minority_vap_shares": compute_minority_vap_shares(partition),
+    }
+
+
+def log_progress(step_index, total, dem_seats, max_dev, t0):
+    """Periodic progress message every 50 steps."""
+    if (step_index + 1) % 50 != 0:
+        return
+    elapsed = time.time() - t0
+    print(f"  Step {step_index+1}/{total} | "
+          f"Dem seats: {dem_seats} | "
+          f"Max dev: {max_dev:.3f} | "
+          f"{elapsed:.1f}s elapsed")
+
+
+def run_chain(chain, ideal_pop, t0):
+    """Run the chain to completion; return (steps, dem_seat_counts)."""
+    steps = []
+    dem_seat_counts = []
+    for i, partition in enumerate(chain):
+        data = step_metrics(partition, i, ideal_pop)
+        steps.append(data)
+        dem_seat_counts.append(data["pres24_dem_seats"])
+        log_progress(i, NUM_STEPS, data["pres24_dem_seats"],
+                     data["max_pop_deviation"], t0)
+    return steps, dem_seat_counts
+
+
+# ── Output ────────────────────────────────────────────────────────────
+
+def build_summary(steps, dem_seat_counts, num_districts, total_pop, ideal_pop, t0):
+    """Aggregate run-level summary from per-step metrics."""
     seat_histogram = {}
     for s in dem_seat_counts:
         seat_histogram[s] = seat_histogram.get(s, 0) + 1
 
-    enacted_dem_seats = steps[0]["pres24_dem_seats"]
-
-    summary = {
+    return {
         "state": "Massachusetts",
         "num_districts": num_districts,
         "total_population": total_pop,
@@ -211,7 +238,7 @@ def main():
         "num_steps": NUM_STEPS,
         "epsilon": EPSILON,
         "seed": SEED,
-        "enacted_dem_seats_pres24": enacted_dem_seats,
+        "enacted_dem_seats_pres24": steps[0]["pres24_dem_seats"],
         "dem_seat_histogram_pres24": seat_histogram,
         "avg_cut_edges": round(
             sum(s["cut_edges"] for s in steps) / len(steps), 1
@@ -219,17 +246,42 @@ def main():
         "runtime_seconds": round(time.time() - t0, 1),
     }
 
-    # ── 9. Write output ───────────────────────────────────────────────
-    output = {"summary": summary, "steps": steps}
-    with open(OUTPUT_PATH, "w") as f:
-        json.dump(output, f, indent=2)
 
+def write_output(summary, steps):
+    """Persist the run output to OUTPUT_PATH."""
+    with open(OUTPUT_PATH, "w") as f:
+        json.dump({"summary": summary, "steps": steps}, f, indent=2)
+
+
+def print_final_summary(summary):
+    """Console recap of the run."""
     print(f"\nDone! Results written to {OUTPUT_PATH}")
     print(f"\n── Summary ──")
-    print(f"  Enacted plan Dem seats (Pres 2024): {enacted_dem_seats}")
-    print(f"  Seat distribution across {NUM_STEPS} plans: {seat_histogram}")
+    print(f"  Enacted plan Dem seats (Pres 2024): {summary['enacted_dem_seats_pres24']}")
+    print(f"  Seat distribution across {NUM_STEPS} plans: {summary['dem_seat_histogram_pres24']}")
     print(f"  Avg cut edges: {summary['avg_cut_edges']}")
     print(f"  Runtime: {summary['runtime_seconds']}s")
+
+
+# ── Main ──────────────────────────────────────────────────────────────
+
+def main():
+    random.seed(SEED)
+    t0 = time.time()
+
+    graph = load_graph()
+    fix_connectivity(graph)
+    num_districts, total_pop, ideal_pop = compute_population_targets(graph)
+
+    initial = build_initial_partition(graph)
+    chain = build_chain(initial, ideal_pop)
+
+    steps, dem_seat_counts = run_chain(chain, ideal_pop, t0)
+
+    summary = build_summary(steps, dem_seat_counts, num_districts,
+                            total_pop, ideal_pop, t0)
+    write_output(summary, steps)
+    print_final_summary(summary)
 
 
 if __name__ == "__main__":
