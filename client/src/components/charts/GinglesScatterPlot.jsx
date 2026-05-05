@@ -83,6 +83,7 @@ const GinglesScatterPlot = ({ points, regression, group }) => {
   const [plotEl, setPlotEl] = useState(null);
   const [dims, setDims] = useState({ width: 600, height: 350 });
 
+  // allows resizing
   useEffect(() => {
     if (!containerEl) return;
     const observer = new ResizeObserver(entries => {
