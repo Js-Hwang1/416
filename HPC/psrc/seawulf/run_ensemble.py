@@ -195,81 +195,90 @@ def build_chain(
 # Main run loop
 
 
-def run(args):
-    t0 = time.time()
-
-    # 1. Load configuration
-    cfg = load_state_config(args.config)
+def print_run_header(cfg: StateConfig, args) -> None:
     print(f"=== {cfg.state_name} ({cfg.state_abbr}) ===")
     print(f"  Mode:        {args.mode}")
     print(f"  Core:        {args.core_id} / {args.num_cores}")
     print(f"  Districts:   {cfg.num_districts}")
     print(f"  Minority groups: {cfg.feasible_group_names()}")
 
-    # 2. Plans assigned to this core
+
+def _read_plan_list_for_core(path: str, num_cores: int, core_id: int) -> list:
+    """Round-robin assign plan numbers from a backfill file to this core."""
+    with open(path) as plan_f:
+        all_plan_nums = sorted(
+            int(line.strip())
+            for line in plan_f
+            if line.strip()
+        )
+    return [
+        all_plan_nums[i]
+        for i in range(len(all_plan_nums))
+        if i % num_cores == core_id
+    ]
+
+
+def _contiguous_plan_range(args) -> list:
+    """Compute the contiguous slice of plan numbers assigned to this core."""
+    base = args.total_plans // args.num_cores
+    remainder = args.total_plans % args.num_cores
+    if args.core_id < remainder:
+        plans_per_core = base + 1
+        start_plan = args.core_id * (base + 1)
+    else:
+        plans_per_core = base
+        start_plan = remainder * (base + 1) + (args.core_id - remainder) * base
+    if plans_per_core == 0:
+        return []
+    start_plan += args.plan_offset
+    return list(range(start_plan + 1, start_plan + plans_per_core + 1))
+
+
+def assign_plan_numbers(args) -> list:
+    """Return the plan numbers this core is responsible for (or [] for none)."""
     if args.plan_list:
-        # Targeted backfill: read specific plan numbers from file
-        with open(args.plan_list) as plan_f:
-            all_plan_nums = sorted(
-                int(line.strip())
-                for line in plan_f
-                if line.strip()
-            )
-        # Distribute plan numbers across cores round-robin
-        my_plan_nums = [
-            all_plan_nums[i]
-            for i in range(len(all_plan_nums))
-            if i % args.num_cores == args.core_id
-        ]
-        plans_per_core = len(my_plan_nums)
-        if plans_per_core == 0:
-            print(f"  [{args.core_id}] No plans assigned, exiting.")
-            return
+        my_plan_nums = _read_plan_list_for_core(
+            args.plan_list, args.num_cores, args.core_id
+        )
+        if not my_plan_nums:
+            return my_plan_nums
         preview = my_plan_nums[:5]
         ellip = "..." if len(my_plan_nums) > 5 else ""
         print(
-            f"  Plans for this core: {plans_per_core} "
+            f"  Plans for this core: {len(my_plan_nums)} "
             f"(specific: {preview}{ellip})"
         )
-    else:
-        base = args.total_plans // args.num_cores
-        remainder = args.total_plans % args.num_cores
-        if args.core_id < remainder:
-            plans_per_core = base + 1
-            start_plan = args.core_id * (base + 1)
-        else:
-            plans_per_core = base
-            start_plan = remainder * (base + 1) + (args.core_id - remainder) * base
-        if plans_per_core == 0:
-            print(f"  [{args.core_id}] No plans assigned, exiting.")
-            return
-        start_plan += args.plan_offset
-        my_plan_nums = list(range(start_plan + 1, start_plan + plans_per_core + 1))
-        first, last = my_plan_nums[0], my_plan_nums[-1]
-        print(
-            f"  Plans for this core: {plans_per_core} "
-            f"(global index {first}..{last})"
-        )
-    thin = args.recom_steps  # ReCom steps between saved plans
-    total_chain_steps = plans_per_core * thin
-    print(f"  ReCom steps per plan: {thin}, total chain steps: {total_chain_steps}")
+        return my_plan_nums
 
-    # 3. Random seed (unique per core)
-    seed = (cfg.random_seed or 0) + args.core_id + my_plan_nums[0]
+    my_plan_nums = _contiguous_plan_range(args)
+    if not my_plan_nums:
+        return my_plan_nums
+    first, last = my_plan_nums[0], my_plan_nums[-1]
+    print(
+        f"  Plans for this core: {len(my_plan_nums)} "
+        f"(global index {first}..{last})"
+    )
+    return my_plan_nums
+
+
+def seed_random(cfg: StateConfig, core_id: int, first_plan: int) -> int:
+    seed = (cfg.random_seed or 0) + core_id + first_plan
     random.seed(seed)
     print(f"  Random seed: {seed}")
+    return seed
 
-    # 4. Load graph and initial partition
-    graph = load_graph(cfg, _HPC_ROOT)
-    updaters = build_updaters(cfg)
 
-    # Always compute benchmark from enacted plan
-    enacted = Partition(graph, assignment=DISTRICT_COL, updaters=updaters)
+def build_enacted_partition(graph, cfg: StateConfig) -> Partition:
+    """Build the enacted Partition and log basic population stats."""
+    enacted = Partition(graph, assignment=DISTRICT_COL, updaters=build_updaters(cfg))
     total_pop = sum(enacted["population"].values())
     ideal_pop = total_pop / cfg.num_districts
     print(f"  Total pop: {total_pop:,}  Ideal: {ideal_pop:,.0f}")
+    return enacted
 
-    # 5. Benchmark from enacted plan
+
+def populate_benchmark(enacted: Partition, cfg: StateConfig) -> None:
+    """Compute and attach the VRA benchmark to cfg from the enacted plan."""
     benchmark_per_group, benchmark_total = compute_benchmark(
         enacted, cfg, election_key="PRES24"
     )
@@ -279,81 +288,147 @@ def run(args):
     print(f"  Enacted plan total effective: {benchmark_total}")
 
     enacted_metrics = compose_plan_metrics(enacted, cfg, election_key="PRES24")
-    dem = enacted_metrics["dem_seats"]
-    rep = enacted_metrics["rep_seats"]
-    print(f"  Enacted plan: {dem}D / {rep}R")
+    print(
+        f"  Enacted plan: {enacted_metrics['dem_seats']}D / "
+        f"{enacted_metrics['rep_seats']}R"
+    )
 
-    # May differ from enacted if population tolerance is violated.
+
+def make_output_dir(args, cfg: StateConfig) -> str:
+    mode_dir = "RB" if args.mode == "race_blind" else "VRA"
+    plan_dir = os.path.join(args.output_dir, cfg.state_abbr, mode_dir)
+    os.makedirs(plan_dir, exist_ok=True)
+    return plan_dir
+
+
+def make_chain_iterator(chain, total_steps: int, core_id: int):
+    """Wrap chain in tqdm for core 0; return (iterator, use_tqdm)."""
+    if core_id != 0:
+        return enumerate(chain), False
+    try:
+        from tqdm import tqdm
+
+        return (
+            tqdm(
+                enumerate(chain),
+                total=total_steps,
+                desc=f"[{core_id}]",
+                file=sys.stderr,
+            ),
+            True,
+        )
+    except ImportError:
+        print("  [!] tqdm not installed, using plain logging")
+        return enumerate(chain), False
+
+
+def write_plan_file(
+    plan_dir: str,
+    plan_num: int,
+    cfg: StateConfig,
+    mode: str,
+    partition: Partition,
+    metrics: dict,
+) -> None:
+    plan_file = os.path.join(plan_dir, f"plan_{plan_num:04d}.json")
+    plan_data = {
+        "plan_id": plan_num,
+        "state": cfg.state_abbr,
+        "mode": mode,
+        "assignment": {str(k): int(v) for k, v in partition.assignment.items()},
+        "num_districts": cfg.num_districts,
+        "metrics": metrics,
+    }
+    with open(plan_file, "w") as f:
+        json.dump(plan_data, f)
+
+
+def log_step_progress(
+    core_id: int,
+    step: int,
+    total_chain_steps: int,
+    saved: int,
+    plans_per_core: int,
+    t0: float,
+) -> None:
+    elapsed = time.time() - t0
+    rate = (step + 1) / elapsed if elapsed > 0 else 0
+    eta = (total_chain_steps - step - 1) / rate if rate > 0 else 0
+    print(
+        f"  [{core_id}] Step {step+1}/{total_chain_steps} | "
+        f"saved {saved}/{plans_per_core} plans | "
+        f"{rate:.1f} steps/s | ETA {eta/3600:.1f}h"
+    )
+
+
+def run_chain_loop(
+    chain,
+    cfg: StateConfig,
+    args,
+    my_plan_nums: list,
+    plan_dir: str,
+    total_chain_steps: int,
+    thin: int,
+    t0: float,
+) -> int:
+    """Iterate the chain, save every `thin`-th plan; return number saved."""
+    chain_iter, use_tqdm = make_chain_iterator(
+        chain, total_chain_steps, args.core_id
+    )
+    plans_per_core = len(my_plan_nums)
+    log_interval = 1000
+    saved = 0
+
+    for step, partition in chain_iter:
+        if (step + 1) % thin == 0:
+            metrics = compose_plan_metrics(partition, cfg, election_key="PRES24")
+            write_plan_file(
+                plan_dir, my_plan_nums[saved], cfg, args.mode, partition, metrics
+            )
+            saved += 1
+
+        if not use_tqdm and (step + 1) % log_interval == 0:
+            log_step_progress(
+                args.core_id, step, total_chain_steps,
+                saved, plans_per_core, t0,
+            )
+
+    return saved
+
+
+def run(args):
+    t0 = time.time()
+
+    cfg = load_state_config(args.config)
+    print_run_header(cfg, args)
+
+    my_plan_nums = assign_plan_numbers(args)
+    if not my_plan_nums:
+        print(f"  [{args.core_id}] No plans assigned, exiting.")
+        return
+
+    thin = args.recom_steps
+    total_chain_steps = len(my_plan_nums) * thin
+    print(f"  ReCom steps per plan: {thin}, total chain steps: {total_chain_steps}")
+
+    seed_random(cfg, args.core_id, my_plan_nums[0])
+
+    graph = load_graph(cfg, _HPC_ROOT)
+    enacted = build_enacted_partition(graph, cfg)
+    populate_benchmark(enacted, cfg)
+
     initial = create_initial_partition(graph, cfg, mode=args.mode)
-
-    # 6. Build Markov chain
     chain = build_chain(initial, cfg, args.mode, total_chain_steps)
     print(
         f"  Chain ready, running {total_chain_steps} ReCom steps "
         f"(saving every {thin}-th as a plan) ..."
     )
 
-    # 7. Output directory: results/{STATE}/{RB|VRA}/
-    mode_dir = "RB" if args.mode == "race_blind" else "VRA"
-    plan_dir = os.path.join(args.output_dir, cfg.state_abbr, mode_dir)
-    os.makedirs(plan_dir, exist_ok=True)
-
-    # 8. Save one JSON file per plan
-    # SeaWulf-9 interesting-plan tracker omitted: full metrics are in each
-    # plan JSON; use interesting_plans.scan_results_for_extremes post-hoc.
-    saved = 0
-
-    # Core 0 gets tqdm progress bar; others log every 1000 steps
-    use_tqdm = args.core_id == 0
-    if use_tqdm:
-        try:
-            from tqdm import tqdm
-
-            chain_iter = tqdm(
-                enumerate(chain),
-                total=total_chain_steps,
-                desc=f"[{args.core_id}]",
-                file=sys.stderr,
-            )
-        except ImportError:
-            print("  [!] tqdm not installed, using plain logging")
-            use_tqdm = False
-
-    if not use_tqdm:
-        chain_iter = enumerate(chain)
-
-    log_interval = 1000  # log every 1000 steps for non-tqdm cores
-
-    for step, partition in chain_iter:
-        if (step + 1) % thin == 0:
-            metrics = compose_plan_metrics(partition, cfg, election_key="PRES24")
-            assignment = {str(k): int(v) for k, v in partition.assignment.items()}
-
-            # Write individual plan file using the assigned plan number
-            plan_num = my_plan_nums[saved]
-            plan_file = os.path.join(plan_dir, f"plan_{plan_num:04d}.json")
-            plan_data = {
-                "plan_id": plan_num,
-                "state": cfg.state_abbr,
-                "mode": args.mode,
-                "assignment": assignment,
-                "num_districts": cfg.num_districts,
-                "metrics": metrics,
-            }
-            with open(plan_file, "w") as f:
-                json.dump(plan_data, f)
-
-            saved += 1
-
-        if not use_tqdm and (step + 1) % log_interval == 0:
-            elapsed = time.time() - t0
-            rate = (step + 1) / elapsed
-            eta = (total_chain_steps - step - 1) / rate if rate > 0 else 0
-            print(
-                f"  [{args.core_id}] Step {step+1}/{total_chain_steps} | "
-                f"saved {saved}/{plans_per_core} plans | "
-                f"{rate:.1f} steps/s | ETA {eta/3600:.1f}h"
-            )
+    plan_dir = make_output_dir(args, cfg)
+    saved = run_chain_loop(
+        chain, cfg, args, my_plan_nums, plan_dir,
+        total_chain_steps, thin, t0,
+    )
 
     elapsed = time.time() - t0
     print(
