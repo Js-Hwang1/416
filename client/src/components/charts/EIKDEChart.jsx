@@ -52,7 +52,6 @@ export default function EIKDEChart({ data }) {
     }
   }, [allGroups.length]);
 
-  // Boilerplate to make the chart resizable
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new ResizeObserver(entries => {
@@ -64,6 +63,13 @@ export default function EIKDEChart({ data }) {
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+
+  // Re-read dimensions when data arrives — container may have been unmeasured on first mount
+  useEffect(() => {
+    if (!data || !containerRef.current) return;
+    const { width, height } = containerRef.current.getBoundingClientRect();
+    if (width > 0 && height > 0) setDims({ width, height });
+  }, [data]);
 
   useEffect(() => {
     if (!svgRef.current || !data || !group1 || !group2) return;
@@ -146,7 +152,7 @@ export default function EIKDEChart({ data }) {
         </select>
       </div>
       <div ref={containerRef} className="ei-kde-plot-wrapper">
-        <svg ref={svgRef} />
+        <svg ref={svgRef} style={{ display: "block" }} />
       </div>
     </div>
   );

@@ -5,7 +5,7 @@ import StateMap from "../components/maps/StateMap";
 import StateOverviewCards from "../components/state/StateOverviewCards";
 import DistrictTable from "../components/state/DistrictTable";
 import ComparePlansView from "../components/planExplorer/ComparePlansView";
-import DemographicsAnalysisPanel from "../components/analysis/DemographicsAnalysisPanel";
+import DemographicsAnalysisPanel, { RPV_CHART_OPTIONS, VRA_CHART_OPTIONS } from "../components/analysis/DemographicsAnalysisPanel";
 import InterestingPlanDropdown from "../components/ui/InterestingPlanDropdown";
 import { generateDummyPlanData } from "../utils/planData";
 import { apiUrl, tilesUrl, useFetchJson } from "../api";
@@ -47,7 +47,8 @@ const STATE_CONFIG = {
 
 const VIEWS = [
   { id: "planExplorer", label: "Plan Explorer" },
-  { id: "analysis", label: "Analysis" },
+  { id: "rpv", label: "Racially Polarized Voting" },
+  { id: "vraImpact", label: "VRA Impact" },
 ];
 
 const INTERESTING_PLAN_OPTIONS = [
@@ -75,7 +76,8 @@ export default function StatePage() {
   const [selectedDistrict, setSelectedDistrict] = useState(null);
   const [demoGroup, setDemoGroup] = useState("black");
   const [heatmapLevel, setHeatmapLevel] = useState("precinct");
-  const [demoPanelChart, setDemoPanelChart] = useState("gingles");
+  const [rpvChart, setRpvChart] = useState("gingles");
+  const [vraChart, setVraChart] = useState("boxwhisker");
   const [eiSubView, setEiSubView] = useState("curves");
 
   const isStateOverviewPanel = activeDetailPanel === "stateOverview";
@@ -92,17 +94,18 @@ export default function StatePage() {
 
   /* ---- lazy-fetch only what the active chart needs ---- */
   const analysisBase = cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis`) : null;
-  const isAnalysis = activeView === "analysis";
+  const isRPV = activeView === "rpv";
+  const isVRAImpact = activeView === "vraImpact";
 
-  const ginglesData = useFetchJson(isAnalysis && demoPanelChart === "gingles" ? `${analysisBase}/gingles-precinct` : null);
-  const regressionData = useFetchJson(isAnalysis && demoPanelChart === "gingles" ? `${analysisBase}/gingles-regression` : null);
-  const enactedDemo = useFetchJson(isAnalysis && demoPanelChart === "boxwhisker" ? `${analysisBase}/enacted-demographics` : null);
-  const ensembleBoxData = useFetchJson(isAnalysis && demoPanelChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
-  const ensembleBarData = useFetchJson(isAnalysis && demoPanelChart === "seatSplits" ? `${analysisBase}/ensemble-bar` : null);
-  const voteSeatData = useFetchJson(isAnalysis && demoPanelChart === "fairness" ? `${analysisBase}/vote-seat` : null);
-  const eiCurvesData = useFetchJson(isAnalysis && demoPanelChart === "ei" && eiSubView === "curves" ? `${analysisBase}/ei-curves` : null);
-  const eiSummaryData = useFetchJson(isAnalysis && demoPanelChart === "ei" && eiSubView === "bar" ? `${analysisBase}/ei-summary` : null);
-  const eiKdeData = useFetchJson(isAnalysis && demoPanelChart === "ei" && eiSubView === "kde" ? `${analysisBase}/ei-kde` : null);
+  const ginglesData = useFetchJson(isRPV && rpvChart === "gingles" ? `${analysisBase}/gingles-precinct` : null);
+  const regressionData = useFetchJson(isRPV && rpvChart === "gingles" ? `${analysisBase}/gingles-regression` : null);
+  const eiCurvesData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "curves" ? `${analysisBase}/ei-curves` : null);
+  const eiSummaryData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "bar" ? `${analysisBase}/ei-summary` : null);
+  const eiKdeData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "kde" ? `${analysisBase}/ei-kde` : null);
+  const enactedDemo = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/enacted-demographics` : null);
+  const ensembleBoxData = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
+  const ensembleBarData = useFetchJson(isVRAImpact && vraChart === "seatSplits" ? `${analysisBase}/ensemble-bar` : null);
+  const voteSeatData = useFetchJson(isVRAImpact && vraChart === "fairness" ? `${analysisBase}/vote-seat` : null);
 
   const reps = representativesData;
 
@@ -165,6 +168,8 @@ export default function StatePage() {
 
   const ginglesPoints = ginglesData?.[demoGroup] ?? [];
 
+  useEffect(() => { setRpvChart("gingles"); setVraChart("boxwhisker"); }, [stateSlug]);
+
   useEffect(() => { setSelectedDistrict(null); }, [stateSlug]);
 
   const handlePlanChange = (value) => {
@@ -220,7 +225,7 @@ export default function StatePage() {
         </div>
       </nav>
 
-      <main className={`state-content${activeView === "planExplorer" ? " plan-explorer-content" : ""}${activeView === "analysis" ? " demographics-content" : ""}`}>
+      <main className={`state-content${activeView === "planExplorer" ? " plan-explorer-content" : ""}${activeView === "rpv" || activeView === "vraImpact" ? " demographics-content" : ""}`}>
 
         {activeView === "planExplorer" && showCompare && selectedInterestingPlan !== "enacted" && (
           <ComparePlansView
@@ -296,7 +301,7 @@ export default function StatePage() {
           </div>
         )}
 
-        {activeView === "analysis" && (
+        {activeView === "rpv" && (
           <div className="state-layout demographics-layout">
             <div className="state-map-panel">
               <div className="demo-map-toolbar">
@@ -342,19 +347,47 @@ export default function StatePage() {
             </div>
 
             <DemographicsAnalysisPanel
-              demoPanelChart={demoPanelChart}
-              setDemoPanelChart={setDemoPanelChart}
+              chartOptions={RPV_CHART_OPTIONS}
+              demoPanelChart={rpvChart}
+              setDemoPanelChart={setRpvChart}
               eiSubView={eiSubView}
               setEiSubView={setEiSubView}
               demoGroup={demoGroup}
               minorityGroups={heatmapMinorityGroups}
               ginglesPoints={ginglesPoints}
               regressionData={regressionData?.[demoGroup]}
-              ensembleBoxData={ensembleBoxData}
-              enactedDemo={enactedDemo}
               eiCurvesData={eiCurvesData}
               eiSummaryData={eiSummaryData}
               eiKdeData={eiKdeData}
+            />
+          </div>
+        )}
+
+        {activeView === "vraImpact" && (
+          <div className="state-layout demographics-layout">
+            <div className="state-map-panel">
+              <h2 className="section-title">Congressional Districts</h2>
+              <div className="state-map-wrapper">
+                <StateMap
+                  geojson={districtGeoJsonData}
+                  cfg={cfg}
+                  selectedDistrict={selectedDistrict}
+                  onDistrictSelect={setSelectedDistrict}
+                  districtParties={reps}
+                />
+              </div>
+            </div>
+
+            <DemographicsAnalysisPanel
+              chartOptions={VRA_CHART_OPTIONS}
+              demoPanelChart={vraChart}
+              setDemoPanelChart={setVraChart}
+              eiSubView={eiSubView}
+              setEiSubView={setEiSubView}
+              demoGroup={demoGroup}
+              minorityGroups={heatmapMinorityGroups}
+              ensembleBoxData={ensembleBoxData}
+              enactedDemo={enactedDemo}
               ensembleBarData={ensembleBarData}
               voteSeatData={voteSeatData}
             />

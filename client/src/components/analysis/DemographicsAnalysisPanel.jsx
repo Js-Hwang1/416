@@ -7,12 +7,15 @@ import EISupportSummary from "../charts/EISupportSummary";
 import EIKDEChart from "../charts/EIKDEChart";
 import VoteSeatChart from "../charts/VoteSeatChart";
 
-const DEMO_CHART_OPTIONS = [
-  { value: "gingles", label: "Voter Cohesion" },
-  { value: "boxwhisker", label: "Minority Distribution" },
+export const RPV_CHART_OPTIONS = [
+  { value: "gingles", label: "Gingles Analysis" },
   { value: "ei", label: "Ecological Inference" },
+];
+
+export const VRA_CHART_OPTIONS = [
+  { value: "boxwhisker", label: "Minority Distribution" },
   { value: "seatSplits", label: "Seat Splits" },
-  { value: "fairness", label: "Fairness" },
+  { value: "fairness", label: "Vote-Seat Curve" },
 ];
 
 const EI_SUB_OPTIONS = [
@@ -22,6 +25,7 @@ const EI_SUB_OPTIONS = [
 ];
 
 const DemographicsAnalysisPanel = ({
+  chartOptions,
   demoPanelChart,
   setDemoPanelChart,
   eiSubView,
@@ -40,7 +44,7 @@ const DemographicsAnalysisPanel = ({
 }) => (
   <div className="state-info-panel demographics-info-panel">
     <div className="demo-panel-tabs" role="tablist">
-      {DEMO_CHART_OPTIONS.map((opt) => (
+      {chartOptions.map((opt) => (
         <button
           key={opt.value}
           type="button"
