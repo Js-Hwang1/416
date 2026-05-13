@@ -217,3 +217,5 @@ HPC/results/
 # Generated large files (regenerate with clean_data.py + generate_tiles.sh)
 client/public/data/*_blocks_heatmap.geojson
 server/tiles/*.pmtiles
+
+Ensemble/
