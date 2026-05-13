@@ -1153,6 +1153,37 @@
   margin-left: auto;
 }
 
+.rp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Verdana", sans-serif;
+  font-size: 0.82rem;
+}
+
+.rp-table th {
+  padding: 5px 10px;
+  font-weight: 600;
+  color: #232323;
+  text-align: right;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.rp-table th:first-child {
+  text-align: left;
+}
+
+.rp-table td {
+  padding: 5px 10px;
+  color: #232323;
+  text-align: right;
+  border-top: 1px solid #f0f0f0;
+}
+
+.rp-table td:first-child {
+  text-align: left;
+  font-weight: 600;
+}
+
 .district-table-wrapper {
   --district-header-height: 38px;
   --district-row-height: 52px;

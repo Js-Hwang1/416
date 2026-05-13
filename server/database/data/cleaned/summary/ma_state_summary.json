@@ -31,6 +31,8 @@
   },
   "feasible_demographic_groups": [
     "white",
-    "hispanic"
+    "black",
+    "hispanic",
+    "asian"
   ]
 }

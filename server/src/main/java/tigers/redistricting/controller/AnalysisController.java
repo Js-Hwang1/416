@@ -9,6 +9,8 @@ import tigers.redistricting.model.*;
 import tigers.redistricting.service.AnalysisService;
 
 import java.util.List;
+
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -97,6 +99,14 @@ public class AnalysisController {
     @GetMapping("/minority-effectiveness")
     public ResponseEntity<MinorityEffectivenessData> getMinorityEffectiveness(@PathVariable StateId id) {
         return analysisService.getMinorityEffectiveness(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Cacheable("roughProportionality")
+    @GetMapping("/rough-proportionality")
+    public ResponseEntity<List<RoughProportionalityEntry>> getRoughProportionality(@PathVariable StateId id) {
+        return analysisService.getRoughProportionality(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

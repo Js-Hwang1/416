@@ -8,7 +8,9 @@ function formatPct1(value) {
   return `${Number(value).toFixed(1)}%`;
 }
 
-const StateOverviewCards = ({ ov, cfg }) => (
+const GROUP_LABELS = { black: "Black", hispanic: "Latino", asian: "Asian" };
+
+const StateOverviewCards = ({ ov, cfg, roughProportionality }) => (
   <div className="overview-cards">
     <article className="overview-card">
       <h3 className="overview-card-title">Population</h3>
@@ -96,6 +98,32 @@ const StateOverviewCards = ({ ov, cfg }) => (
         ))}
       </dl>
     </article>
+
+    {roughProportionality && roughProportionality.length > 0 && (
+      <article className="overview-card">
+        <h3 className="overview-card-title">Rough Proportionality</h3>
+        <table className="rp-table">
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th>Effective Districts</th>
+              <th>Population Share</th>
+              <th>Ratio</th>
+            </tr>
+          </thead>
+          <tbody>
+            {roughProportionality.map((row) => (
+              <tr key={row.group}>
+                <td>{GROUP_LABELS[row.group] ?? row.group}</td>
+                <td>{row.effectiveDistrictCount}</td>
+                <td>{formatPct1(row.vapPct)}</td>
+                <td>{row.ratio.toFixed(2)}×</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </article>
+    )}
   </div>
 );
 
