@@ -102,7 +102,7 @@ function buildDistrictFillExpr(numDistricts, districtParties) {
 export default function DemographicHeatMap({
   districtGeoJsonData,
   precinctGeoJsonData,
-  blockTilesUrl,
+  blockGeoJsonData,
   districtParties,
   numDistricts,
   mapView,
@@ -172,7 +172,7 @@ export default function DemographicHeatMap({
   const districtVisibility = isDistrict ? "visible" : "none";
   const interactiveIds = isDistrict
     ? ["district-fill"]
-    : isBlock
+    : isBlock && blockGeoJsonData
       ? ["block-fill"]
       : ["precinct-fill"];
 
@@ -239,29 +239,29 @@ export default function DemographicHeatMap({
             </Source>
           )}
 
-          {/* Block source — always loaded */}
-          <Source id="block-source" type="vector" url={blockTilesUrl}>
-            <Layer
-              id="block-fill"
-              type="fill"
-              source-layer="blocks"
-              layout={{ visibility: blockVisibility }}
-              paint={{
-                "fill-color": fillColorExpr,
-                "fill-opacity": 0.85,
-              }}
-            />
-            <Layer
-              id="block-line"
-              type="line"
-              source-layer="blocks"
-              layout={{ visibility: blockVisibility }}
-              paint={{
-                "line-color": "#666",
-                "line-width": 0.2,
-              }}
-            />
-          </Source>
+          {/* Block source — GeoJSON from API, lazy-loaded */}
+          {blockGeoJsonData && (
+            <Source id="block-source" type="geojson" data={blockGeoJsonData}>
+              <Layer
+                id="block-fill"
+                type="fill"
+                layout={{ visibility: blockVisibility }}
+                paint={{
+                  "fill-color": fillColorExpr,
+                  "fill-opacity": 0.85,
+                }}
+              />
+              <Layer
+                id="block-line"
+                type="line"
+                layout={{ visibility: blockVisibility }}
+                paint={{
+                  "line-color": "#666",
+                  "line-width": 0.2,
+                }}
+              />
+            </Source>
+          )}
 
           {/* District source — GeoJSON */}
           {districtGeoJsonData && (

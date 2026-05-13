@@ -4,6 +4,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tigers.redistricting.enums.StateId;
+import tigers.redistricting.model.BlockGeoJson;
 import tigers.redistricting.model.DistrictGeoJson;
 import tigers.redistricting.model.PrecinctGeoJson;
 import tigers.redistricting.service.GeoJsonService;
@@ -30,6 +31,14 @@ public class GeoJsonController {
     @GetMapping("/precincts")
     public ResponseEntity<PrecinctGeoJson> getPrecincts(@PathVariable StateId id) {
         return geoJsonService.getPrecinctGeoJson(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Cacheable("blockGeoJson")
+    @GetMapping("/blocks")
+    public ResponseEntity<BlockGeoJson> getBlocks(@PathVariable StateId id) {
+        return geoJsonService.getBlockGeoJson(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
