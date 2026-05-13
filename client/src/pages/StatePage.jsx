@@ -46,8 +46,8 @@ const STATE_CONFIG = {
 };
 
 const VIEWS = [
-  { id: "planExplorer", label: "Plan Explorer" },
-  { id: "rpv", label: "Racially Polarized Voting" },
+  { id: "planExplorer", label: "State Overview" },
+  { id: "rpv", label: "Voter Cohesion" },
   { id: "vraImpact", label: "VRA Impact" },
 ];
 

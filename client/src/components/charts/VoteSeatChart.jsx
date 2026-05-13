@@ -45,7 +45,6 @@ export default function VoteSeatChart({ data }) {
   const plotRef = useRef();
   const [dims, setDims] = useState({ width: 600, height: 400 });
 
-  // Boilerplate to make the chart resizable
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new ResizeObserver(entries => {
@@ -57,6 +56,13 @@ export default function VoteSeatChart({ data }) {
     observer.observe(containerRef.current);
     return () => observer.disconnect();
   }, []);
+
+  // Re-read dimensions when data arrives — container may have been unmeasured on first mount
+  useEffect(() => {
+    if (!data || !containerRef.current) return;
+    const { width, height } = containerRef.current.getBoundingClientRect();
+    if (width > 0 && height > 0) setDims({ width, height });
+  }, [data]);
 
   useEffect(() => {
     if (!plotRef.current || !data) return;
