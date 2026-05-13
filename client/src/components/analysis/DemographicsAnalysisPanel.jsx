@@ -13,8 +13,8 @@ export const RPV_CHART_OPTIONS = [
 ];
 
 export const VRA_CHART_OPTIONS = [
-  { value: "boxwhisker", label: "Minority Distribution" },
   { value: "seatSplits", label: "Seat Splits" },
+  { value: "boxwhisker", label: "Minority Distribution" },
   { value: "fairness", label: "Vote-Seat Curve" },
 ];
 

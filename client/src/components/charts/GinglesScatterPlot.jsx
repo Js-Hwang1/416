@@ -18,16 +18,23 @@ function partyLines(data) {
 }
 
 function buildRegressionPoints([a, b, c, d]) {
-  const points = [];
+  const pts = [];
   for (let i = 0; i <= 199; i++) {
     const x = i / 199;
     const y = a + b*x + c*x*x + d*x*x*x;
-    points.push({ x, y });
+    pts.push({ x, y });
   }
-  return points;
+  return pts;
 }
 
-function buildMarks(points, regression) {
+// Augment each datum with party so the pointer layer can distinguish Dem vs Rep by y-position
+function makePartyPoints(points) {
+  const dem = points.map(p => ({ datum: p, party: "dem" }));
+  const rep = points.map(p => ({ datum: p, party: "rep" }));
+  return [...dem, ...rep];
+}
+
+function buildMarks(points, regression, selectedPoint) {
   const dots = partyDots(points, { fillOpacity: 0.18, r: 2.5, clip: true });
 
   const lines = regression?.length > 0
@@ -49,7 +56,25 @@ function buildMarks(points, regression) {
     fontFamily: "Verdana, sans-serif",
   });
 
-  return [...dots, ...lines, midline, label];
+  // Pointer layer over both Dem and Rep positions so the nearest party dot is identified on click
+  const partyPoints = makePartyPoints(points);
+  const pointerLayer = Plot.dot(partyPoints, Plot.pointer({
+    x: d => d.datum.x * 100,
+    y: d => d.party === "dem" ? d.datum.y * 100 : (1 - d.datum.y) * 100,
+    r: 6,
+    fill: "transparent",
+    stroke: "transparent",
+  }));
+
+  // Highlight only the clicked party's dot for the selected precinct
+  const selDem = selectedPoint?.party === "dem" ? [selectedPoint.datum] : [];
+  const selRep = selectedPoint?.party === "rep" ? [selectedPoint.datum] : [];
+  const selectedDots = [
+    Plot.dot(selDem, { x: d => d.x * 100, y: d => d.y * 100,       fill: "steelblue", fillOpacity: 0.9, r: 6, stroke: "#000", strokeWidth: 1.5, clip: true }),
+    Plot.dot(selRep, { x: d => d.x * 100, y: d => (1 - d.y) * 100, fill: "tomato",    fillOpacity: 0.9, r: 6, stroke: "#000", strokeWidth: 1.5, clip: true }),
+  ];
+
+  return [...dots, ...lines, midline, label, ...selectedDots, pointerLayer];
 }
 
 function buildPlotConfig(dims, group, marks) {
@@ -78,7 +103,7 @@ function buildPlotConfig(dims, group, marks) {
   };
 }
 
-const GinglesScatterPlot = ({ points, regression, group }) => {
+const GinglesScatterPlot = ({ points, regression, group, onSelectPrecinct, selectedPoint }) => {
   const [containerEl, setContainerEl] = useState(null);
   const [plotEl, setPlotEl] = useState(null);
   const [dims, setDims] = useState({ width: 600, height: 350 });
@@ -98,9 +123,19 @@ const GinglesScatterPlot = ({ points, regression, group }) => {
 
   useEffect(() => {
     if (!plotEl || !points?.length) return;
-    plotEl.innerHTML = ""; // cleanup old svg
-    plotEl.appendChild(Plot.plot(buildPlotConfig(dims, group, buildMarks(points, regression))));
-  }, [plotEl, points, regression, group, dims]);
+    plotEl.innerHTML = "";
+    const marks = buildMarks(points, regression, selectedPoint);
+    const svg = Plot.plot(buildPlotConfig(dims, group, marks));
+
+    if (onSelectPrecinct) {
+      // svg.value is a { datum, party } object from the pointer layer
+      svg.addEventListener("click", () => {
+        if (svg.value) onSelectPrecinct(svg.value);
+      });
+    }
+
+    plotEl.appendChild(svg);
+  }, [plotEl, points, regression, group, dims, selectedPoint, onSelectPrecinct]);
 
   return (
     <div ref={setContainerEl} className="gingles-scatter-container">
@@ -111,7 +146,7 @@ const GinglesScatterPlot = ({ points, regression, group }) => {
           <span><span className="gingles-legend-line gingles-legend-line--dem" />Regression</span>
         )}
       </div>
-      <div ref={setPlotEl} />
+      <div ref={setPlotEl} className="gingles-scatter-clickable" />
     </div>
   );
 };

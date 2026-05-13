@@ -1917,6 +1917,10 @@
   height: 100%;
 }
 
+.gingles-scatter-clickable svg {
+  cursor: pointer;
+}
+
 .gingles-legend {
   display: flex;
   gap: 16px;

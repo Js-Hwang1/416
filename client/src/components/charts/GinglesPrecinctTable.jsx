@@ -8,7 +8,7 @@ function sortIcon(key, sort) {
   return sort.dir === "asc" ? " ▲" : " ▼";
 }
 
-const GinglesPrecinctTable = ({ points, group, minorityGroups }) => {
+const GinglesPrecinctTable = ({ points, group, minorityGroups, selectedPoint }) => {
   const [page, setPage] = useState(0);
   const [sort, setSort] = useState({ key: null, dir: "asc" });
 
@@ -28,6 +28,13 @@ const GinglesPrecinctTable = ({ points, group, minorityGroups }) => {
       return sort.dir === "asc" ? diff : -diff;
     });
   }, [points, sort]);
+
+  // Jump to the page containing the selected precinct whenever selection changes
+  useEffect(() => {
+    if (!selectedPoint) return;
+    const idx = sortedPoints.indexOf(selectedPoint.datum);
+    if (idx >= 0) setPage(Math.floor(idx / PAGE_SIZE));
+  }, [selectedPoint, sortedPoints]);
 
   const totalPages = Math.ceil(sortedPoints.length / PAGE_SIZE);
   const pageRows = sortedPoints.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -68,7 +75,10 @@ const GinglesPrecinctTable = ({ points, group, minorityGroups }) => {
         </thead>
         <tbody>
           {pageRows.map((row, idx) => (
-            <tr key={page * PAGE_SIZE + idx}>
+            <tr
+              key={page * PAGE_SIZE + idx}
+              className={row === selectedPoint?.datum ? "precinct-row-hovered" : undefined}
+            >
               <td>{(page * PAGE_SIZE + idx + 1).toLocaleString()}</td>
               <td>{(Math.min(row.x, 1) * 100).toFixed(1)}%</td>
               <td>{(Math.min(row.y, 1) * 100).toFixed(1)}%</td>

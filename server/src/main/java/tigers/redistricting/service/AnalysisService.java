@@ -45,7 +45,7 @@ public class AnalysisService {
             for (Map.Entry<String, List<PrecinctPoint>> groupEntry : byGroup.entrySet()) {
                 List<Map<String, Object>> points = new ArrayList<>();
                 for (PrecinctPoint precinct : groupEntry.getValue()) {
-                    points.add(Map.of("x", precinct.minority_vap_pct, "y", precinct.d_vote_share));
+                    points.add(Map.of("x", precinct.minority_vap_pct, "y", precinct.d_vote_share, "precinct_id", precinct.precinct_id));
                 }
                 result.put(Race.fromString(groupEntry.getKey()), points);
             }
