@@ -24,31 +24,46 @@ const MONO_SCALE = [
 const MAP_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 
 /**
- * Build a MapLibre GL `step` expression for coloring features by demographic %.
- * Maps [0-10) -> color[0], [10-20) -> color[1], ... [90-100] -> color[9]
+ * Compute which 0\u201310% bins are occupied in the precinct GeoJSON for the given group,
+ * spread MONO_SCALE colors evenly across only those bins, and return both the
+ * MapLibre step expression and the filtered legend entries.
  */
-function buildFillColorExpr(groupKey) {
-  return [
-    "step",
-    ["coalesce", ["get", groupKey], 0],
-    MONO_SCALE[0],       // 0-10%
-    10, MONO_SCALE[1],   // 10-20%
-    20, MONO_SCALE[2],   // 20-30%
-    30, MONO_SCALE[3],   // 30-40%
-    40, MONO_SCALE[4],   // 40-50%
-    50, MONO_SCALE[5],   // 50-60%
-    60, MONO_SCALE[6],   // 60-70%
-    70, MONO_SCALE[7],   // 70-80%
-    80, MONO_SCALE[8],   // 80-90%
-    90, MONO_SCALE[9],   // 90-100%
-  ];
-}
+function buildDynamicScheme(features, groupKey) {
+  const counts = Array(10).fill(0);
+  for (const feat of features) {
+    const val = feat.properties?.[groupKey];
+    if (val == null) continue;
+    counts[Math.min(Math.floor(val / 10), 9)]++;
+  }
 
-/* Legend bins (always show all 10) */
-const LEGEND_BINS = MONO_SCALE.map((color, i) => ({
-  label: `${i * 10}\u2013${(i + 1) * 10}%`,
-  color,
-}));
+  const occupied = counts.reduce((acc, c, i) => { if (c > 0) acc.push(i); return acc; }, []);
+
+  if (!occupied.length) {
+    return {
+      fillColorExpr: ["literal", MONO_SCALE[0]],
+      legendBins: [{ label: "0\u201310%", color: MONO_SCALE[0] }],
+    };
+  }
+
+  // Spread MONO_SCALE evenly across the occupied bins for maximum color separation
+  const last = occupied.length - 1;
+  const colors = occupied.map((_, i) =>
+    MONO_SCALE[last === 0 ? 0 : Math.round(i * (MONO_SCALE.length - 1) / last)]
+  );
+
+  // MapLibre step: default color covers everything below the second occupied bin threshold
+  const expr = ["step", ["coalesce", ["get", groupKey], 0], colors[0]];
+  for (let i = 1; i < occupied.length; i++) {
+    expr.push(occupied[i] * 10, colors[i]);
+  }
+
+  const legendBins = occupied.map((binIdx, i) => ({
+    label: `${binIdx * 10}\u2013${(binIdx + 1) * 10}%`,
+    color: colors[i],
+  }));
+
+  return { fillColorExpr: expr, legendBins };
+}
 
 /**
  * Build a MapLibre match expression for district party colors.
@@ -97,9 +112,9 @@ export default function DemographicHeatMap({
 }) {
   const [hoverInfo, setHoverInfo] = useState(null);
 
-  const fillColorExpr = useMemo(
-    () => buildFillColorExpr(selectedGroup),
-    [selectedGroup]
+  const { fillColorExpr, legendBins } = useMemo(
+    () => buildDynamicScheme(precinctGeoJsonData?.features ?? [], selectedGroup),
+    [precinctGeoJsonData, selectedGroup]
   );
 
   const isDistrict = heatmapLevel === "district";
@@ -324,7 +339,7 @@ export default function DemographicHeatMap({
             <div className="heatmap-legend-title">
               {label} Population %
             </div>
-            {LEGEND_BINS.map((b, i) => (
+            {legendBins.map((b, i) => (
               <div key={i} className="heatmap-legend-item">
                 <span
                   className="heatmap-legend-swatch"
