@@ -87,6 +87,14 @@ public class AnalysisController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Cacheable("eiPrecinct")
+    @GetMapping("/ei-precinct")
+    public ResponseEntity<List<EiPrecinctEntry>> getEiPrecinct(@PathVariable StateId id) {
+        return analysisService.getEiPrecinct(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
     @Cacheable("voteSeat")
     @GetMapping("/vote-seat")
     public ResponseEntity<VoteSeatData> getVoteSeat(@PathVariable StateId id) {

@@ -20,8 +20,8 @@ export const VRA_CHART_OPTIONS = [
 
 const EI_SUB_OPTIONS = [
   { value: "curves", label: "EI Curves" },
-  { value: "bar", label: "EI Summary" },
   { value: "kde", label: "EI KDE" },
+  { value: "precinct", label: "Precinct Results" },
 ];
 
 const DemographicsAnalysisPanel = ({
@@ -86,8 +86,8 @@ const DemographicsAnalysisPanel = ({
           </div>
           <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
             {eiSubView === "curves" && <ProbabilityChart data={eiCurvesData} />}
-            {eiSubView === "bar" && <EISupportSummary data={eiSummaryData} />}
             {eiSubView === "kde" && <EIKDEChart data={eiKdeData} />}
+            {eiSubView === "precinct" && <EISupportSummary data={eiSummaryData} />}
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DemographicHeatMap from "../components/maps/DemographicHeatMap";
+import EIPrecinctMap from "../components/maps/EIPrecinctMap";
 import StateMap from "../components/maps/StateMap";
 import StateOverviewCards from "../components/state/StateOverviewCards";
 import DistrictTable from "../components/state/DistrictTable";
@@ -100,8 +101,9 @@ export default function StatePage() {
   const ginglesData = useFetchJson(isRPV && rpvChart === "gingles" ? `${analysisBase}/gingles-precinct` : null);
   const regressionData = useFetchJson(isRPV && rpvChart === "gingles" ? `${analysisBase}/gingles-regression` : null);
   const eiCurvesData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "curves" ? `${analysisBase}/ei-curves` : null);
-  const eiSummaryData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "bar" ? `${analysisBase}/ei-summary` : null);
+  const eiSummaryData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "precinct" ? `${analysisBase}/ei-summary` : null);
   const eiKdeData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "kde" ? `${analysisBase}/ei-kde` : null);
+  const eiPrecinctData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "precinct" ? `${analysisBase}/ei-precinct` : null);
   const enactedDemo = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/enacted-demographics` : null);
   const ensembleBoxData = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
   const ensembleBarData = useFetchJson(isVRAImpact && vraChart === "seatSplits" ? `${analysisBase}/ensemble-bar` : null);
@@ -304,45 +306,56 @@ export default function StatePage() {
         {activeView === "rpv" && (
           <div className="state-layout demographics-layout">
             <div className="state-map-panel">
-              <div className="demo-map-toolbar">
-                <div className="demo-group-btn-group" role="group" aria-label="Map level">
-                  {["district", "precinct", "block"].map((level) => (
-                    <button
-                      key={level}
-                      type="button"
-                      className={`demo-group-btn${heatmapLevel === level ? " active" : ""}`}
-                      onClick={() => setHeatmapLevel(level)}
-                    >
-                      {level === "block" ? "Census Block" : level.charAt(0).toUpperCase() + level.slice(1)}
-                    </button>
-                  ))}
+              {!(rpvChart === "ei" && eiSubView === "precinct") && (
+                <div className="demo-map-toolbar">
+                  <div className="demo-group-btn-group" role="group" aria-label="Map level">
+                    {["district", "precinct", "block"].map((level) => (
+                      <button
+                        key={level}
+                        type="button"
+                        className={`demo-group-btn${heatmapLevel === level ? " active" : ""}`}
+                        onClick={() => setHeatmapLevel(level)}
+                      >
+                        {level === "block" ? "Census Block" : level.charAt(0).toUpperCase() + level.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="demo-group-btn-group" role="group" aria-label="Minority group">
+                    {heatmapMinorityGroups.map((g) => (
+                      <button
+                        key={g.key}
+                        type="button"
+                        className={`demo-group-btn${demoGroup === g.key ? " active" : ""}`}
+                        onClick={() => setDemoGroup(g.key)}
+                      >
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="demo-group-btn-group" role="group" aria-label="Minority group">
-                  {heatmapMinorityGroups.map((g) => (
-                    <button
-                      key={g.key}
-                      type="button"
-                      className={`demo-group-btn${demoGroup === g.key ? " active" : ""}`}
-                      onClick={() => setDemoGroup(g.key)}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              )}
               <div className="demo-heatmap-wrapper">
-                <DemographicHeatMap
-                  key={stateSlug}
-                  districtGeoJsonData={districtGeoJsonData}
-                  precinctGeoJsonData={precinctGeoJsonData}
-                  blockTilesUrl={cfg.blockTiles}
-                  districtParties={reps}
-                  numDistricts={cfg.districts}
-                  mapView={cfg.mapView}
-                  minorityGroups={heatmapMinorityGroups}
-                  selectedGroup={demoGroup}
-                  heatmapLevel={heatmapLevel}
-                />
+                {rpvChart === "ei" && eiSubView === "precinct" ? (
+                  <EIPrecinctMap
+                    key={stateSlug}
+                    precinctGeoJsonData={precinctGeoJsonData}
+                    eiPrecinctData={eiPrecinctData}
+                    mapView={cfg.mapView}
+                  />
+                ) : (
+                  <DemographicHeatMap
+                    key={stateSlug}
+                    districtGeoJsonData={districtGeoJsonData}
+                    precinctGeoJsonData={precinctGeoJsonData}
+                    blockTilesUrl={cfg.blockTiles}
+                    districtParties={reps}
+                    numDistricts={cfg.districts}
+                    mapView={cfg.mapView}
+                    minorityGroups={heatmapMinorityGroups}
+                    selectedGroup={demoGroup}
+                    heatmapLevel={heatmapLevel}
+                  />
+                )}
               </div>
             </div>
 

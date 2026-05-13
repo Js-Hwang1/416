@@ -102,6 +102,10 @@ public class AnalysisService {
         return analysisDataRepository.findById(id).map(AnalysisData::getEiSummary);
     }
 
+    public Optional<List<EiPrecinctEntry>> getEiPrecinct(StateId id) {
+        return analysisDataRepository.findById(id).map(AnalysisData::getEiPrecinct);
+    }
+
     public Optional<VoteSeatData> getVoteSeat(StateId id) {
         return analysisDataRepository.findById(id).map(AnalysisData::getVoteSeat);
     }

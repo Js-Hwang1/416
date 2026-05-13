@@ -525,11 +525,12 @@ def update_mongodb(
     ei_curves,
     ei_summary,
     ei_kde,
+    ei_precinct,
     mongo_uri: str = MONGO_URI,
 ):
     """Update analysisData in MongoDB with new EI fields.
 
-    Replaces eiCurves, eiSummary, and eiKde for the given state.
+    Replaces eiCurves, eiSummary, eiKde, and eiPrecinct for the given state.
     The client reads these via GET /api/states/{stateId}/analysis.
     """
     from pymongo import MongoClient
@@ -546,6 +547,7 @@ def update_mongodb(
                 "eiCurves": ei_curves,
                 "eiSummary": ei_summary,
                 "eiKde": ei_kde,
+                "eiPrecinct": ei_precinct,
             }
         },
     )
@@ -561,11 +563,12 @@ def update_mongodb(
                 "eiCurves": ei_curves,
                 "eiSummary": ei_summary,
                 "eiKde": ei_kde,
+                "eiPrecinct": ei_precinct,
             }
         )
         print(f"  Inserted new document for {state.upper()}")
     else:
-        print(f"  Updated eiCurves, eiSummary, eiKde for {state.upper()}")
+        print(f"  Updated eiCurves, eiSummary, eiKde, eiPrecinct for {state.upper()}")
         print(f"  matched={result.matched_count}, modified={result.modified_count}")
 
     client.close()
@@ -769,6 +772,7 @@ def write_client_outputs(args, ei, df, poc, t0):
         f" ({len(precinct_est)} precincts)",
     )
 
+
     gc_config = generate_gerrychain_config(poc)
     ei_results = {
         "state": args.state,
@@ -784,14 +788,14 @@ def write_client_outputs(args, ei, df, poc, t0):
         json.dump(ei_results, f, indent=2)
     print(f"  Results:   {results_path}")
 
-    return ei_curves, ei_summary, ei_kde, gc_config
+    return ei_curves, ei_summary, ei_kde, precinct_est, gc_config
 
 
-def maybe_update_db(args, ei_curves, ei_summary, ei_kde) -> None:
+def maybe_update_db(args, ei_curves, ei_summary, ei_kde, ei_precinct) -> None:
     if not args.update_db:
         return
     update_mongodb(
-        args.state, ei_curves, ei_summary, ei_kde, mongo_uri=args.mongo_uri
+        args.state, ei_curves, ei_summary, ei_kde, ei_precinct, mongo_uri=args.mongo_uri
     )
 
 
@@ -831,11 +835,11 @@ def main():
     ei = fit_ei(args, df)
     poc = report_party_of_choice(ei)
 
-    ei_curves, ei_summary, ei_kde, gc_config = write_client_outputs(
+    ei_curves, ei_summary, ei_kde, ei_precinct, gc_config = write_client_outputs(
         args, ei, df, poc, t0
     )
 
-    maybe_update_db(args, ei_curves, ei_summary, ei_kde)
+    maybe_update_db(args, ei_curves, ei_summary, ei_kde, ei_precinct)
     maybe_save_model(args, ei)
     maybe_save_plots(args, ei)
     print_done(t0, gc_config)

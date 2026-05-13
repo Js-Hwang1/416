@@ -22,6 +22,7 @@ public class AnalysisData {
     private List<EICurve> eiCurves;
     private EiKdeData eiKde;
     private List<EiSupportEntry> eiSummary;
+    private List<EiPrecinctEntry> eiPrecinct;
     private VoteSeatData voteSeat;
     private MinorityEffectivenessData minorityEffectiveness;
 
@@ -54,6 +55,9 @@ public class AnalysisData {
 
     public List<EiSupportEntry> getEiSummary() { return eiSummary; }
     public void setEiSummary(List<EiSupportEntry> eiSummary) { this.eiSummary = eiSummary; }
+
+    public List<EiPrecinctEntry> getEiPrecinct() { return eiPrecinct; }
+    public void setEiPrecinct(List<EiPrecinctEntry> eiPrecinct) { this.eiPrecinct = eiPrecinct; }
 
     public VoteSeatData getVoteSeat() { return voteSeat; }
     public void setVoteSeat(VoteSeatData voteSeat) { this.voteSeat = voteSeat; }
