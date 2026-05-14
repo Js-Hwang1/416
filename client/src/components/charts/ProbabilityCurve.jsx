@@ -1,21 +1,35 @@
 import React, { useState, useEffect } from "react";
 import Plot from "react-plotly.js";
 
-const COLOR_MAP = {
-  White:    "rgba(60, 165, 165, 0.85)",
-  Black:    "rgba(200, 160, 50, 0.85)",
-  Hispanic: "rgba(130, 90, 180, 0.85)",
-  Asian:    "rgba(120, 170, 100, 0.85)",
+// High-contrast palette (d3 Category10–ish). One hex per group; line uses
+// it solid, fill uses the same hue at low opacity so 2+ curves overlap legibly.
+const GROUP_HEX = {
+  black:    "#d62728", // red
+  hispanic: "#9467bd", // purple
+  asian:    "#2ca02c", // green
+  white:    "#1f77b4", // blue
 };
 
-const FILL_MAP = {
-  White:    "rgba(60, 165, 165, 0.2)",
-  Black:    "rgba(200, 160, 50, 0.2)",
-  Hispanic: "rgba(130, 90, 180, 0.2)",
-  Asian:    "rgba(120, 170, 100, 0.2)",
+const hexToRgba = (hex, alpha) => {
+  const h = hex.replace("#", "");
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 };
 
-const DISPLAY_NAME = { Hispanic: "Latino", White: "White", Black: "Black", Asian: "Asian" };
+const colorFor = (key) => {
+  const k = (key || "").toLowerCase();
+  return GROUP_HEX[k] || "#888";
+};
+
+const fillFor = (key) => hexToRgba(colorFor(key), 0.25);
+const lineFor = (key) => hexToRgba(colorFor(key), 1);
+
+const DISPLAY_NAME = {
+  hispanic: "Latino", white: "White", black: "Black", asian: "Asian",
+  Hispanic: "Latino", White: "White", Black: "Black", Asian: "Asian",
+};
 const displayName = (key) => DISPLAY_NAME[key] || key;
 
 const CANDIDATE_TO_PARTY = { "Harris (D)": "Democratic", "Trump (R)": "Republican" };
@@ -57,8 +71,8 @@ function buildTraces(filteredData) {
     mode: "lines",
     name: displayName(d.race),
     fill: "tozeroy",
-    line: { color: COLOR_MAP[d.race] || "rgba(128,128,128,0.8)", width: 2, shape: "spline" },
-    fillcolor: FILL_MAP[d.race] || "rgba(128,128,128,0.15)",
+    line: { color: lineFor(d.race), width: 2.5, shape: "spline" },
+    fillcolor: fillFor(d.race),
   }));
 }
 
@@ -106,7 +120,7 @@ const ProbabilityChart = ({ data }) => {
         {allRaces.map(race => (
           <label key={race} className="chart-control-checkbox">
             <input type="checkbox" checked={selectedRaces.includes(race)} onChange={() => handleRaceToggle(race)} />
-            <span className="chart-control-swatch" style={{ background: COLOR_MAP[race] || "#888" }} />
+            <span className="chart-control-swatch" style={{ background: colorFor(race) }} />
             {displayName(race)}
           </label>
         ))}
