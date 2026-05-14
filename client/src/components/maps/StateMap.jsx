@@ -123,6 +123,7 @@ function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtPa
         onMouseLeave={clearHover}
         onMouseOut={clearHover}
         cursor={hoveredDistrict ? "pointer" : ""}
+        attributionControl={false}
       >
         <NavigationControl position="top-right" />
         <Source id="districts" type="geojson" data={geojson}>

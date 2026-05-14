@@ -99,10 +99,41 @@ function buildDistrictFillExpr(numDistricts, districtParties) {
   return expr;
 }
 
+// Enrich features that ship raw VAP counts (e.g. WVAP / BVAP / HVAP / ASIANVAP
+// + total VAP) with normalized 0..100 percentages keyed by `white`/`black`/
+// `hispanic`/`asian`. Returns a NEW GeoJSON object so React/maplibre treat
+// it as a fresh source.
+function enrichWithDemographics(geojson) {
+  if (!geojson?.features?.length) return geojson;
+  // If first feature already has the lowercase percentage fields we expect,
+  // bail — nothing to do.
+  const sample = geojson.features[0].properties || {};
+  if (typeof sample.hispanic === "number" || typeof sample.black === "number") {
+    return geojson;
+  }
+  const features = geojson.features.map((feat) => {
+    const p = feat.properties || {};
+    const vap = p.VAP || 0;
+    if (vap <= 0) return feat;
+    const props = {
+      ...p,
+      white:    +((p.WVAP || 0) / vap * 100).toFixed(2),
+      black:    +((p.BVAP || 0) / vap * 100).toFixed(2),
+      hispanic: +((p.HVAP || 0) / vap * 100).toFixed(2),
+      asian:    +((p.ASIANVAP || 0) / vap * 100).toFixed(2),
+      pop: p.TOTPOP ?? p.pop ?? 0,
+      vap,
+      name: p.NAME || p.name || "",
+    };
+    return { ...feat, properties: props };
+  });
+  return { ...geojson, features };
+}
+
 export default function DemographicHeatMap({
   districtGeoJsonData,
   precinctGeoJsonData,
-  blockGeoJsonData,
+  blockTilesUrl,
   districtParties,
   numDistricts,
   mapView,
@@ -112,9 +143,16 @@ export default function DemographicHeatMap({
 }) {
   const [hoverInfo, setHoverInfo] = useState(null);
 
+  // Hi-res precinct geojson ships WVAP / BVAP / HVAP / ASIANVAP / VAP rather
+  // than pre-normalized lowercase percentages. Compute them up front.
+  const enrichedPrecincts = useMemo(
+    () => enrichWithDemographics(precinctGeoJsonData),
+    [precinctGeoJsonData]
+  );
+
   const { fillColorExpr, legendBins } = useMemo(
-    () => buildDynamicScheme(precinctGeoJsonData?.features ?? [], selectedGroup),
-    [precinctGeoJsonData, selectedGroup]
+    () => buildDynamicScheme(enrichedPrecincts?.features ?? [], selectedGroup),
+    [enrichedPrecincts, selectedGroup]
   );
 
   const isDistrict = heatmapLevel === "district";
@@ -172,7 +210,7 @@ export default function DemographicHeatMap({
   const districtVisibility = isDistrict ? "visible" : "none";
   const interactiveIds = isDistrict
     ? ["district-fill"]
-    : isBlock && blockGeoJsonData
+    : isBlock && blockTilesUrl
       ? ["block-fill"]
       : ["precinct-fill"];
 
@@ -192,12 +230,13 @@ export default function DemographicHeatMap({
           interactiveLayerIds={interactiveIds}
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
+          attributionControl={false}
         >
           <NavigationControl position="top-right" />
 
-          {/* Precinct source — GeoJSON from API */}
-          {precinctGeoJsonData && (
-            <Source id="precinct-source" type="geojson" data={precinctGeoJsonData}>
+          {/* Precinct source — GeoJSON from API (enriched with derived demo%) */}
+          {enrichedPrecincts && (
+            <Source id="precinct-source" type="geojson" data={enrichedPrecincts}>
               <Layer
                 id="precinct-fill"
                 type="fill"
@@ -239,11 +278,16 @@ export default function DemographicHeatMap({
             </Source>
           )}
 
-          {/* Block source — GeoJSON from API, lazy-loaded */}
-          {blockGeoJsonData && (
-            <Source id="block-source" type="geojson" data={blockGeoJsonData}>
+          {/* Block source — pmtiles vector (775k features; too big as a single
+              geojson). Source layer name "blocks" matches what tippecanoe
+              baked into the .pmtiles file. Properties already carry
+              lowercase hispanic/black/asian/white percentages so the
+              same fillColorExpr works. */}
+          {blockTilesUrl && (
+            <Source id="block-source" type="vector" url={blockTilesUrl}>
               <Layer
                 id="block-fill"
+                source-layer="blocks"
                 type="fill"
                 layout={{ visibility: blockVisibility }}
                 paint={{
@@ -253,6 +297,7 @@ export default function DemographicHeatMap({
               />
               <Layer
                 id="block-line"
+                source-layer="blocks"
                 type="line"
                 layout={{ visibility: blockVisibility }}
                 paint={{

@@ -173,6 +173,7 @@ export default function EIPrecinctMap({ precinctGeoJsonData, eiPrecinctData, map
           interactiveLayerIds={["ei-precinct-fill"]}
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
+          attributionControl={false}
         >
           <NavigationControl position="top-right" />
 

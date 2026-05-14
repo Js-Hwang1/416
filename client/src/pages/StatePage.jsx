@@ -97,7 +97,7 @@ export default function StatePage() {
   /* ---- lazy-fetch only what the active chart needs ---- */
   const analysisBase = cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis`) : null;
   const isRPV = activeView === "rpv";
-  const blockGeoJsonData = useFetchJson(isRPV && heatmapLevel === "block" ? apiUrl(`/api/states/${cfg.stateId}/geojson/blocks`) : null);
+  // Blocks render from the pmtiles vector source (cfg.blockTiles), not a geojson fetch.
   const isVRAImpact = activeView === "vraImpact";
 
   const ginglesData = useFetchJson(isRPV && rpvChart === "gingles" ? `${analysisBase}/gingles-precinct` : null);
@@ -350,7 +350,7 @@ export default function StatePage() {
                     key={stateSlug}
                     districtGeoJsonData={districtGeoJsonData}
                     precinctGeoJsonData={precinctGeoJsonData}
-                    blockGeoJsonData={blockGeoJsonData}
+                    blockTilesUrl={cfg.blockTiles}
                     districtParties={reps}
                     numDistricts={cfg.districts}
                     mapView={cfg.mapView}
