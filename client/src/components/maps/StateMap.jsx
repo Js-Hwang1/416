@@ -51,15 +51,20 @@ function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtPa
       if (Number.isFinite(districtNumber)) {
         onDistrictSelect((prev) => prev === districtNumber ? null : districtNumber);
       }
+    } else {
+      // Click on empty area deselects so we never accumulate visual state.
+      onDistrictSelect(null);
     }
+    setHoveredDistrict(null);
   }, [onDistrictSelect]);
 
   const onMouseMove = useCallback((e) => {
     if (e.features && e.features.length > 0) {
       const d = e.features[0].properties.district;
-      setHoveredDistrict(typeof d === "number" ? d : parseInt(d, 10));
+      const dn = typeof d === "number" ? d : parseInt(d, 10);
+      setHoveredDistrict((prev) => (prev === dn ? prev : dn));
     } else {
-      setHoveredDistrict(null);
+      setHoveredDistrict((prev) => (prev === null ? prev : null));
     }
   }, []);
 
@@ -86,49 +91,62 @@ function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtPa
   );
 
   return (
-    <MapGL
-      key={cfg.stateId}
-      initialViewState={{
-        longitude: cfg.mapView.center[0],
-        latitude: cfg.mapView.center[1],
-        zoom: cfg.mapView.zoom,
-      }}
-      minZoom={cfg.mapView.minZoom}
-      maxZoom={cfg.mapView.maxZoom}
-      style={{ width: "100%", height: "100%" }}
-      mapStyle={MAP_STYLE}
-      interactiveLayerIds={["district-fill"]}
-      onClick={onMapClick}
-      onMouseMove={onMouseMove}
-      onMouseLeave={onMouseLeave}
-      cursor={hoveredDistrict ? "pointer" : ""}
+    <div
+      style={{ width: "100%", height: "100%", position: "relative" }}
+      onMouseLeave={() => setHoveredDistrict(null)}
     >
-      <NavigationControl position="top-right" />
-      <Source id="districts" type="geojson" data={geojson}>
-        <Layer
-          id="district-fill"
-          type="fill"
-          paint={{ "fill-color": fillColorExpr, "fill-opacity": 0.72 }}
-        />
-        <Layer
-          id="district-line"
-          type="line"
-          paint={{ "line-color": "#1a1a1a", "line-width": 1.5 }}
-        />
-        <Layer
-          id="district-hover"
-          type="line"
-          filter={hoverFilter}
-          paint={{ "line-color": "#f97316", "line-width": 3, "line-opacity": 0.7 }}
-        />
-        <Layer
-          id="district-selected"
-          type="line"
-          filter={selectedFilter}
-          paint={{ "line-color": "#f97316", "line-width": 4 }}
-        />
-      </Source>
-    </MapGL>
+      <MapGL
+        key={cfg.stateId}
+        initialViewState={{
+          longitude: cfg.mapView.center[0],
+          latitude: cfg.mapView.center[1],
+          zoom: cfg.mapView.zoom,
+        }}
+        minZoom={cfg.mapView.minZoom}
+        maxZoom={cfg.mapView.maxZoom}
+        style={{ width: "100%", height: "100%" }}
+        mapStyle={MAP_STYLE}
+        interactiveLayerIds={["district-fill"]}
+        onClick={onMapClick}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        onMouseOut={onMouseLeave}
+        cursor={hoveredDistrict ? "pointer" : ""}
+      >
+        <NavigationControl position="top-right" />
+        <Source id="districts" type="geojson" data={geojson}>
+          <Layer
+            id="district-fill"
+            type="fill"
+            paint={{ "fill-color": fillColorExpr, "fill-opacity": 0.72 }}
+          />
+          <Layer
+            id="district-line"
+            type="line"
+            paint={{ "line-color": "#1a1a1a", "line-width": 1.5 }}
+          />
+          {/* hover preview — distinct color/style so it never reads as "selected" */}
+          <Layer
+            id="district-hover"
+            type="line"
+            filter={hoverFilter}
+            paint={{
+              "line-color": "#3b82f6",
+              "line-width": 2,
+              "line-opacity": 0.9,
+              "line-dasharray": [2, 2],
+            }}
+          />
+          {/* selected — bold solid orange */}
+          <Layer
+            id="district-selected"
+            type="line"
+            filter={selectedFilter}
+            paint={{ "line-color": "#f97316", "line-width": 4 }}
+          />
+        </Source>
+      </MapGL>
+    </div>
   );
 }
 
