@@ -2214,8 +2214,7 @@
   background: #fafafa;
 }
 
-.vra-impact-table tbody td:nth-child(3),
-.vra-impact-table tbody td:nth-child(4) {
+.vra-impact-table tbody td.vra-value {
   font-weight: 700;
   text-align: right;
   font-variant-numeric: tabular-nums;

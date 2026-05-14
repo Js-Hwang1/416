@@ -36,18 +36,18 @@ export default function VraImpactTable({ data, threshold }) {
               <tr key={`${g}-effect`}>
                 <td rowSpan={3} className="vra-impact-group"><strong>{label}</strong></td>
                 <td>Meets enacted effectiveness floor</td>
-                <td>{formatPct(row.meetsEnacted?.raceBlind)}</td>
-                <td>{formatPct(row.meetsEnacted?.vra)}</td>
+                <td className="vra-value">{formatPct(row.meetsEnacted?.raceBlind)}</td>
+                <td className="vra-value">{formatPct(row.meetsEnacted?.vra)}</td>
               </tr>,
               <tr key={`${g}-prop`}>
                 <td>Achieves rough proportionality</td>
-                <td>{formatPct(row.roughProportional?.raceBlind)}</td>
-                <td>{formatPct(row.roughProportional?.vra)}</td>
+                <td className="vra-value">{formatPct(row.roughProportional?.raceBlind)}</td>
+                <td className="vra-value">{formatPct(row.roughProportional?.vra)}</td>
               </tr>,
               <tr key={`${g}-both`}>
                 <td>Satisfies both</td>
-                <td>{formatPct(row.both?.raceBlind)}</td>
-                <td>{formatPct(row.both?.vra)}</td>
+                <td className="vra-value">{formatPct(row.both?.raceBlind)}</td>
+                <td className="vra-value">{formatPct(row.both?.vra)}</td>
               </tr>,
             ];
           })}
