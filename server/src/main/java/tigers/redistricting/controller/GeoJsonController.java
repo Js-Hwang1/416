@@ -46,11 +46,20 @@ public class GeoJsonController {
     @Value("${tigers.interesting-plans-dir:interesting_plans}")
     private String interestingPlansDir;
 
-    @GetMapping("/plan/{planId}")
-    public ResponseEntity<Resource> getPlanGeoJson(@PathVariable StateId id, @PathVariable int planId) {
-        String filename = id.name().toLowerCase() + "_plan_" + planId + ".geojson";
+    @GetMapping({ "/plan/{variant}/{planId}", "/plan/{planId}" })
+    public ResponseEntity<Resource> getPlanGeoJson(
+            @PathVariable StateId id,
+            @PathVariable int planId,
+            @PathVariable(required = false) String variant) {
+        String v = (variant == null || variant.isEmpty()) ? "robust" : variant.toLowerCase();
+        String filename = id.name().toLowerCase() + "_" + v + "_plan_" + planId + ".geojson";
         Path path = Path.of(interestingPlansDir, filename);
-        if (!Files.isReadable(path)) return ResponseEntity.notFound().build();
+        // Backward-compat: also accept the older filename pattern.
+        if (!Files.isReadable(path)) {
+            Path legacy = Path.of(interestingPlansDir, id.name().toLowerCase() + "_plan_" + planId + ".geojson");
+            if (Files.isReadable(legacy)) path = legacy;
+            else return ResponseEntity.notFound().build();
+        }
         long length;
         try { length = Files.size(path); } catch (Exception e) { return ResponseEntity.notFound().build(); }
         return ResponseEntity.ok()

@@ -92,14 +92,22 @@ export default function StatePage() {
   const planOptions = useMemo(() => {
     const opts = [ENACTED_OPTION];
     for (const p of interestingPlans || []) {
-      opts.push({ value: p.key, label: p.label, planId: p.planId, summary: p.summary, perDistrict: p.perDistrict });
+      opts.push({
+        value: p.key,
+        label: p.label,
+        planId: p.planId,
+        variant: p.variant,
+        scoreText: p.scoreText,
+        summary: p.summary,
+        perDistrict: p.perDistrict,
+      });
     }
     return opts;
   }, [interestingPlans]);
   const selectedInterestingMeta = planOptions.find((o) => o.value === selectedInterestingPlan);
   const alternatePlanGeoJson = useFetchJson(
     selectedInterestingMeta?.planId
-      ? apiUrl(`/api/states/${cfg.stateId}/geojson/plan/${selectedInterestingMeta.planId}`)
+      ? apiUrl(`/api/states/${cfg.stateId}/geojson/plan/${selectedInterestingMeta.variant || "robust"}/${selectedInterestingMeta.planId}`)
       : null
   );
   const districtGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/districts`) : null);
