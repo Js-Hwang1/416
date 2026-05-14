@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import * as d3 from "d3";
+import { computeDifference, probAboveThreshold } from "./eikde.math";
 
-const DISPLAY_NAME = { Hispanic: "Latino", White: "White", Black: "Black", Asian: "Asian" };
+const DISPLAY_NAME = {
+  hispanic: "Latino", white: "White", black: "Black", asian: "Asian",
+  Hispanic: "Latino", White: "White", Black: "Black", Asian: "Asian",
+};
 const displayName = (key) => DISPLAY_NAME[key] || key;
 
 const applyLabelStyle = (sel) =>
@@ -15,50 +19,6 @@ const applyTickStyle = (sel) =>
      .style("font-size", "10px")
      .style("font-weight", "700")
      .style("fill", "#000");
-
-const PCT_BINS = 101;
-
-// PMF of (X - Y) on integer support [-100,100] assuming independence.
-function computeDifference(f1, f2) {
-  const a = new Array(PCT_BINS).fill(0);
-  const b = new Array(PCT_BINS).fill(0);
-  f1.forEach(p => { if (p.x >= 0 && p.x < PCT_BINS) a[p.x] = p.y; });
-  f2.forEach(p => { if (p.x >= 0 && p.x < PCT_BINS) b[p.x] = p.y; });
-  const sa = a.reduce((s, v) => s + v, 0);
-  const sb = b.reduce((s, v) => s + v, 0);
-  if (sa > 0) for (let i = 0; i < PCT_BINS; i++) a[i] /= sa;
-  if (sb > 0) for (let i = 0; i < PCT_BINS; i++) b[i] /= sb;
-
-  const out = [];
-  for (let d = -100; d <= 100; d++) {
-    let s = 0;
-    for (let y = 0; y < PCT_BINS; y++) {
-      const x = d + y;
-      if (x >= 0 && x < PCT_BINS) s += a[x] * b[y];
-    }
-    // Convert to density on x in [-1,1]: bin width 0.01, so density = pmf / 0.01 = pmf * 100
-    out.push({ x: d / 100, y: s * 100 });
-  }
-  return out;
-}
-
-// Trapezoidal integral of density from `threshold` to 1.
-function probAboveThreshold(diffData, threshold) {
-  let s = 0;
-  for (let i = 1; i < diffData.length; i++) {
-    const a = diffData[i - 1];
-    const b = diffData[i];
-    if (b.x <= threshold) continue;
-    if (a.x < threshold) {
-      const t = (threshold - a.x) / (b.x - a.x);
-      const yAtT = a.y + (b.y - a.y) * t;
-      s += 0.5 * (yAtT + b.y) * (b.x - threshold);
-    } else {
-      s += 0.5 * (a.y + b.y) * (b.x - a.x);
-    }
-  }
-  return s;
-}
 
 export default function EIKDEChart({ data, candidateName = "Democratic Candidate" }) {
   const allGroups = data ? Object.keys(data) : [];

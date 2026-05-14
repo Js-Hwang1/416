@@ -32,6 +32,45 @@ const SEAT_SPLIT_THRESHOLDS = [
   { value: "t07", label: "0.70" },
 ];
 
+const COL_STYLE = { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 };
+const CHART_BODY_STYLE = { flex: 1, minHeight: 0, display: "flex" };
+
+const ChartFrame = ({ controls, children }) => (
+  <div style={COL_STYLE}>
+    {controls}
+    <div style={CHART_BODY_STYLE}>{children}</div>
+  </div>
+);
+
+const ThresholdSelect = ({ value, onChange }) => (
+  <div className="chart-controls">
+    <span className="chart-controls-label">Minority-effectiveness threshold:</span>
+    <select className="heatmap-group-select" value={value} onChange={(e) => onChange(e.target.value)}>
+      {SEAT_SPLIT_THRESHOLDS.map((opt) => (
+        <option key={opt.value} value={opt.value}>{opt.label}</option>
+      ))}
+    </select>
+  </div>
+);
+
+const ButtonRow = ({ options, value, onChange, ariaLabel, extraClass = "" }) => (
+  <div className={`demo-group-btn-group ${extraClass}`} role="group" aria-label={ariaLabel}>
+    {(options || []).map((opt) => (
+      <button
+        key={opt.value ?? opt.key}
+        type="button"
+        className={`demo-group-btn${value === (opt.value ?? opt.key) ? " active" : ""}`}
+        onClick={() => onChange && onChange(opt.value ?? opt.key)}
+      >
+        {opt.label}
+      </button>
+    ))}
+  </div>
+);
+
+const groupOpts = (minorityGroups) =>
+  (minorityGroups || []).map((g) => ({ value: g.key, label: g.label }));
+
 const DemographicsAnalysisPanel = ({
   chartOptions,
   demoPanelChart,
@@ -39,6 +78,7 @@ const DemographicsAnalysisPanel = ({
   eiSubView,
   setEiSubView,
   demoGroup,
+  setDemoGroup,
   minorityGroups,
   ginglesPoints,
   regressionData,
@@ -52,126 +92,93 @@ const DemographicsAnalysisPanel = ({
   seatSplitThreshold,
   setSeatSplitThreshold,
   minorityBarsData,
-  setDemoGroup,
-}) => (
-  <div className="state-info-panel demographics-info-panel">
-    <div className="demo-panel-tabs" role="tablist">
-      {chartOptions.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          role="tab"
-          aria-selected={demoPanelChart === opt.value}
-          className={`demo-tab-btn${demoPanelChart === opt.value ? " active" : ""}`}
-          onClick={() => setDemoPanelChart(opt.value)}
-        >
-          {opt.label}
-        </button>
-      ))}
-    </div>
+}) => {
+  const groupRow = (
+    <ButtonRow
+      options={groupOpts(minorityGroups)}
+      value={demoGroup}
+      onChange={setDemoGroup}
+      ariaLabel="Minority group"
+    />
+  );
+  const thresholdRow = (
+    <ThresholdSelect value={seatSplitThreshold} onChange={setSeatSplitThreshold} />
+  );
 
-    <div className="demo-chart-body">
-      {demoPanelChart === "gingles" && (
-        <GinglesSection
-          points={ginglesPoints}
-          regressionData={regressionData}
-          group={demoGroup}
-          minorityGroups={minorityGroups}
-        />
-      )}
-      {demoPanelChart === "boxwhisker" && (
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-          <div className="demo-group-btn-group" role="group" aria-label="Minority group">
-            {(minorityGroups || []).map((g) => (
-              <button
-                key={g.key}
-                type="button"
-                className={`demo-group-btn${demoGroup === g.key ? " active" : ""}`}
-                onClick={() => setDemoGroup && setDemoGroup(g.key)}
-              >
-                {g.label}
-              </button>
-            ))}
-          </div>
-          <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
-            <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} selectedGroup={demoGroup} />
-          </div>
-        </div>
-      )}
-      {demoPanelChart === "ei" && (
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-          <div className="demo-group-btn-group ei-sub-tabs" role="group" aria-label="EI view">
-            {EI_SUB_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                type="button"
-                className={`demo-group-btn${eiSubView === opt.value ? " active" : ""}`}
-                onClick={() => setEiSubView(opt.value)}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-          <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+  return (
+    <div className="state-info-panel demographics-info-panel">
+      <div className="demo-panel-tabs" role="tablist">
+        {chartOptions.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            role="tab"
+            aria-selected={demoPanelChart === opt.value}
+            className={`demo-tab-btn${demoPanelChart === opt.value ? " active" : ""}`}
+            onClick={() => setDemoPanelChart(opt.value)}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="demo-chart-body">
+        {demoPanelChart === "gingles" && (
+          <GinglesSection
+            points={ginglesPoints}
+            regressionData={regressionData}
+            group={demoGroup}
+            minorityGroups={minorityGroups}
+          />
+        )}
+
+        {demoPanelChart === "ei" && (
+          <ChartFrame
+            controls={
+              <ButtonRow
+                options={EI_SUB_OPTIONS}
+                value={eiSubView}
+                onChange={setEiSubView}
+                ariaLabel="EI view"
+                extraClass="ei-sub-tabs"
+              />
+            }
+          >
             {eiSubView === "curves" && <ProbabilityChart data={eiCurvesData} />}
             {eiSubView === "kde" && <EIKDEChart data={eiKdeData} />}
             {eiSubView === "precinct" && <EISupportSummary data={eiSummaryData} />}
-          </div>
-        </div>
-      )}
-      {demoPanelChart === "seatSplits" && (
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-          <div className="chart-controls">
-            <span className="chart-controls-label">Minority-effectiveness threshold:</span>
-            <select
-              className="heatmap-group-select"
-              value={seatSplitThreshold}
-              onChange={(e) => setSeatSplitThreshold(e.target.value)}
-            >
-              {SEAT_SPLIT_THRESHOLDS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-          <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+          </ChartFrame>
+        )}
+
+        {demoPanelChart === "boxwhisker" && (
+          <ChartFrame controls={groupRow}>
+            <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} selectedGroup={demoGroup} />
+          </ChartFrame>
+        )}
+
+        {demoPanelChart === "seatSplits" && (
+          <ChartFrame controls={thresholdRow}>
             <BarChart data={ensembleBarData} />
-          </div>
-        </div>
-      )}
-      {demoPanelChart === "minorityBars" && (
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
-          <div className="chart-controls">
-            <span className="chart-controls-label">Minority-effectiveness threshold:</span>
-            <select
-              className="heatmap-group-select"
-              value={seatSplitThreshold}
-              onChange={(e) => setSeatSplitThreshold(e.target.value)}
-            >
-              {SEAT_SPLIT_THRESHOLDS.map((opt) => (
-                <option key={opt.value} value={opt.value}>{opt.label}</option>
-              ))}
-            </select>
-          </div>
-          <div className="demo-group-btn-group" role="group" aria-label="Minority group">
-            {(minorityGroups || []).map((g) => (
-              <button
-                key={g.key}
-                type="button"
-                className={`demo-group-btn${demoGroup === g.key ? " active" : ""}`}
-                onClick={() => setDemoGroup && setDemoGroup(g.key)}
-              >
-                {g.label}
-              </button>
-            ))}
-          </div>
-          <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+          </ChartFrame>
+        )}
+
+        {demoPanelChart === "minorityBars" && (
+          <ChartFrame
+            controls={
+              <>
+                {thresholdRow}
+                {groupRow}
+              </>
+            }
+          >
             <MinorityBarsChart data={minorityBarsData} group={demoGroup} />
-          </div>
-        </div>
-      )}
-      {demoPanelChart === "fairness" && <VoteSeatChart data={voteSeatData} />}
+          </ChartFrame>
+        )}
+
+        {demoPanelChart === "fairness" && <VoteSeatChart data={voteSeatData} />}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export default DemographicsAnalysisPanel;
