@@ -18,16 +18,16 @@ export const RPV_CHART_OPTIONS = [
 export const VRA_CHART_OPTIONS = [
   { value: "seatSplits", label: "Seat Splits" },
   { value: "boxwhisker", label: "Minority Distribution" },
-  { value: "minorityBars", label: "Effective / Maj-Minority" },
+  { value: "fairness", label: "Vote-Seat Curve" },
+  { value: "minorityBars", label: "Effectiveness" },
   { value: "effHistogram", label: "Effectiveness Histogram" },
   { value: "impactTable", label: "VRA Impact Table" },
-  { value: "fairness", label: "Vote-Seat Curve" },
 ];
 
 const VARIANTS = [
-  { value: "robust", label: "Robust (s^dist)" },
+  { value: "robust", label: "Robust" },
   { value: "standard", label: "Standard" },
-  { value: "compactness", label: "Compactness (PP≥0.2)" },
+  { value: "compactness", label: "Compactness" },
 ];
 
 const EI_SUB_OPTIONS = [
