@@ -89,18 +89,20 @@ export default function MinorityEffectivenessBox({ data, numDistricts }) {
       .range([MARGIN.left, width - MARGIN.right])
       .padding(0.3);
 
-    const yMax = Math.max(
-      numDistricts || 0,
+    // Scale to the actual data range, not the total number of districts —
+    // showing y up to 38 when the data tops out at 6 wastes the canvas.
+    const dataMax = Math.max(
       ...groupStats.flatMap((g) => [g.rb?.max ?? 0, g.vra?.max ?? 0, g.enacted ?? 0])
     );
+    const yMax = Math.max(1, dataMax + 1);
     const y = d3.scaleLinear()
-      .domain([0, Math.max(1, yMax + 1)])
+      .domain([0, yMax])
       .range([height - MARGIN.bottom, MARGIN.top]);
 
     // Gridlines
     svg.append("g")
       .attr("transform", `translate(${MARGIN.left},0)`)
-      .call(d3.axisLeft(y).ticks(Math.min(yMax + 1, 12)).tickSize(-width + MARGIN.left + MARGIN.right).tickFormat(""))
+      .call(d3.axisLeft(y).ticks(Math.min(yMax, 12)).tickSize(-width + MARGIN.left + MARGIN.right).tickFormat(""))
       .call((g) => {
         g.select(".domain").remove();
         g.selectAll(".tick line").attr("stroke", "#f0f0f0");
@@ -132,7 +134,7 @@ export default function MinorityEffectivenessBox({ data, numDistricts }) {
     // Y axis
     svg.append("g")
       .attr("transform", `translate(${MARGIN.left},0)`)
-      .call(d3.axisLeft(y).ticks(Math.min(yMax + 1, 12)).tickFormat(d3.format("d")))
+      .call(d3.axisLeft(y).ticks(Math.min(yMax, 12)).tickFormat(d3.format("d")))
       .call((g) => {
         g.select(".domain").attr("stroke", "#ccc");
         g.selectAll(".tick text")

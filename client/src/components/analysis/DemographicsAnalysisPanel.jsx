@@ -38,8 +38,8 @@ const EI_SUB_OPTIONS = [
 ];
 
 const BOX_SUB_OPTIONS = [
-  { value: "perDistrict", label: "Per-District (GUI-17)" },
-  { value: "perGroup", label: "Per-Group Effectiveness (GUI-21)" },
+  { value: "perDistrict", label: "Per-District" },
+  { value: "perGroup", label: "Per-Group Effectiveness" },
 ];
 
 const SEAT_SPLIT_THRESHOLDS = [
