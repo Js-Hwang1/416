@@ -130,7 +130,7 @@ export default function StatePage() {
   const enactedDemo = useFetchJson(cfg ? `${analysisBase}/enacted-demographics` : null);
   const ensembleBoxData = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
   const ensembleBarData = useFetchJson(isVRAImpact && vraChart === "seatSplits" ? `${analysisBase}/ensemble-bar/${seatSplitThreshold}/${ensembleVariant}` : null);
-  const minorityBarsData = useFetchJson(isVRAImpact && (vraChart === "minorityBars" || vraChart === "effHistogram") ? `${analysisBase}/minority-bars/${seatSplitThreshold}/${ensembleVariant}` : null);
+  const minorityBarsData = useFetchJson(isVRAImpact && (vraChart === "minorityBars" || vraChart === "effHistogram" || vraChart === "boxwhisker") ? `${analysisBase}/minority-bars/${seatSplitThreshold}/${ensembleVariant}` : null);
   const vraImpactData = useFetchJson(isVRAImpact && vraChart === "impactTable" ? `${analysisBase}/vra-impact/${seatSplitThreshold}/${ensembleVariant}` : null);
   const voteSeatData = useFetchJson(isVRAImpact && vraChart === "fairness" ? `${analysisBase}/vote-seat` : null);
 
@@ -440,6 +440,7 @@ export default function StatePage() {
               ensembleVariant={ensembleVariant}
               setEnsembleVariant={setEnsembleVariant}
               vraImpactData={vraImpactData}
+              numDistricts={cfg.districts}
             />
           </div>
         )}

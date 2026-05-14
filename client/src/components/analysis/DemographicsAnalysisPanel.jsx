@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import BoxPlotChart from "../charts/BoxAndWhisker";
 import BarChart from "../charts/BarChart";
 import ProbabilityChart from "../charts/ProbabilityCurve";
@@ -9,6 +9,7 @@ import VoteSeatChart from "../charts/VoteSeatChart";
 import MinorityBarsChart from "../charts/MinorityBarsChart";
 import EffectivenessHistogram from "../charts/EffectivenessHistogram";
 import VraImpactTable from "../analysis/VraImpactTable";
+import MinorityEffectivenessBox from "../charts/MinorityEffectivenessBox";
 
 export const RPV_CHART_OPTIONS = [
   { value: "gingles", label: "Gingles Analysis" },
@@ -34,6 +35,11 @@ const EI_SUB_OPTIONS = [
   { value: "curves", label: "EI Curves" },
   { value: "kde", label: "EI KDE" },
   { value: "precinct", label: "Precinct Results" },
+];
+
+const BOX_SUB_OPTIONS = [
+  { value: "perDistrict", label: "Per-District (GUI-17)" },
+  { value: "perGroup", label: "Per-Group Effectiveness (GUI-21)" },
 ];
 
 const SEAT_SPLIT_THRESHOLDS = [
@@ -106,8 +112,10 @@ const DemographicsAnalysisPanel = ({
   ensembleVariant,
   setEnsembleVariant,
   vraImpactData,
+  numDistricts,
 }) => {
   const isVRA = chartOptions === VRA_CHART_OPTIONS;
+  const [boxSubView, setBoxSubView] = useState("perDistrict");
 
   const groupRow = (
     <ButtonRow
@@ -180,8 +188,26 @@ const DemographicsAnalysisPanel = ({
         )}
 
         {demoPanelChart === "boxwhisker" && (
-          <ChartFrame controls={groupRow}>
-            <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} selectedGroup={demoGroup} />
+          <ChartFrame
+            controls={
+              <>
+                <ButtonRow
+                  options={BOX_SUB_OPTIONS}
+                  value={boxSubView}
+                  onChange={setBoxSubView}
+                  ariaLabel="Minority distribution view"
+                  extraClass="ei-sub-tabs"
+                />
+                {boxSubView === "perDistrict" ? groupRow : thresholdRow}
+              </>
+            }
+          >
+            {boxSubView === "perDistrict" && (
+              <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} selectedGroup={demoGroup} />
+            )}
+            {boxSubView === "perGroup" && (
+              <MinorityEffectivenessBox data={minorityBarsData} numDistricts={numDistricts} />
+            )}
           </ChartFrame>
         )}
 
