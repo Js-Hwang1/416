@@ -95,6 +95,7 @@ export default function StatePage() {
   const presidentialResultsData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/presidential-results`) : null);
   const partySplitData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/party-split`) : null);
   const roughProportionalityData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis/rough-proportionality`) : null);
+  const expectedSeatChange = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis/expected-seat-change`) : null);
   const districtGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/districts`) : null);
   const precinctGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/precincts`) : null);
 
@@ -297,7 +298,7 @@ export default function StatePage() {
               <section className="state-section">
                 <h2 className="section-title">{isStateOverviewPanel ? "State Overview" : "District Detail"}</h2>
                 {isStateOverviewPanel ? (
-                  <StateOverviewCards ov={ov} cfg={cfg} roughProportionality={roughProportionalityData} />
+                  <StateOverviewCards ov={ov} cfg={cfg} roughProportionality={roughProportionalityData} expectedSeatChange={expectedSeatChange} />
                 ) : (
                   <DistrictTable
                     key={stateSlug}

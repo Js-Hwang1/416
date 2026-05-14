@@ -63,6 +63,34 @@ function buildLayout(selectedCandidate) {
   };
 }
 
+// Overlap coefficient between two KDE traces on a common 0..100 integer grid.
+// Returns 0..1: 0 = disjoint, 1 = identical distributions.
+function overlapCoefficient(a, b) {
+  const sampleAt = (curve, x) => {
+    const pts = curve.data;
+    if (!pts.length) return 0;
+    if (x <= pts[0].percent) return 0;
+    if (x >= pts[pts.length - 1].percent) return 0;
+    let lo = 0, hi = pts.length - 1;
+    while (lo + 1 < hi) {
+      const mid = (lo + hi) >> 1;
+      if (pts[mid].percent <= x) lo = mid; else hi = mid;
+    }
+    const p0 = pts[lo], p1 = pts[hi];
+    const t = (x - p0.percent) / (p1.percent - p0.percent);
+    return p0.probability + t * (p1.probability - p0.probability);
+  };
+  const minSum = (curve) => curve.data.reduce((s, p) => s + p.probability, 0);
+  const aTotal = minSum(a), bTotal = minSum(b);
+  if (aTotal <= 0 || bTotal <= 0) return 0;
+  let overlap = 0;
+  for (let x = 0; x <= 100; x += 1) {
+    overlap += Math.min(sampleAt(a, x), sampleAt(b, x));
+  }
+  // Normalize by the smaller total (the standard overlap coefficient).
+  return overlap / Math.min(aTotal, bTotal);
+}
+
 function buildTraces(filteredData) {
   return filteredData.map(d => ({
     x: d.data.map(point => point.percent),
@@ -135,6 +163,30 @@ const ProbabilityChart = ({ data }) => {
         useResizeHandler={true}
         config={{ responsive: true, displayModeBar: false }}
       />
+      {filteredData.length >= 2 && (
+        <div className="chart-controls" style={{ marginTop: 8 }}>
+          <span className="chart-controls-label">Curve overlap (lower = more polarized):</span>
+          {filteredData.flatMap((a, i) =>
+            filteredData.slice(i + 1).map((b) => (
+              <span
+                key={`${a.race}-${b.race}`}
+                style={{
+                  fontFamily: "'Verdana', sans-serif",
+                  fontSize: "0.75rem",
+                  fontWeight: 700,
+                  padding: "2px 6px",
+                  background: "#f3f4f6",
+                  border: "1px solid #d1d5db",
+                  borderRadius: 3,
+                  marginRight: 4,
+                }}
+              >
+                {displayName(a.race)} ∩ {displayName(b.race)} = {(overlapCoefficient(a, b) * 100).toFixed(1)}%
+              </span>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -10,8 +10,36 @@ function formatPct1(value) {
 
 const GROUP_LABELS = { black: "Black", hispanic: "Latino", asian: "Asian" };
 
-const StateOverviewCards = ({ ov, cfg, roughProportionality }) => (
+const StateOverviewCards = ({ ov, cfg, roughProportionality, expectedSeatChange }) => (
   <div className="overview-cards">
+    {expectedSeatChange && (
+      <article className="overview-card">
+        <h3 className="overview-card-title">Expected Seat Change vs Enacted</h3>
+        <dl className="overview-kv-list">
+          <div className="overview-kv-row">
+            <dt>Controlling Party</dt>
+            <dd>{expectedSeatChange.controllingParty}</dd>
+          </div>
+          <div className="overview-kv-row">
+            <dt>Enacted Seats ({expectedSeatChange.controllingParty})</dt>
+            <dd>{expectedSeatChange.enactedSeats}</dd>
+          </div>
+          <div className="overview-kv-row">
+            <dt>Most Extreme Race-Blind</dt>
+            <dd>{expectedSeatChange.mostExtremeRaceBlind}</dd>
+          </div>
+          <div className="overview-kv-row">
+            <dt>Expected Change</dt>
+            <dd style={{ fontWeight: 700, color: expectedSeatChange.expectedChange > 0 ? "#c0392b" : expectedSeatChange.expectedChange < 0 ? "#2563eb" : "#444" }}>
+              {expectedSeatChange.expectedChange >= 0 ? "+" : ""}{expectedSeatChange.expectedChange}
+            </dd>
+          </div>
+        </dl>
+        <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "#666" }}>
+          {expectedSeatChange.note}
+        </p>
+      </article>
+    )}
     <article className="overview-card">
       <h3 className="overview-card-title">Population</h3>
       <dl className="overview-kv-list">
