@@ -85,9 +85,9 @@ export default function EIKDEChart({ data, candidateName = "Democratic Candidate
     const area = d3.area().x(d => x(d.x)).y0(height - margin.bottom).y1(d => y(d.y)).curve(d3.curveBasis);
     const line = d3.line().x(d => x(d.x)).y(d => y(d.y)).curve(d3.curveBasis);
 
-    svg.append("path").datum(diffData).attr("d", area).attr("fill", "rgba(70,130,180,0.45)");
+    svg.append("path").datum(diffData).attr("d", area).attr("fill", "rgba(100, 170, 160, 0.45)");
     svg.append("path").datum(diffData).attr("d", line).attr("fill", "none")
-       .attr("stroke", "rgba(40,90,140,1)").attr("stroke-width", 2);
+       .attr("stroke", "rgba(100, 170, 160, 1)").attr("stroke-width", 2);
 
     const prob = probAboveThreshold(diffData, threshold);
     svg.append("text")

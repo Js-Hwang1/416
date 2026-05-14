@@ -4,10 +4,10 @@ import Plot from "react-plotly.js";
 // High-contrast palette (d3 Category10–ish). One hex per group; line uses
 // it solid, fill uses the same hue at low opacity so 2+ curves overlap legibly.
 const GROUP_HEX = {
-  black:    "#d62728", // red
+  black:    "#C8AA50", // yellow (matches EI bar chart)
   hispanic: "#9467bd", // purple
   asian:    "#2ca02c", // green
-  white:    "#1f77b4", // blue
+  white:    "#64AAA0", // teal (matches EI bar chart)
 };
 
 const hexToRgba = (hex, alpha) => {
