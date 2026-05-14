@@ -17,11 +17,9 @@ export default function VraImpactTable({ data, threshold }) {
   const groups = Object.keys(data).length ? Object.keys(data) : DEFAULT_GROUPS;
 
   return (
-    <div className="vra-impact-table-wrapper" style={{ padding: 12, overflow: "auto" }}>
-      <h3 style={{ fontFamily: "Verdana, sans-serif", fontSize: "0.95rem", margin: "0 0 12px" }}>
-        VRA Impact (threshold {threshold})
-      </h3>
-      <table className="district-table" aria-label="VRA impact threshold table">
+    <div className="vra-impact-table-wrapper">
+      <h3 className="vra-impact-title">VRA Impact (threshold {threshold})</h3>
+      <table className="vra-impact-table" aria-label="VRA impact threshold table">
         <thead>
           <tr>
             <th>Group</th>
@@ -36,7 +34,7 @@ export default function VraImpactTable({ data, threshold }) {
             const label = GROUP_LABEL[g] || g;
             return [
               <tr key={`${g}-effect`}>
-                <td rowSpan={3}><strong>{label}</strong></td>
+                <td rowSpan={3} className="vra-impact-group"><strong>{label}</strong></td>
                 <td>Meets enacted effectiveness floor</td>
                 <td>{formatPct(row.meetsEnacted?.raceBlind)}</td>
                 <td>{formatPct(row.meetsEnacted?.vra)}</td>
