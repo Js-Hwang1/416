@@ -20,9 +20,9 @@ export const VRA_CHART_OPTIONS = [
   { value: "seatSplits", label: "Seat Splits" },
   { value: "boxwhisker", label: "Minority Distribution" },
   { value: "fairness", label: "Vote-Seat Curve" },
-  { value: "impactTable", label: "VRA Impact Table" },
   { value: "minorityBars", label: "Effectiveness" },
   { value: "effHistogram", label: "Effectiveness Histogram" },
+  { value: "impactTable", label: "VRA Impact Table" },
 ];
 
 const VARIANTS = [
