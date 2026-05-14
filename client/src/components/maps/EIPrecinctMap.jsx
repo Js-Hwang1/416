@@ -7,9 +7,10 @@ const CANDIDATES = ["Harris (D)", "Trump (R)"];
 const RACES = ["White", "Black", "Hispanic", "Asian"];
 
 // Blue scale for Harris (D), red scale for Trump (R)
+// Softened: top end stops at a medium-dark hue so precinct boundaries remain visible
 const COLOR_SCALES = {
-  "Harris (D)": ["#f7fbff", "#deebf7", "#c6dbef", "#9ecae1", "#6baed6", "#4292c6", "#2171b5", "#08519c", "#08306b", "#041d40"],
-  "Trump (R)":  ["#fff5f0", "#fee0d2", "#fcbba1", "#fc9272", "#fb6a4a", "#ef3b2c", "#cb181d", "#a50f15", "#67000d", "#3d0007"],
+  "Harris (D)": ["#f0f7ff", "#d0e5f5", "#aed0ea", "#84b8de", "#5a9fd0", "#3787bf", "#1f6fab", "#115994", "#0a4478", "#053360"],
+  "Trump (R)":  ["#fff5f0", "#fdd9cc", "#fab59e", "#f58e72", "#ee6749", "#de3e2b", "#bf2018", "#9b1012", "#710a0d", "#4e0509"],
 };
 
 // 10 equal steps 0-100%
@@ -176,12 +177,12 @@ export default function EIPrecinctMap({ precinctGeoJsonData, eiPrecinctData, map
             <Layer
               id="ei-precinct-fill"
               type="fill"
-              paint={{ "fill-color": fillExpr, "fill-opacity": 0.85 }}
+              paint={{ "fill-color": fillExpr, "fill-opacity": 0.75 }}
             />
             <Layer
               id="ei-precinct-line"
               type="line"
-              paint={{ "line-color": "#666", "line-width": 0.3 }}
+              paint={{ "line-color": "#ffffff", "line-width": 0.5, "line-opacity": 0.7 }}
             />
           </Source>
 
