@@ -275,7 +275,9 @@ export default function StatePage() {
               <h2 className="section-title">Congressional Districts</h2>
               <div className="state-map-wrapper">
                 <StateMap
-                  geojson={districtGeoJsonData}
+                  geojson={selectedInterestingPlan === "enacted"
+                    ? districtGeoJsonData
+                    : (alternatePlanGeoJson || districtGeoJsonData)}
                   cfg={cfg}
                   selectedDistrict={selectedDistrict}
                   onDistrictSelect={setSelectedDistrict}
