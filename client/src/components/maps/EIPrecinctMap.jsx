@@ -68,12 +68,14 @@ export default function EIPrecinctMap({ precinctGeoJsonData, eiPrecinctData, map
     if (!precinctGeoJsonData || !eiPrecinctData) return null;
     const features = precinctGeoJsonData.features.map((feat) => {
       const props = feat.properties;
-      const est = estimatesMap[props.precinct_id];
+      // Try multiple possible precinct ID fields (TX uses CNTYVTD, MA uses NAME)
+      const pid = props.precinct_id ?? props.CNTYVTD ?? props.NAME ?? props.name ?? "";
+      const est = estimatesMap[pid];
       if (!est) return feat;
 
       // Demographic fractions: prefer pre-normalized 0..1 fractions if present,
       // else compute from the raw VAP counts that ship in the precinct geojson
-      // (BVAP, HVAP, ASIANVAP, WVAP, total VAP).
+      // (BVAP, HVAP/HISPVAP, ASIANVAP, WVAP, total VAP).
       let wh, bl, hi, as;
       if (typeof props.white === "number") {
         // Old shape (used by smaller heatmap geojsons): 0..100 percentages.
@@ -86,7 +88,8 @@ export default function EIPrecinctMap({ precinctGeoJsonData, eiPrecinctData, map
         if (vap > 0) {
           wh = (props.WVAP || 0) / vap;
           bl = (props.BVAP || 0) / vap;
-          hi = (props.HVAP || 0) / vap;
+          // TX uses HISPVAP; MA uses HVAP
+          hi = (props.HVAP || props.HISPVAP || 0) / vap;
           as = (props.ASIANVAP || 0) / vap;
         } else {
           wh = bl = hi = as = 0;

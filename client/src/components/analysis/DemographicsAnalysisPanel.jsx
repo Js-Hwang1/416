@@ -174,7 +174,7 @@ const DemographicsAnalysisPanel = ({
             }
           >
             {eiSubView === "curves" && <ProbabilityChart data={eiCurvesData} />}
-            {eiSubView === "kde" && <EIKDEChart data={eiKdeData} />}
+            {eiSubView === "kde" && <EIKDEChart data={eiKdeData} candidateName="Harris (D)" republicanCandidateName="Trump (R)" />}
             {eiSubView === "precinct" && <EISupportSummary data={eiSummaryData} />}
           </ChartFrame>
         )}

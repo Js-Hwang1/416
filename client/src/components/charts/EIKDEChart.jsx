@@ -20,11 +20,37 @@ const applyTickStyle = (sel) =>
      .style("font-weight", "700")
      .style("fill", "#000");
 
-export default function EIKDEChart({ data, candidateName = "Democratic Candidate" }) {
+const PARTIES = [
+  { value: "dem", label: "Democrat" },
+  { value: "rep", label: "Republican" },
+];
+
+// Mirror x values (0-100 support for Dem → 100-x support for Rep)
+function mirrorKdeData(groupData) {
+  if (!groupData) return groupData;
+  const mirrored = groupData.map((p) => ({ x: 100 - p.x, y: p.y }));
+  mirrored.sort((a, b) => a.x - b.x);
+  return mirrored;
+}
+
+export default function EIKDEChart({ data, candidateName = "Democratic Candidate", republicanCandidateName = "Republican Candidate" }) {
   const allGroups = data ? Object.keys(data) : [];
+  const [party, setParty] = useState("dem");
   const [group1, setGroup1] = useState("");
   const [group2, setGroup2] = useState("");
   const [threshold, setThreshold] = useState(0.4);
+
+  // Transform data for selected party
+  const activeData = useMemo(() => {
+    if (!data || party === "dem") return data;
+    const result = {};
+    for (const [g, pts] of Object.entries(data)) {
+      result[g] = mirrorKdeData(pts);
+    }
+    return result;
+  }, [data, party]);
+
+  const activeCandidateName = party === "dem" ? candidateName : republicanCandidateName;
   const containerRef = useRef();
   const svgRef = useRef();
   const [dims, setDims] = useState({ width: 600, height: 400 });
@@ -55,12 +81,12 @@ export default function EIKDEChart({ data, candidateName = "Democratic Candidate
   }, [data]);
 
   const diffData = useMemo(() => {
-    if (!data || !group1 || !group2) return null;
-    const d1 = data[group1];
-    const d2 = data[group2];
+    if (!activeData || !group1 || !group2) return null;
+    const d1 = activeData[group1];
+    const d2 = activeData[group2];
     if (!d1 || !d2) return null;
     return computeDifference(d1, d2);
-  }, [data, group1, group2]);
+  }, [activeData, group1, group2]);
 
   useEffect(() => {
     if (!svgRef.current || !diffData) return;
@@ -110,7 +136,7 @@ export default function EIKDEChart({ data, candidateName = "Democratic Candidate
       .attr("y", height - 8)
       .attr("text-anchor", "middle")
       .call(applyLabelStyle)
-      .text(`(${displayName(group1)} - ${displayName(group2)}) support for ${candidateName}`);
+      .text(`(${displayName(group1)} - ${displayName(group2)}) support for ${activeCandidateName}`);
 
     svg.append("g")
       .attr("transform", `translate(${margin.left},0)`)
@@ -136,8 +162,8 @@ export default function EIKDEChart({ data, candidateName = "Democratic Candidate
       .style("font-size", "13px")
       .style("font-weight", "700")
       .style("fill", "#000")
-      .text(`Polarization KDE for ${candidateName}`);
-  }, [diffData, dims, threshold, group1, group2, candidateName]);
+      .text(`Polarization KDE for ${activeCandidateName}`);
+  }, [diffData, dims, threshold, group1, group2, activeCandidateName]);
 
   if (!data || allGroups.length < 2) {
     return <div className="placeholder-card">No KDE data available</div>;
@@ -145,6 +171,20 @@ export default function EIKDEChart({ data, candidateName = "Democratic Candidate
 
   return (
     <div className="ei-kde-container">
+      <div className="chart-controls">
+        <div className="demo-group-btn-group" role="group" aria-label="Party">
+          {PARTIES.map((p) => (
+            <button
+              key={p.value}
+              type="button"
+              className={`demo-group-btn${party === p.value ? " active" : ""}`}
+              onClick={() => setParty(p.value)}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
       <div className="chart-controls">
         <span className="chart-controls-label">Group 1:</span>
         <select className="heatmap-group-select" value={group1} onChange={e => setGroup1(e.target.value)}>
