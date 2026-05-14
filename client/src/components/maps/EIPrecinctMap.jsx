@@ -71,11 +71,27 @@ export default function EIPrecinctMap({ precinctGeoJsonData, eiPrecinctData, map
       const est = estimatesMap[props.precinct_id];
       if (!est) return feat;
 
-      // Demographic fractions from GeoJSON properties (stored as 0-100 percentages)
-      const wh = (props.white ?? 0) / 100;
-      const bl = (props.black ?? 0) / 100;
-      const hi = (props.hispanic ?? 0) / 100;
-      const as = (props.asian ?? 0) / 100;
+      // Demographic fractions: prefer pre-normalized 0..1 fractions if present,
+      // else compute from the raw VAP counts that ship in the precinct geojson
+      // (BVAP, HVAP, ASIANVAP, WVAP, total VAP).
+      let wh, bl, hi, as;
+      if (typeof props.white === "number") {
+        // Old shape (used by smaller heatmap geojsons): 0..100 percentages.
+        wh = (props.white ?? 0) / 100;
+        bl = (props.black ?? 0) / 100;
+        hi = (props.hispanic ?? 0) / 100;
+        as = (props.asian ?? 0) / 100;
+      } else {
+        const vap = props.VAP || 0;
+        if (vap > 0) {
+          wh = (props.WVAP || 0) / vap;
+          bl = (props.BVAP || 0) / vap;
+          hi = (props.HVAP || 0) / vap;
+          as = (props.ASIANVAP || 0) / vap;
+        } else {
+          wh = bl = hi = as = 0;
+        }
+      }
 
       const harris = (
         wh * (est["White"]?.["Harris (D)"] ?? 0) +
