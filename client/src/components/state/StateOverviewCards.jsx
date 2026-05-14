@@ -35,9 +35,6 @@ const StateOverviewCards = ({ ov, cfg, roughProportionality, expectedSeatChange 
             </dd>
           </div>
         </dl>
-        <p style={{ margin: "8px 0 0", fontSize: "0.7rem", color: "#666" }}>
-          {expectedSeatChange.note}
-        </p>
       </article>
     )}
     <article className="overview-card">
