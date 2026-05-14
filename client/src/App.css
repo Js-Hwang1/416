@@ -2070,6 +2070,17 @@
   background: #c0392b;
 }
 
+.vote-seat-legend-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #c0392b;
+  border: 1.5px solid #fff;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
 .vote-seat-legend-line--prop {
   background: #ccc;
   border-bottom: 1px dashed #ccc;
