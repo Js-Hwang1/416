@@ -27,6 +27,7 @@ export const VRA_CHART_OPTIONS = [
 const VARIANTS = [
   { value: "robust", label: "Robust (s^dist)" },
   { value: "standard", label: "Standard" },
+  { value: "compactness", label: "Compactness (PP≥0.2)" },
 ];
 
 const EI_SUB_OPTIONS = [

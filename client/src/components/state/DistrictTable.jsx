@@ -3,29 +3,14 @@ import Pagination from "../ui/Pagination";
 
 const PAGE_SIZE = 10;
 
-// EI confidence per state/group, from the state_config.json files used by the
-// EI pipeline. Same numbers the Java AnalysisService uses to compute
-// rough proportionality.
-const EI_CONFIDENCE = {
-  MA: { black: 0.97, hispanic: 0.67, asian: 0.98 },
-  TX: { black: 0.90, hispanic: 0.58, asian: 0.74 },
-};
+// Map "black"/"hispanic"/"asian" → "Black"/"Hispanic"/"Asian" (the keys used
+// in enactedDistrictEi.districts[].groups).
+const TITLE_CASE = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
 
-const GROUP_LABEL = { black: "Black", hispanic: "Latino", asian: "Asian" };
-
-// effectiveness = min(2k, 1) * ei_confidence ; k = group VAP fraction.
-// Calibrated form scales by k itself so very-low-VAP districts read as low
-// effectiveness even when ei_confidence is high (proxy for the s^dist
-// calibration in the Becker paper).
-function effectivenessScores(pct, eiConf) {
-  if (pct == null || eiConf == null) return { raw: null, calibrated: null };
-  const k = pct / 100;
-  const raw = Math.min(2 * k, 1) * eiConf;
-  const calibrated = raw * Math.min(1, k * 2);
-  return { raw: +raw.toFixed(3), calibrated: +calibrated.toFixed(3) };
-}
-
-const DistrictTable = ({ rows, selectedDistrict, onSelectDistrict, enactedDemographics, stateId, minorityGroups }) => {
+const DistrictTable = ({
+  rows, selectedDistrict, onSelectDistrict,
+  enactedDistrictEi, stateId, minorityGroups, effectivenessThresholdKey = "t60",
+}) => {
   const [page, setPage] = useState(0);
   const [effGroup, setEffGroup] = useState(null);
   const wrapperRef = useRef(null);
@@ -37,23 +22,17 @@ const DistrictTable = ({ rows, selectedDistrict, onSelectDistrict, enactedDemogr
     if (minorityGroups?.length) setEffGroup(minorityGroups[0].key);
   }, [minorityGroups, effGroup]);
 
-  // Map district number -> group VAP pct from enactedDemographics
-  const districtPct = useMemo(() => {
+  // Index per-district EI data by district number (string keys from JSON).
+  const districtEi = useMemo(() => {
     const map = new Map();
-    const districts = enactedDemographics?.districts || [];
-    for (const dd of districts) {
-      const groups = dd.groups || {};
-      const inner = {};
-      for (const g of Object.keys(groups)) {
-        inner[g] = groups[g]?.pct ?? 0;
-      }
-      map.set(dd.district, inner);
+    for (const dd of (enactedDistrictEi?.districts || [])) {
+      const dn = typeof dd.district === "number" ? dd.district : parseInt(dd.district, 10);
+      if (Number.isFinite(dn)) map.set(dn, dd);
     }
     return map;
-  }, [enactedDemographics]);
+  }, [enactedDistrictEi]);
 
-  const eiConf = (stateId && EI_CONFIDENCE[stateId]?.[effGroup]) ?? null;
-  const showEffectiveness = effGroup && eiConf != null && districtPct.size > 0;
+  const showEffectiveness = effGroup && districtEi.size > 0;
 
   const totalPages = Math.ceil(rows.length / PAGE_SIZE);
   const pageRows = rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -104,16 +83,18 @@ const DistrictTable = ({ rows, selectedDistrict, onSelectDistrict, enactedDemogr
             <th>Party</th>
             <th>Race</th>
             <th>Vote Margin %</th>
-            {showEffectiveness && <th>Eff.</th>}
-            {showEffectiveness && <th>Calib. Eff.</th>}
+            {showEffectiveness && <th>EI Score</th>}
+            {showEffectiveness && <th>Effective</th>}
           </tr>
         </thead>
         <tbody>
           {pageRows.map((row) => {
             const districtNumber = Number.parseInt(row.districtNumber, 10);
             const isSelected = selectedDistrict === districtNumber;
-            const groupPct = showEffectiveness ? districtPct.get(districtNumber)?.[effGroup] : null;
-            const scores = effectivenessScores(groupPct, eiConf);
+            const dd = districtEi.get(districtNumber);
+            const gInfo = dd?.groups?.[TITLE_CASE(effGroup)];
+            const score = gInfo?.score;
+            const eff = gInfo?.effective_at?.[effectivenessThresholdKey];
             return (
               <tr
                 key={row.districtNumber}
@@ -142,8 +123,12 @@ const DistrictTable = ({ rows, selectedDistrict, onSelectDistrict, enactedDemogr
                 </td>
                 <td>{row.racialEthnicGroup}</td>
                 <td>{row.voteMargin}</td>
-                {showEffectiveness && <td>{scores.raw == null ? "—" : scores.raw.toFixed(2)}</td>}
-                {showEffectiveness && <td>{scores.calibrated == null ? "—" : scores.calibrated.toFixed(2)}</td>}
+                {showEffectiveness && <td>{score == null ? "—" : score.toFixed(2)}</td>}
+                {showEffectiveness && (
+                  <td style={{ fontWeight: 700, color: eff ? "#16a34a" : "#888" }}>
+                    {eff == null ? "—" : eff ? "Yes" : "No"}
+                  </td>
+                )}
               </tr>
             );
           })}

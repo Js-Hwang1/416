@@ -96,6 +96,7 @@ export default function StatePage() {
   const partySplitData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/party-split`) : null);
   const roughProportionalityData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis/rough-proportionality`) : null);
   const expectedSeatChange = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis/expected-seat-change`) : null);
+  const enactedDistrictEi = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis/enacted-district-ei`) : null);
   const districtGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/districts`) : null);
   const precinctGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/precincts`) : null);
 
@@ -307,9 +308,10 @@ export default function StatePage() {
                     rows={districtTableRows}
                     selectedDistrict={selectedDistrict}
                     onSelectDistrict={setSelectedDistrict}
-                    enactedDemographics={enactedDemo}
+                    enactedDistrictEi={enactedDistrictEi}
                     stateId={cfg.stateId}
                     minorityGroups={heatmapMinorityGroups}
+                    effectivenessThresholdKey={seatSplitThreshold === "t05" ? "t50" : seatSplitThreshold === "t06" ? "t60" : "t70"}
                   />
                 )}
               </section>
