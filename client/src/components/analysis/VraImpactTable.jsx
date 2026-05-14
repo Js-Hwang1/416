@@ -55,10 +55,6 @@ export default function VraImpactTable({ data, threshold }) {
           })}
         </tbody>
       </table>
-      <p style={{ fontFamily: "Verdana, sans-serif", fontSize: "0.72rem", color: "#666", marginTop: 10 }}>
-        Lower race-blind percentages relative to VRA-constrained indicate that minority representation
-        rarely arises by chance and that the VRA constraint is doing meaningful work.
-      </p>
     </div>
   );
 }
