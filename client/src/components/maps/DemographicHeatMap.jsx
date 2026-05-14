@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { Map as MapGL, Source, Layer, NavigationControl } from "react-map-gl/maplibre";
 
 const GROUP_LABELS = {
@@ -143,6 +143,24 @@ export default function DemographicHeatMap({
 }) {
   const [hoverInfo, setHoverInfo] = useState(null);
 
+  // Pre-warm the pmtiles header + first directory page as soon as the
+  // RPV view mounts, so toggling to "Census Block" doesn't pay the
+  // header round-trip on click. blockTilesUrl is "pmtiles://http://..." —
+  // strip the scheme to get the raw HTTPS URL and Range-request the head.
+  useEffect(() => {
+    if (!blockTilesUrl) return;
+    const rawUrl = blockTilesUrl.replace(/^pmtiles:\/\//, "");
+    // 32KB covers the 127-byte header + the root directory for any reasonably-
+    // sized pmtiles file. Fire-and-forget; we just want it in the browser cache.
+    const controller = new AbortController();
+    fetch(rawUrl, {
+      method: "GET",
+      headers: { Range: "bytes=0-32767" },
+      signal: controller.signal,
+    }).catch(() => {});
+    return () => controller.abort();
+  }, [blockTilesUrl]);
+
   // Hi-res precinct geojson ships WVAP / BVAP / HVAP / ASIANVAP / VAP rather
   // than pre-normalized lowercase percentages. Compute them up front.
   const enrichedPrecincts = useMemo(
@@ -280,16 +298,17 @@ export default function DemographicHeatMap({
 
           {/* Block source — pmtiles vector (775k features; too big as a single
               geojson). Source layer name "blocks" matches what tippecanoe
-              baked into the .pmtiles file. Properties already carry
-              lowercase hispanic/black/asian/white percentages so the
-              same fillColorExpr works. */}
+              baked into the .pmtiles file. minzoom/maxzoom on the source
+              keep maplibre from requesting tiles outside the file's actual
+              zoom range (3–12) which is wasted load. */}
           {blockTilesUrl && (
-            <Source id="block-source" type="vector" url={blockTilesUrl}>
+            <Source id="block-source" type="vector" url={blockTilesUrl} minzoom={3} maxzoom={12}>
               <Layer
                 id="block-fill"
                 source-layer="blocks"
                 type="fill"
                 layout={{ visibility: blockVisibility }}
+                minzoom={5}
                 paint={{
                   "fill-color": fillColorExpr,
                   "fill-opacity": 0.85,
@@ -300,6 +319,7 @@ export default function DemographicHeatMap({
                 source-layer="blocks"
                 type="line"
                 layout={{ visibility: blockVisibility }}
+                minzoom={9}
                 paint={{
                   "line-color": "#666",
                   "line-width": 0.2,
