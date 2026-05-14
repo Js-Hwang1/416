@@ -80,6 +80,7 @@ export default function StatePage() {
   const [rpvChart, setRpvChart] = useState("gingles");
   const [vraChart, setVraChart] = useState("boxwhisker");
   const [eiSubView, setEiSubView] = useState("curves");
+  const [seatSplitThreshold, setSeatSplitThreshold] = useState("t06");
 
   const isStateOverviewPanel = activeDetailPanel === "stateOverview";
 
@@ -107,7 +108,7 @@ export default function StatePage() {
   const eiPrecinctData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "precinct" ? `${analysisBase}/ei-precinct` : null);
   const enactedDemo = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/enacted-demographics` : null);
   const ensembleBoxData = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
-  const ensembleBarData = useFetchJson(isVRAImpact && vraChart === "seatSplits" ? `${analysisBase}/ensemble-bar` : null);
+  const ensembleBarData = useFetchJson(isVRAImpact && vraChart === "seatSplits" ? `${analysisBase}/ensemble-bar/${seatSplitThreshold}` : null);
   const voteSeatData = useFetchJson(isVRAImpact && vraChart === "fairness" ? `${analysisBase}/vote-seat` : null);
 
   const reps = representativesData;
@@ -404,6 +405,8 @@ export default function StatePage() {
               enactedDemo={enactedDemo}
               ensembleBarData={ensembleBarData}
               voteSeatData={voteSeatData}
+              seatSplitThreshold={seatSplitThreshold}
+              setSeatSplitThreshold={setSeatSplitThreshold}
             />
           </div>
         )}

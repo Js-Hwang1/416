@@ -24,6 +24,12 @@ const EI_SUB_OPTIONS = [
   { value: "precinct", label: "Precinct Results" },
 ];
 
+const SEAT_SPLIT_THRESHOLDS = [
+  { value: "t05", label: "0.50" },
+  { value: "t06", label: "0.60" },
+  { value: "t07", label: "0.70" },
+];
+
 const DemographicsAnalysisPanel = ({
   chartOptions,
   demoPanelChart,
@@ -41,6 +47,8 @@ const DemographicsAnalysisPanel = ({
   eiKdeData,
   ensembleBarData,
   voteSeatData,
+  seatSplitThreshold,
+  setSeatSplitThreshold,
 }) => (
   <div className="state-info-panel demographics-info-panel">
     <div className="demo-panel-tabs" role="tablist">
@@ -91,7 +99,25 @@ const DemographicsAnalysisPanel = ({
           </div>
         </div>
       )}
-      {demoPanelChart === "seatSplits" && <BarChart data={ensembleBarData} />}
+      {demoPanelChart === "seatSplits" && (
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+          <div className="chart-controls">
+            <span className="chart-controls-label">Minority-effectiveness threshold:</span>
+            <select
+              className="heatmap-group-select"
+              value={seatSplitThreshold}
+              onChange={(e) => setSeatSplitThreshold(e.target.value)}
+            >
+              {SEAT_SPLIT_THRESHOLDS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+            <BarChart data={ensembleBarData} />
+          </div>
+        </div>
+      )}
       {demoPanelChart === "fairness" && <VoteSeatChart data={voteSeatData} />}
     </div>
   </div>
