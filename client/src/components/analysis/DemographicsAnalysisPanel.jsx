@@ -33,11 +33,12 @@ const SEAT_SPLIT_THRESHOLDS = [
 ];
 
 const COL_STYLE = { display: "flex", flexDirection: "column", flex: 1, minHeight: 0 };
+const CONTROLS_STYLE = { display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start", padding: "10px 12px 4px" };
 const CHART_BODY_STYLE = { flex: 1, minHeight: 0, display: "flex" };
 
 const ChartFrame = ({ controls, children }) => (
   <div style={COL_STYLE}>
-    {controls}
+    {controls && <div style={CONTROLS_STYLE}>{controls}</div>}
     <div style={CHART_BODY_STYLE}>{children}</div>
   </div>
 );

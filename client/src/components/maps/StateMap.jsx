@@ -3,6 +3,11 @@ import { Map as MapGL, Source, Layer, NavigationControl } from "react-map-gl/map
 
 const MAP_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 
+const districtId = (props) => {
+  const d = props?.district;
+  return typeof d === "number" ? d : parseInt(d, 10);
+};
+
 function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtParties }) {
   const [hoveredDistrict, setHoveredDistrict] = useState(null);
 
@@ -20,10 +25,7 @@ function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtPa
     const expr = ["match", ["to-number", ["get", "district"]]];
     for (let d = 1; d <= cfg.districts; d++) {
       const info = districtInfo[d];
-      if (!info) {
-        expr.push(d, "#ccc");
-        continue;
-      }
+      if (!info) { expr.push(d, "#ccc"); continue; }
       const t = 0.3 + 0.7 * Math.min(info.margin / 60, 1);
       if (info.party === "Democrat") {
         const r = Math.round(220 - 130 * t);
@@ -43,16 +45,40 @@ function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtPa
     return expr;
   }, [districtInfo, cfg.districts]);
 
+  // Build paint expressions that read the live selectedDistrict/hoveredDistrict
+  // values directly. Using map expressions (not filter rebuilds) means
+  // there's no chance of stale-filter rendering quirks.
+  const selectedLineWidth = useMemo(
+    () => selectedDistrict == null
+      ? 0
+      : ["case", ["==", ["to-number", ["get", "district"]], selectedDistrict], 4, 0],
+    [selectedDistrict]
+  );
+
+  const hoverLineWidth = useMemo(
+    () => hoveredDistrict == null
+      ? 0
+      : ["case",
+          ["all",
+            ["==", ["to-number", ["get", "district"]], hoveredDistrict],
+            // hide hover stroke on the currently-selected district to avoid
+            // overlapping with the selected highlight
+            ["!=", ["to-number", ["get", "district"]], selectedDistrict ?? -1],
+          ],
+          2,
+          0,
+        ],
+    [hoveredDistrict, selectedDistrict]
+  );
+
   const onMapClick = useCallback((e) => {
     const features = e.features;
     if (features && features.length > 0) {
-      const d = features[0].properties.district;
-      const districtNumber = typeof d === "number" ? d : parseInt(d, 10);
-      if (Number.isFinite(districtNumber)) {
-        onDistrictSelect((prev) => prev === districtNumber ? null : districtNumber);
+      const dn = districtId(features[0].properties);
+      if (Number.isFinite(dn)) {
+        onDistrictSelect((prev) => (prev === dn ? null : dn));
       }
     } else {
-      // Click on empty area deselects so we never accumulate visual state.
       onDistrictSelect(null);
     }
     setHoveredDistrict(null);
@@ -60,29 +86,14 @@ function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtPa
 
   const onMouseMove = useCallback((e) => {
     if (e.features && e.features.length > 0) {
-      const d = e.features[0].properties.district;
-      const dn = typeof d === "number" ? d : parseInt(d, 10);
+      const dn = districtId(e.features[0].properties);
       setHoveredDistrict((prev) => (prev === dn ? prev : dn));
     } else {
       setHoveredDistrict((prev) => (prev === null ? prev : null));
     }
   }, []);
 
-  const onMouseLeave = useCallback(() => setHoveredDistrict(null), []);
-
-  const selectedFilter = useMemo(
-    () => selectedDistrict !== null
-      ? ["==", ["to-number", ["get", "district"]], selectedDistrict]
-      : ["==", 1, 0],
-    [selectedDistrict]
-  );
-
-  const hoverFilter = useMemo(
-    () => hoveredDistrict !== null
-      ? ["==", ["to-number", ["get", "district"]], hoveredDistrict]
-      : ["==", 1, 0],
-    [hoveredDistrict]
-  );
+  const clearHover = useCallback(() => setHoveredDistrict(null), []);
 
   if (!geojson) return (
     <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -93,7 +104,7 @@ function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtPa
   return (
     <div
       style={{ width: "100%", height: "100%", position: "relative" }}
-      onMouseLeave={() => setHoveredDistrict(null)}
+      onMouseLeave={clearHover}
     >
       <MapGL
         key={cfg.stateId}
@@ -109,8 +120,8 @@ function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtPa
         interactiveLayerIds={["district-fill"]}
         onClick={onMapClick}
         onMouseMove={onMouseMove}
-        onMouseLeave={onMouseLeave}
-        onMouseOut={onMouseLeave}
+        onMouseLeave={clearHover}
+        onMouseOut={clearHover}
         cursor={hoveredDistrict ? "pointer" : ""}
       >
         <NavigationControl position="top-right" />
@@ -125,24 +136,23 @@ function StateMap({ geojson, cfg, selectedDistrict, onDistrictSelect, districtPa
             type="line"
             paint={{ "line-color": "#1a1a1a", "line-width": 1.5 }}
           />
-          {/* hover preview — distinct color/style so it never reads as "selected" */}
           <Layer
             id="district-hover"
             type="line"
-            filter={hoverFilter}
             paint={{
               "line-color": "#3b82f6",
-              "line-width": 2,
+              "line-width": hoverLineWidth,
               "line-opacity": 0.9,
               "line-dasharray": [2, 2],
             }}
           />
-          {/* selected — bold solid orange */}
           <Layer
             id="district-selected"
             type="line"
-            filter={selectedFilter}
-            paint={{ "line-color": "#f97316", "line-width": 4 }}
+            paint={{
+              "line-color": "#f97316",
+              "line-width": selectedLineWidth,
+            }}
           />
         </Source>
       </MapGL>
