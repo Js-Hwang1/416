@@ -1917,8 +1917,29 @@
   height: 100%;
 }
 
-.gingles-scatter-clickable svg {
+.gingles-scatter-clickable {
+  cursor: grab;
+}
+
+.gingles-scatter-clickable.gingles-scatter-panning,
+.gingles-scatter-panning svg {
+  cursor: grabbing !important;
+}
+
+.gingles-reset-zoom {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-family: Verdana, sans-serif;
+  background: #f0f0f0;
+  border: 1px solid #bbb;
+  border-radius: 3px;
   cursor: pointer;
+  color: #333;
+  margin-left: 4px;
+}
+
+.gingles-reset-zoom:hover {
+  background: #e0e0e0;
 }
 
 .gingles-legend {
