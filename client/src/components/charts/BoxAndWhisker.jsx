@@ -18,6 +18,24 @@ const applyTickStyle = (sel) =>
      .style("font-weight", "700")
      .style("fill", "#000");
 
+// Normalize the new shape ({ raceBlind: [...], vra: [...] }) into a list of
+// {label, color, districts} series. Falls back to legacy single-series shape
+// (plain [...] array) so old data still renders.
+function buildSeries(boxDataForGroup) {
+  if (!boxDataForGroup) return [];
+  if (Array.isArray(boxDataForGroup)) {
+    return [{ key: "single", label: "Ensemble", color: "#c8d0da", stroke: "#667", districts: boxDataForGroup }];
+  }
+  const series = [];
+  if (Array.isArray(boxDataForGroup.raceBlind)) {
+    series.push({ key: "raceBlind", label: "Race-Blind", color: "rgba(70,160,100,0.55)", stroke: "rgba(40,120,60,1)", districts: boxDataForGroup.raceBlind });
+  }
+  if (Array.isArray(boxDataForGroup.vra)) {
+    series.push({ key: "vra", label: "VRA-Constrained", color: "rgba(120,140,210,0.55)", stroke: "rgba(60,80,180,1)", districts: boxDataForGroup.vra });
+  }
+  return series;
+}
+
 // Computes a y scale whose upper bound lands on a clean tick value just above dataMax
 function buildYScale(districts, height) {
   const yMin = Math.max(0, d3.min(districts, d => d.min));
@@ -58,7 +76,10 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
   const containerRef = useRef();
   const [dims, setDims] = useState({ width: 800, height: 400 });
 
-  const districts = boxData?.[selectedGroup] ?? [];
+  const groupData = boxData?.[selectedGroup];
+  const series = buildSeries(groupData);
+  // Districts used for the y-scale span: union of every series' districts.
+  const districts = series.flatMap(s => s.districts);
 
   // Boilerplate to make the chart resizable
   useEffect(() => {
@@ -86,13 +107,14 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
       .style("max-width", "100%")
       .style("height", "auto");
 
+    const districtIds = series[0]?.districts.map(d => d.district) ?? [];
     const x = d3.scaleBand()
-      .domain(districts.map(d => d.district))
+      .domain(districtIds)
       .range([MARGIN.left, width - MARGIN.right])
-      .padding(0.4);
+      .padding(0.35);
 
     const { scale: y, tickValues } = buildYScale(districts, height);
-    const enactedDots = buildEnactedDots(districts, enactedData, selectedGroup);
+    const enactedDots = buildEnactedDots(series[0]?.districts ?? [], enactedData, selectedGroup);
 
     const gridLayer = svg.append("g");
     const axisLayer = svg.append("g");
@@ -108,45 +130,53 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
         g.selectAll(".tick text").remove();
       });
 
-    // Whiskers (min to max)
-    plotLayer.selectAll(".whisker").data(districts).join("line")
-      .attr("x1", d => x(d.district) + x.bandwidth() / 2)
-      .attr("x2", d => x(d.district) + x.bandwidth() / 2)
-      .attr("y1", d => y(d.min))
-      .attr("y2", d => y(d.max))
-      .attr("stroke", "#888");
+    // Two-series layout: split each band into sub-slots
+    const nSeries = Math.max(1, series.length);
+    const slotWidth = x.bandwidth() / nSeries;
+    const innerPad = slotWidth * 0.18;
 
-    // Whisker caps
-    plotLayer.selectAll(".cap-min").data(districts).join("line")
-      .attr("x1", d => x(d.district) + x.bandwidth() * 0.15)
-      .attr("x2", d => x(d.district) + x.bandwidth() * 0.85)
-      .attr("y1", d => y(d.min)).attr("y2", d => y(d.min))
-      .attr("stroke", "#888");
+    series.forEach((s, idx) => {
+      const seriesGroup = plotLayer.append("g");
+      const slotX = (d) => x(d.district) + idx * slotWidth + innerPad / 2;
+      const slotW = slotWidth - innerPad;
 
-    plotLayer.selectAll(".cap-max").data(districts).join("line")
-      .attr("x1", d => x(d.district) + x.bandwidth() * 0.15)
-      .attr("x2", d => x(d.district) + x.bandwidth() * 0.85)
-      .attr("y1", d => y(d.max)).attr("y2", d => y(d.max))
-      .attr("stroke", "#888");
+      seriesGroup.selectAll(".whisker").data(s.districts).join("line")
+        .attr("x1", d => slotX(d) + slotW / 2)
+        .attr("x2", d => slotX(d) + slotW / 2)
+        .attr("y1", d => y(d.min))
+        .attr("y2", d => y(d.max))
+        .attr("stroke", s.stroke);
 
-    // Box (IQR)
-    plotLayer.selectAll(".box").data(districts).join("rect")
-      .attr("x", d => x(d.district))
-      .attr("width", x.bandwidth())
-      .attr("y", d => y(d.hqr))
-      .attr("height", d => Math.max(0, y(d.lqr) - y(d.hqr)))
-      .attr("fill", "#c8d0da")
-      .attr("stroke", "#667")
-      .attr("stroke-width", 0.8);
+      seriesGroup.selectAll(".cap-min").data(s.districts).join("line")
+        .attr("x1", d => slotX(d) + slotW * 0.15)
+        .attr("x2", d => slotX(d) + slotW * 0.85)
+        .attr("y1", d => y(d.min)).attr("y2", d => y(d.min))
+        .attr("stroke", s.stroke);
 
-    // Median line
-    plotLayer.selectAll(".median").data(districts).join("line")
-      .attr("x1", d => x(d.district)).attr("x2", d => x(d.district) + x.bandwidth())
-      .attr("y1", d => y(d.median)).attr("y2", d => y(d.median))
-      .attr("stroke", "#1a1a1a")
-      .attr("stroke-width", 1.8);
+      seriesGroup.selectAll(".cap-max").data(s.districts).join("line")
+        .attr("x1", d => slotX(d) + slotW * 0.15)
+        .attr("x2", d => slotX(d) + slotW * 0.85)
+        .attr("y1", d => y(d.max)).attr("y2", d => y(d.max))
+        .attr("stroke", s.stroke);
 
-    // Enacted plan dots
+      seriesGroup.selectAll(".box").data(s.districts).join("rect")
+        .attr("x", d => slotX(d))
+        .attr("width", slotW)
+        .attr("y", d => y(d.hqr))
+        .attr("height", d => Math.max(0, y(d.lqr) - y(d.hqr)))
+        .attr("fill", s.color)
+        .attr("stroke", s.stroke)
+        .attr("stroke-width", 0.8);
+
+      seriesGroup.selectAll(".median").data(s.districts).join("line")
+        .attr("x1", d => slotX(d))
+        .attr("x2", d => slotX(d) + slotW)
+        .attr("y1", d => y(d.median)).attr("y2", d => y(d.median))
+        .attr("stroke", "#1a1a1a")
+        .attr("stroke-width", 1.6);
+    });
+
+    // Enacted plan dots — one per district at the center of the band
     plotLayer.selectAll(".enacted-dot").data(enactedDots).join("circle")
       .attr("cx", d => x(d.district) + x.bandwidth() / 2)
       .attr("cy", d => y(d.value))
@@ -192,10 +222,12 @@ export default function BoxPlotChart({ boxData, enactedData, selectedGroup = "hi
   return (
     <div className="box-whisker-container">
       <div className="chart-legend">
-        <div className="chart-legend-item">
-          <span className="chart-legend-box box-legend-iqr" />
-          IQR (25th-75th)
-        </div>
+        {series.map(s => (
+          <div key={s.key} className="chart-legend-item">
+            <span className="chart-legend-box" style={{ background: s.color, border: `1px solid ${s.stroke}` }} />
+            {s.label}
+          </div>
+        ))}
         <div className="chart-legend-item">
           <span className="chart-legend-line box-legend-median" />
           Median

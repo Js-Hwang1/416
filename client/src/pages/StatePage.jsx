@@ -81,6 +81,10 @@ export default function StatePage() {
   const [vraChart, setVraChart] = useState("boxwhisker");
   const [eiSubView, setEiSubView] = useState("curves");
   const [seatSplitThreshold, setSeatSplitThreshold] = useState("t06");
+  // "robust" = ReCom run that uses s^dist in the effectiveness score
+  // (SeaWulf-14 + GUI-24). "standard" = vanilla MGGG VRA-Constrained ReCom.
+  // Current deployed data IS robust; standard data will land later.
+  const [ensembleVariant, setEnsembleVariant] = useState("robust");
 
   const isStateOverviewPanel = activeDetailPanel === "stateOverview";
 
@@ -108,8 +112,9 @@ export default function StatePage() {
   const eiPrecinctData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "precinct" ? `${analysisBase}/ei-precinct` : null);
   const enactedDemo = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/enacted-demographics` : null);
   const ensembleBoxData = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
-  const ensembleBarData = useFetchJson(isVRAImpact && vraChart === "seatSplits" ? `${analysisBase}/ensemble-bar/${seatSplitThreshold}` : null);
-  const minorityBarsData = useFetchJson(isVRAImpact && vraChart === "minorityBars" ? `${analysisBase}/minority-bars/${seatSplitThreshold}` : null);
+  const ensembleBarData = useFetchJson(isVRAImpact && vraChart === "seatSplits" ? `${analysisBase}/ensemble-bar/${seatSplitThreshold}/${ensembleVariant}` : null);
+  const minorityBarsData = useFetchJson(isVRAImpact && (vraChart === "minorityBars" || vraChart === "effHistogram") ? `${analysisBase}/minority-bars/${seatSplitThreshold}/${ensembleVariant}` : null);
+  const vraImpactData = useFetchJson(isVRAImpact && vraChart === "impactTable" ? `${analysisBase}/vra-impact/${seatSplitThreshold}/${ensembleVariant}` : null);
   const voteSeatData = useFetchJson(isVRAImpact && vraChart === "fairness" ? `${analysisBase}/vote-seat` : null);
 
   const reps = representativesData;
@@ -410,6 +415,9 @@ export default function StatePage() {
               setSeatSplitThreshold={setSeatSplitThreshold}
               minorityBarsData={minorityBarsData}
               setDemoGroup={setDemoGroup}
+              ensembleVariant={ensembleVariant}
+              setEnsembleVariant={setEnsembleVariant}
+              vraImpactData={vraImpactData}
             />
           </div>
         )}

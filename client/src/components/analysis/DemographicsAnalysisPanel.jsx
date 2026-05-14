@@ -7,6 +7,8 @@ import EISupportSummary from "../charts/EISupportSummary";
 import EIKDEChart from "../charts/EIKDEChart";
 import VoteSeatChart from "../charts/VoteSeatChart";
 import MinorityBarsChart from "../charts/MinorityBarsChart";
+import EffectivenessHistogram from "../charts/EffectivenessHistogram";
+import VraImpactTable from "../analysis/VraImpactTable";
 
 export const RPV_CHART_OPTIONS = [
   { value: "gingles", label: "Gingles Analysis" },
@@ -16,8 +18,15 @@ export const RPV_CHART_OPTIONS = [
 export const VRA_CHART_OPTIONS = [
   { value: "seatSplits", label: "Seat Splits" },
   { value: "boxwhisker", label: "Minority Distribution" },
-  { value: "minorityBars", label: "Effective / Majority-Minority" },
+  { value: "minorityBars", label: "Effective / Maj-Minority" },
+  { value: "effHistogram", label: "Effectiveness Histogram" },
+  { value: "impactTable", label: "VRA Impact Table" },
   { value: "fairness", label: "Vote-Seat Curve" },
+];
+
+const VARIANTS = [
+  { value: "robust", label: "Robust (s^dist)" },
+  { value: "standard", label: "Standard" },
 ];
 
 const EI_SUB_OPTIONS = [
@@ -93,7 +102,12 @@ const DemographicsAnalysisPanel = ({
   seatSplitThreshold,
   setSeatSplitThreshold,
   minorityBarsData,
+  ensembleVariant,
+  setEnsembleVariant,
+  vraImpactData,
 }) => {
+  const isVRA = chartOptions === VRA_CHART_OPTIONS;
+
   const groupRow = (
     <ButtonRow
       options={groupOpts(minorityGroups)}
@@ -106,8 +120,21 @@ const DemographicsAnalysisPanel = ({
     <ThresholdSelect value={seatSplitThreshold} onChange={setSeatSplitThreshold} />
   );
 
+  const variantRow = isVRA && setEnsembleVariant ? (
+    <div className="chart-controls" style={{ marginBottom: 0 }}>
+      <span className="chart-controls-label">Ensemble:</span>
+      <ButtonRow
+        options={VARIANTS}
+        value={ensembleVariant}
+        onChange={setEnsembleVariant}
+        ariaLabel="Ensemble variant"
+      />
+    </div>
+  ) : null;
+
   return (
     <div className="state-info-panel demographics-info-panel">
+      {variantRow && <div style={{ padding: "8px 12px 0" }}>{variantRow}</div>}
       <div className="demo-panel-tabs" role="tablist">
         {chartOptions.map((opt) => (
           <button
@@ -160,6 +187,32 @@ const DemographicsAnalysisPanel = ({
         {demoPanelChart === "seatSplits" && (
           <ChartFrame controls={thresholdRow}>
             <BarChart data={ensembleBarData} />
+          </ChartFrame>
+        )}
+
+        {demoPanelChart === "effHistogram" && (
+          <ChartFrame
+            controls={
+              <>
+                {thresholdRow}
+                {groupRow}
+              </>
+            }
+          >
+            <EffectivenessHistogram
+              data={minorityBarsData}
+              group={demoGroup}
+              threshold={(SEAT_SPLIT_THRESHOLDS.find((t) => t.value === seatSplitThreshold) || {}).label}
+            />
+          </ChartFrame>
+        )}
+
+        {demoPanelChart === "impactTable" && (
+          <ChartFrame controls={thresholdRow}>
+            <VraImpactTable
+              data={vraImpactData}
+              threshold={(SEAT_SPLIT_THRESHOLDS.find((t) => t.value === seatSplitThreshold) || {}).label}
+            />
           </ChartFrame>
         )}
 
