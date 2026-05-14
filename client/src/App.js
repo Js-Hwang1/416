@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from "react-router-dom";
+import logoImg from "./logo.jpeg";
 import "maplibre-gl/dist/maplibre-gl.css";
 import "./App.css";
 import "./mapSetup";
@@ -24,7 +25,7 @@ function AppHeader() {
       </span>
       <div className="app-header-brand">
         <span className="app-header-team">by Tigers</span>
-        <img src={`${process.env.PUBLIC_URL}/logo.jpeg`} alt="Tigers logo" className="app-header-logo" />
+        <img src={logoImg} alt="Tigers logo" className="app-header-logo" />
       </div>
     </header>
   );
