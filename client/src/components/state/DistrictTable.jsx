@@ -1,38 +1,58 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import Pagination from "../ui/Pagination";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 15;
 
-// Map "black"/"hispanic"/"asian" → "Black"/"Hispanic"/"Asian" (the keys used
-// in enactedDistrictEi.districts[].groups).
-const TITLE_CASE = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1).toLowerCase() : s;
+const EI_CONFIDENCE = {
+  MA: { black: 0.97, hispanic: 0.67, asian: 0.98 },
+  TX: { black: 0.90, hispanic: 0.58, asian: 0.74 },
+};
 
-const DistrictTable = ({
-  rows, selectedDistrict, onSelectDistrict,
-  enactedDistrictEi, stateId, minorityGroups, effectivenessThresholdKey = "t60",
-}) => {
+// effectiveness = min(2k, 1) * ei_confidence ; k = group VAP fraction.
+// Calibrated form scales by k so very-low-VAP districts read as low
+// effectiveness even when ei_confidence is high.
+function effectivenessScores(pct, eiConf) {
+  if (pct == null || eiConf == null) return { raw: null, calibrated: null };
+  const k = pct / 100;
+  const raw = Math.min(2 * k, 1) * eiConf;
+  const calibrated = raw * Math.min(1, k * 2);
+  return { raw: +(raw * 100).toFixed(1), calibrated: +(calibrated * 100).toFixed(1) };
+}
+
+const fmt = (val) => val == null ? "—" : `${val.toFixed(1)}%`;
+
+const DistrictTable = ({ rows, selectedDistrict, onSelectDistrict, enactedDemographics, stateId, minorityGroups }) => {
   const [page, setPage] = useState(0);
-  const [effGroup, setEffGroup] = useState(null);
+  const [groupIdx, setGroupIdx] = useState(0);
   const wrapperRef = useRef(null);
   const rowRefs = useRef(new Map());
 
-  // Auto-pick the first feasible group when minorityGroups loads
-  useEffect(() => {
-    if (effGroup) return;
-    if (minorityGroups?.length) setEffGroup(minorityGroups[0].key);
-  }, [minorityGroups, effGroup]);
-
-  // Index per-district EI data by district number (string keys from JSON).
-  const districtEi = useMemo(() => {
+  // Map district number -> group VAP pct from enactedDemographics
+  const districtPct = useMemo(() => {
     const map = new Map();
-    for (const dd of (enactedDistrictEi?.districts || [])) {
-      const dn = typeof dd.district === "number" ? dd.district : parseInt(dd.district, 10);
-      if (Number.isFinite(dn)) map.set(dn, dd);
+    const districts = enactedDemographics?.districts || [];
+    for (const dd of districts) {
+      const groups = dd.groups || {};
+      const inner = {};
+      for (const g of Object.keys(groups)) {
+        inner[g] = groups[g]?.pct ?? 0;
+      }
+      map.set(dd.district, inner);
     }
     return map;
-  }, [enactedDistrictEi]);
+  }, [enactedDemographics]);
 
-  const showEffectiveness = effGroup && districtEi.size > 0;
+  // Only include groups that have a known EI confidence for this state
+  const feasibleGroups = useMemo(() => {
+    if (!minorityGroups?.length || !stateId) return [];
+    return minorityGroups.filter((g) => EI_CONFIDENCE[stateId]?.[g.key] != null);
+  }, [minorityGroups, stateId]);
+
+  const showEffectiveness = feasibleGroups.length > 0 && districtPct.size > 0;
+  const activeGroup = feasibleGroups[groupIdx] ?? null;
+
+  // Reset group index when state changes
+  useEffect(() => { setGroupIdx(0); }, [stateId]);
 
   const totalPages = Math.ceil(rows.length / PAGE_SIZE);
   const pageRows = rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -61,14 +81,13 @@ const DistrictTable = ({
   return (
     <div className="district-table-wrapper" ref={wrapperRef}>
       {showEffectiveness && (
-        <div className="chart-controls" style={{ marginBottom: 6 }}>
-          <span className="chart-controls-label">Effectiveness for:</span>
-          {(minorityGroups || []).map((g) => (
+        <div className="district-group-nav">
+          {feasibleGroups.map((g, i) => (
             <button
               key={g.key}
               type="button"
-              className={`demo-group-btn${effGroup === g.key ? " active" : ""}`}
-              onClick={() => setEffGroup(g.key)}
+              className={`demo-group-btn${groupIdx === i ? " active" : ""}`}
+              onClick={() => setGroupIdx(i)}
             >
               {g.label}
             </button>
@@ -82,19 +101,21 @@ const DistrictTable = ({
             <th>Representative</th>
             <th>Party</th>
             <th>Race</th>
-            <th>Vote Margin %</th>
-            {showEffectiveness && <th>EI Score</th>}
-            {showEffectiveness && <th>Effective</th>}
+            <th>Vote Margin</th>
+            {showEffectiveness && <th>Eff.</th>}
+            {showEffectiveness && <th>Calib. Eff.</th>}
           </tr>
         </thead>
         <tbody>
           {pageRows.map((row) => {
             const districtNumber = Number.parseInt(row.districtNumber, 10);
             const isSelected = selectedDistrict === districtNumber;
-            const dd = districtEi.get(districtNumber);
-            const gInfo = dd?.groups?.[TITLE_CASE(effGroup)];
-            const score = gInfo?.score;
-            const eff = gInfo?.effective_at?.[effectivenessThresholdKey];
+            let scores = { raw: null, calibrated: null };
+            if (showEffectiveness && activeGroup) {
+              const pct = districtPct.get(districtNumber)?.[activeGroup.key];
+              const eiConf = EI_CONFIDENCE[stateId][activeGroup.key];
+              scores = effectivenessScores(pct, eiConf);
+            }
             return (
               <tr
                 key={row.districtNumber}
@@ -123,12 +144,8 @@ const DistrictTable = ({
                 </td>
                 <td>{row.racialEthnicGroup}</td>
                 <td>{row.voteMargin}</td>
-                {showEffectiveness && <td>{score == null ? "—" : score.toFixed(2)}</td>}
-                {showEffectiveness && (
-                  <td style={{ fontWeight: 700, color: eff ? "#16a34a" : "#888" }}>
-                    {eff == null ? "—" : eff ? "Yes" : "No"}
-                  </td>
-                )}
+                {showEffectiveness && <td>{fmt(scores.raw)}</td>}
+                {showEffectiveness && <td>{fmt(scores.calibrated)}</td>}
               </tr>
             );
           })}
