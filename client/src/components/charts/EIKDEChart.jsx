@@ -111,9 +111,12 @@ export default function EIKDEChart({ data, candidateName = "Democratic Candidate
     const area = d3.area().x(d => x(d.x)).y0(height - margin.bottom).y1(d => y(d.y)).curve(d3.curveBasis);
     const line = d3.line().x(d => x(d.x)).y(d => y(d.y)).curve(d3.curveBasis);
 
-    svg.append("path").datum(diffData).attr("d", area).attr("fill", "rgba(100, 170, 160, 0.45)");
+    const kdeColor = party === "dem" ? "rgba(33, 113, 181, 1)" : "rgba(203, 24, 29, 1)";
+    const kdeFill  = party === "dem" ? "rgba(33, 113, 181, 0.35)" : "rgba(203, 24, 29, 0.35)";
+
+    svg.append("path").datum(diffData).attr("d", area).attr("fill", kdeFill);
     svg.append("path").datum(diffData).attr("d", line).attr("fill", "none")
-       .attr("stroke", "rgba(100, 170, 160, 1)").attr("stroke-width", 2);
+       .attr("stroke", kdeColor).attr("stroke-width", 2);
 
     const prob = probAboveThreshold(diffData, threshold);
     svg.append("text")
@@ -163,7 +166,7 @@ export default function EIKDEChart({ data, candidateName = "Democratic Candidate
       .style("font-weight", "700")
       .style("fill", "#000")
       .text(`Polarization KDE for ${activeCandidateName}`);
-  }, [diffData, dims, threshold, group1, group2, activeCandidateName]);
+  }, [diffData, dims, threshold, group1, group2, activeCandidateName, party]);
 
   if (!data || allGroups.length < 2) {
     return <div className="placeholder-card">No KDE data available</div>;

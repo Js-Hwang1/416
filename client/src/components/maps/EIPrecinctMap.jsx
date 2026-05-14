@@ -4,6 +4,7 @@ import { Map as MapGL, Source, Layer, NavigationControl } from "react-map-gl/map
 const MAP_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
 
 const CANDIDATES = ["Harris (D)", "Trump (R)"];
+const RACES = ["White", "Black", "Hispanic", "Asian"];
 
 // Blue scale for Harris (D), red scale for Trump (R)
 const COLOR_SCALES = {
@@ -51,6 +52,7 @@ function getBbox(geojson) {
 
 export default function EIPrecinctMap({ precinctGeoJsonData, eiPrecinctData, mapView }) {
   const [candidate, setCandidate] = useState("Harris (D)");
+  const [race, setRace] = useState("Black");
   const [hoverInfo, setHoverInfo] = useState(null);
 
   // Build lookup: precinct name -> estimates
@@ -63,61 +65,21 @@ export default function EIPrecinctMap({ precinctGeoJsonData, eiPrecinctData, map
     return map;
   }, [eiPrecinctData]);
 
-  // Merge EI estimates into precinct GeoJSON as weighted-average support per candidate
+  // Merge EI estimates into precinct GeoJSON — one value per race+candidate combination
   const enrichedGeoJson = useMemo(() => {
     if (!precinctGeoJsonData || !eiPrecinctData) return null;
     const features = precinctGeoJsonData.features.map((feat) => {
       const props = feat.properties;
-      // Try multiple possible precinct ID fields (TX uses CNTYVTD, MA uses NAME)
       const pid = props.precinct_id ?? props.CNTYVTD ?? props.NAME ?? props.name ?? "";
       const est = estimatesMap[pid];
       if (!est) return feat;
 
-      // Demographic fractions: prefer pre-normalized 0..1 fractions if present,
-      // else compute from the raw VAP counts that ship in the precinct geojson
-      // (BVAP, HVAP/HISPVAP, ASIANVAP, WVAP, total VAP).
-      let wh, bl, hi, as;
-      if (typeof props.white === "number") {
-        // Old shape (used by smaller heatmap geojsons): 0..100 percentages.
-        wh = (props.white ?? 0) / 100;
-        bl = (props.black ?? 0) / 100;
-        hi = (props.hispanic ?? 0) / 100;
-        as = (props.asian ?? 0) / 100;
-      } else {
-        const vap = props.VAP || 0;
-        if (vap > 0) {
-          wh = (props.WVAP || 0) / vap;
-          bl = (props.BVAP || 0) / vap;
-          // TX uses HISPVAP; MA uses HVAP
-          hi = (props.HVAP || props.HISPVAP || 0) / vap;
-          as = (props.ASIANVAP || 0) / vap;
-        } else {
-          wh = bl = hi = as = 0;
-        }
+      const newProps = { ...props };
+      for (const r of RACES) {
+        newProps[`ei_harris_${r}`] = Math.round((est[r]?.["Harris (D)"] ?? 0) * 1000) / 10;
+        newProps[`ei_trump_${r}`]  = Math.round((est[r]?.["Trump (R)"]  ?? 0) * 1000) / 10;
       }
-
-      const harris = (
-        wh * (est["White"]?.["Harris (D)"] ?? 0) +
-        bl * (est["Black"]?.["Harris (D)"] ?? 0) +
-        hi * (est["Hispanic"]?.["Harris (D)"] ?? 0) +
-        as * (est["Asian"]?.["Harris (D)"] ?? 0)
-      ) * 100;
-
-      const trump = (
-        wh * (est["White"]?.["Trump (R)"] ?? 0) +
-        bl * (est["Black"]?.["Trump (R)"] ?? 0) +
-        hi * (est["Hispanic"]?.["Trump (R)"] ?? 0) +
-        as * (est["Asian"]?.["Trump (R)"] ?? 0)
-      ) * 100;
-
-      return {
-        ...feat,
-        properties: {
-          ...props,
-          ei_harris: Math.round(harris * 10) / 10,
-          ei_trump: Math.round(trump * 10) / 10,
-        },
-      };
+      return { ...feat, properties: newProps };
     });
     return { ...precinctGeoJsonData, features };
   }, [precinctGeoJsonData, eiPrecinctData, estimatesMap]);
@@ -127,18 +89,36 @@ export default function EIPrecinctMap({ precinctGeoJsonData, eiPrecinctData, map
     [precinctGeoJsonData]
   );
 
-  const fillExpr = useMemo(() => buildFillExpr(candidate), [candidate]);
+  // The active property key changes with both selectors
+  const activeProp = candidate === "Harris (D)" ? `ei_harris_${race}` : `ei_trump_${race}`;
+
+  const fillExpr = useMemo(() => {
+    const colors = COLOR_SCALES[candidate];
+    return [
+      "step",
+      ["coalesce", ["get", activeProp], 0],
+      colors[0],
+      10, colors[1],
+      20, colors[2],
+      30, colors[3],
+      40, colors[4],
+      50, colors[5],
+      60, colors[6],
+      70, colors[7],
+      80, colors[8],
+      90, colors[9],
+    ];
+  }, [candidate, activeProp]);
+
   const colors = COLOR_SCALES[candidate];
 
   const onMouseMove = useCallback((e) => {
     if (!e.features?.length) return;
     const props = e.features[0].properties;
-    setHoverInfo({
-      name: props.name || props.precinct_id || "",
-      harris: props.ei_harris ?? null,
-      trump: props.ei_trump ?? null,
-    });
-  }, []);
+    const name = props.name || props.NAME || props.precinct_id || props.CNTYVTD || "";
+    const val = props[activeProp] ?? null;
+    setHoverInfo({ name, val });
+  }, [activeProp]);
 
   const onMouseLeave = useCallback(() => setHoverInfo(null), []);
 
@@ -158,6 +138,18 @@ export default function EIPrecinctMap({ precinctGeoJsonData, eiPrecinctData, map
               onClick={() => setCandidate(c)}
             >
               {c}
+            </button>
+          ))}
+        </div>
+        <div className="demo-group-btn-group" role="group" aria-label="Race" style={{ marginLeft: "1rem" }}>
+          {RACES.map((r) => (
+            <button
+              key={r}
+              type="button"
+              className={`demo-group-btn${race === r ? " active" : ""}`}
+              onClick={() => setRace(r)}
+            >
+              {r}
             </button>
           ))}
         </div>
@@ -210,14 +202,14 @@ export default function EIPrecinctMap({ precinctGeoJsonData, eiPrecinctData, map
               }}
             >
               <strong>{hoverInfo.name}</strong><br />
-              {hoverInfo.harris !== null && <>Harris (D): {hoverInfo.harris.toFixed(1)}%<br /></>}
-              {hoverInfo.trump !== null && <>Trump (R): {hoverInfo.trump.toFixed(1)}%</>}
+              {race} voters — {candidate}:{" "}
+              {hoverInfo.val !== null ? `${hoverInfo.val.toFixed(1)}%` : "N/A"}
             </div>
           )}
         </MapGL>
 
         <div className="heatmap-legend">
-          <div className="heatmap-legend-title">EI Support — {candidate}</div>
+          <div className="heatmap-legend-title">{race} voters — {candidate}</div>
           {STEPS.map((step, i) => (
             <div key={step} className="heatmap-legend-item">
               <span className="heatmap-legend-swatch" style={{ background: colors[i] }} />
