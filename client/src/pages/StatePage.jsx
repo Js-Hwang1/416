@@ -109,6 +109,7 @@ export default function StatePage() {
   const enactedDemo = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/enacted-demographics` : null);
   const ensembleBoxData = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
   const ensembleBarData = useFetchJson(isVRAImpact && vraChart === "seatSplits" ? `${analysisBase}/ensemble-bar/${seatSplitThreshold}` : null);
+  const minorityBarsData = useFetchJson(isVRAImpact && vraChart === "minorityBars" ? `${analysisBase}/minority-bars/${seatSplitThreshold}` : null);
   const voteSeatData = useFetchJson(isVRAImpact && vraChart === "fairness" ? `${analysisBase}/vote-seat` : null);
 
   const reps = representativesData;
@@ -407,6 +408,8 @@ export default function StatePage() {
               voteSeatData={voteSeatData}
               seatSplitThreshold={seatSplitThreshold}
               setSeatSplitThreshold={setSeatSplitThreshold}
+              minorityBarsData={minorityBarsData}
+              setDemoGroup={setDemoGroup}
             />
           </div>
         )}

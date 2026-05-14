@@ -6,6 +6,7 @@ import GinglesSection from "./GinglesSection";
 import EISupportSummary from "../charts/EISupportSummary";
 import EIKDEChart from "../charts/EIKDEChart";
 import VoteSeatChart from "../charts/VoteSeatChart";
+import MinorityBarsChart from "../charts/MinorityBarsChart";
 
 export const RPV_CHART_OPTIONS = [
   { value: "gingles", label: "Gingles Analysis" },
@@ -15,6 +16,7 @@ export const RPV_CHART_OPTIONS = [
 export const VRA_CHART_OPTIONS = [
   { value: "seatSplits", label: "Seat Splits" },
   { value: "boxwhisker", label: "Minority Distribution" },
+  { value: "minorityBars", label: "Effective / Majority-Minority" },
   { value: "fairness", label: "Vote-Seat Curve" },
 ];
 
@@ -49,6 +51,8 @@ const DemographicsAnalysisPanel = ({
   voteSeatData,
   seatSplitThreshold,
   setSeatSplitThreshold,
+  minorityBarsData,
+  setDemoGroup,
 }) => (
   <div className="state-info-panel demographics-info-panel">
     <div className="demo-panel-tabs" role="tablist">
@@ -76,7 +80,23 @@ const DemographicsAnalysisPanel = ({
         />
       )}
       {demoPanelChart === "boxwhisker" && (
-        <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} selectedGroup={demoGroup} />
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+          <div className="demo-group-btn-group" role="group" aria-label="Minority group">
+            {(minorityGroups || []).map((g) => (
+              <button
+                key={g.key}
+                type="button"
+                className={`demo-group-btn${demoGroup === g.key ? " active" : ""}`}
+                onClick={() => setDemoGroup && setDemoGroup(g.key)}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+            <BoxPlotChart boxData={ensembleBoxData} enactedData={enactedDemo} selectedGroup={demoGroup} />
+          </div>
+        </div>
       )}
       {demoPanelChart === "ei" && (
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
@@ -115,6 +135,37 @@ const DemographicsAnalysisPanel = ({
           </div>
           <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
             <BarChart data={ensembleBarData} />
+          </div>
+        </div>
+      )}
+      {demoPanelChart === "minorityBars" && (
+        <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
+          <div className="chart-controls">
+            <span className="chart-controls-label">Minority-effectiveness threshold:</span>
+            <select
+              className="heatmap-group-select"
+              value={seatSplitThreshold}
+              onChange={(e) => setSeatSplitThreshold(e.target.value)}
+            >
+              {SEAT_SPLIT_THRESHOLDS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
+          <div className="demo-group-btn-group" role="group" aria-label="Minority group">
+            {(minorityGroups || []).map((g) => (
+              <button
+                key={g.key}
+                type="button"
+                className={`demo-group-btn${demoGroup === g.key ? " active" : ""}`}
+                onClick={() => setDemoGroup && setDemoGroup(g.key)}
+              >
+                {g.label}
+              </button>
+            ))}
+          </div>
+          <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
+            <MinorityBarsChart data={minorityBarsData} group={demoGroup} />
           </div>
         </div>
       )}
