@@ -111,7 +111,9 @@ export default function StatePage() {
   const eiSummaryData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "precinct" ? `${analysisBase}/ei-summary` : null);
   const eiKdeData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "kde" ? `${analysisBase}/ei-kde` : null);
   const eiPrecinctData = useFetchJson(isRPV && rpvChart === "ei" && eiSubView === "precinct" ? `${analysisBase}/ei-precinct` : null);
-  const enactedDemo = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/enacted-demographics` : null);
+  // Used by both the VRA box-whisker (as enacted-plan dots) and the planExplorer
+  // DistrictTable (per-district effectiveness column, GUI-6).
+  const enactedDemo = useFetchJson(cfg ? `${analysisBase}/enacted-demographics` : null);
   const ensembleBoxData = useFetchJson(isVRAImpact && vraChart === "boxwhisker" ? `${analysisBase}/ensemble-box` : null);
   const ensembleBarData = useFetchJson(isVRAImpact && vraChart === "seatSplits" ? `${analysisBase}/ensemble-bar/${seatSplitThreshold}/${ensembleVariant}` : null);
   const minorityBarsData = useFetchJson(isVRAImpact && (vraChart === "minorityBars" || vraChart === "effHistogram") ? `${analysisBase}/minority-bars/${seatSplitThreshold}/${ensembleVariant}` : null);
@@ -305,6 +307,9 @@ export default function StatePage() {
                     rows={districtTableRows}
                     selectedDistrict={selectedDistrict}
                     onSelectDistrict={setSelectedDistrict}
+                    enactedDemographics={enactedDemo}
+                    stateId={cfg.stateId}
+                    minorityGroups={heatmapMinorityGroups}
                   />
                 )}
               </section>
