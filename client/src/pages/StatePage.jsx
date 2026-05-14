@@ -308,10 +308,9 @@ export default function StatePage() {
                     rows={districtTableRows}
                     selectedDistrict={selectedDistrict}
                     onSelectDistrict={setSelectedDistrict}
-                    enactedDistrictEi={enactedDistrictEi}
+                    enactedDemographics={enactedDemo}
                     stateId={cfg.stateId}
                     minorityGroups={heatmapMinorityGroups}
-                    effectivenessThresholdKey={seatSplitThreshold === "t05" ? "t50" : seatSplitThreshold === "t06" ? "t60" : "t70"}
                   />
                 )}
               </section>
