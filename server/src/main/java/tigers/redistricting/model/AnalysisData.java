@@ -25,6 +25,8 @@ public class AnalysisData {
     private List<EiPrecinctEntry> eiPrecinct;
     private VoteSeatData voteSeat;
     private MinorityEffectivenessData minorityEffectiveness;
+    // Shape: { "0.5": { "Black": { "effective": { "enacted": N, ... }, ... }, ... }, ... }
+    private Map<String, Map<String, Map<String, Map<String, Object>>>> minorityBarsByThreshold;
 
     public StateId getId() { return id; }
     public void setId(StateId id) { this.id = id; }
@@ -64,4 +66,9 @@ public class AnalysisData {
 
     public MinorityEffectivenessData getMinorityEffectiveness() { return minorityEffectiveness; }
     public void setMinorityEffectiveness(MinorityEffectivenessData minorityEffectiveness) { this.minorityEffectiveness = minorityEffectiveness; }
+
+    public Map<String, Map<String, Map<String, Map<String, Object>>>> getMinorityBarsByThreshold() { return minorityBarsByThreshold; }
+    public void setMinorityBarsByThreshold(Map<String, Map<String, Map<String, Map<String, Object>>>> minorityBarsByThreshold) {
+        this.minorityBarsByThreshold = minorityBarsByThreshold;
+    }
 }

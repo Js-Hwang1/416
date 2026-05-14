@@ -120,42 +120,32 @@ public class AnalysisService {
         if (stateOpt.isEmpty() || analysisOpt.isEmpty()) return Optional.empty();
 
         State state = stateOpt.get();
-        EnactedDemographicsData enacted = analysisOpt.get().getEnactedDemographics();
-        if (enacted == null || enacted.getDistricts() == null) return Optional.empty();
+        AnalysisData analysis = analysisOpt.get();
 
-        // Districts won by the minority party of choice (Democratic for all groups)
-        Set<Integer> demDistricts = new HashSet<>();
-        if (state.getRepresentatives() != null) {
-            for (Representative rep : state.getRepresentatives()) {
-                if (Party.Democrat == rep.getParty()) demDistricts.add(rep.getDistrict());
-            }
-        }
-
-        Map<String, Double> eiConf = EI_CONFIDENCE.getOrDefault(id, Map.of());
         Map<String, Integer> vapByGroup = state.getVap_by_group();
         int totalVap = state.getVoting_age_population();
         int totalDistricts = state.getNum_congressional_districts();
         List<String> feasibleGroups = state.getFeasible_demographic_groups();
 
+        // Read the enacted-plan effective counts produced by the SeaWulf
+        // pipeline (stored under minorityBarsByThreshold."0.6".<Group>.effective.enacted),
+        // not the simplified Java formula. This makes the table consistent
+        // with the seat-split / minority bars charts on the same page.
+        Map<String, Map<String, Map<String, Map<String, Object>>>> mbt = analysis.getMinorityBarsByThreshold();
+        String thresholdKey = String.format("%.1f", EFFECTIVENESS_THRESHOLD);
+        Map<String, Map<String, Map<String, Object>>> atThreshold = mbt == null ? null : mbt.get(thresholdKey);
+
         List<RoughProportionalityEntry> result = new ArrayList<>();
 
-        for (Map.Entry<String, Double> confEntry : eiConf.entrySet()) {
-            String group = confEntry.getKey();
+        // Iterate the configured groups (sorted for deterministic output)
+        List<String> groups = new ArrayList<>(EI_CONFIDENCE.getOrDefault(id, Map.of()).keySet());
+        groups.sort(Comparator.naturalOrder());
+
+        for (String group : groups) {
             if ("white".equals(group)) continue;
             if (feasibleGroups != null && !feasibleGroups.contains(group)) continue;
 
-            double eiConfidence = confEntry.getValue();
-            int effectiveCount = 0;
-
-            for (DistrictDemographics dd : enacted.getDistricts()) {
-                if (!demDistricts.contains(dd.getDistrict())) continue;
-                DemographicGroup dg = dd.getGroups() != null ? dd.getGroups().get(group) : null;
-                if (dg == null) continue;
-                double k = dg.getPct() / 100.0;
-                double effectiveness = Math.min(2.0 * k, 1.0) * eiConfidence;
-                if (effectiveness >= EFFECTIVENESS_THRESHOLD) effectiveCount++;
-            }
-
+            int effectiveCount = lookupEnactedEffective(atThreshold, group);
             double effectivePct = totalDistricts > 0 ? (effectiveCount * 100.0) / totalDistricts : 0;
             int groupVap = vapByGroup != null ? vapByGroup.getOrDefault(group, 0) : 0;
             double vapPct = totalVap > 0 ? (groupVap * 100.0) / totalVap : 0;
@@ -170,8 +160,21 @@ public class AnalysisService {
             result.add(entry);
         }
 
-        result.sort(Comparator.comparing(RoughProportionalityEntry::getGroup));
         return Optional.of(result);
+    }
+
+    /** mbt structure: { "Black": { "effective": { "enacted": N, ... }, ... }, ... }.
+     *  Group keys in mongo are capitalized; our internal `group` is lowercase. */
+    private int lookupEnactedEffective(Map<String, Map<String, Map<String, Object>>> atThreshold, String group) {
+        if (atThreshold == null) return 0;
+        String capKey = group.substring(0, 1).toUpperCase() + group.substring(1);
+        Map<String, Map<String, Object>> perGroup = atThreshold.get(capKey);
+        if (perGroup == null) return 0;
+        Map<String, Object> effective = perGroup.get("effective");
+        if (effective == null) return 0;
+        Object enacted = effective.get("enacted");
+        if (enacted instanceof Number) return ((Number) enacted).intValue();
+        return 0;
     }
 
     private double[] fitPolynomial(double[] xs, double[] ys) {
