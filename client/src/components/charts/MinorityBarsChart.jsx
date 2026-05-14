@@ -130,10 +130,11 @@ function isTrivialZero(rbArr, vraArr) {
 
 const DISPLAY = { Hispanic: "Latino", Black: "Black", Asian: "Asian", White: "White" };
 
+const EMPTY_DATA = { labels: [], datasets: [] };
+
 const TrivialPanel = ({ title }) => (
-  <div className="bar-chart-panel" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", color: "#666" }}>
-    <strong style={{ marginBottom: 8, color: "#111" }}>{title}</strong>
-    <span style={{ fontSize: "0.85rem" }}>No plan in either ensemble had any qualifying district for this group at the selected threshold.</span>
+  <div className="bar-chart-panel">
+    <Bar data={EMPTY_DATA} options={makeOptions(title, null)} />
   </div>
 );
 
