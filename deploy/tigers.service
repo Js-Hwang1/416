@@ -12,6 +12,7 @@ ExecStart=/usr/bin/java -Xmx1500m -jar /opt/tigers/app/app.jar
 # is location-independent.
 Environment=TIGERS_TILES_DIR=/opt/tigers/tiles/
 Environment=TIGERS_GEOJSON_DIR=/opt/tigers/geojson/
+Environment=TIGERS_INTERESTING_PLANS_DIR=/opt/tigers/interesting_plans/
 Environment=TIGERS_STATIC_DIR=/var/www/tigers/
 Restart=on-failure
 RestartSec=5

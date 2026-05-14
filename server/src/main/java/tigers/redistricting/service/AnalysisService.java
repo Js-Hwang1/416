@@ -235,4 +235,8 @@ public class AnalysisService {
     public Optional<Map<String, Object>> getEnactedDistrictEi(StateId id) {
         return analysisDataRepository.findById(id).map(AnalysisData::getEnactedDistrictEi);
     }
+
+    public Optional<List<Map<String, Object>>> getInterestingPlans(StateId id) {
+        return analysisDataRepository.findById(id).map(AnalysisData::getInterestingPlans);
+    }
 }

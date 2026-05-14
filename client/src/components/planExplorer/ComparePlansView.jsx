@@ -4,6 +4,7 @@ import InterestingPlanDropdown from "../ui/InterestingPlanDropdown";
 
 const ComparePlansView = ({
   districtGeoJsonData,
+  alternatePlanGeoJsonData,
   cfg,
   selectedDistrict,
   onDistrictSelect,
@@ -43,7 +44,7 @@ const ComparePlansView = ({
         <h2 className="section-title compare-map-title">{planLabel}</h2>
         <div className="compare-map-wrapper">
           <StateMap
-            geojson={districtGeoJsonData}
+            geojson={alternatePlanGeoJsonData || districtGeoJsonData}
             cfg={cfg}
             selectedDistrict={selectedDistrict}
             onDistrictSelect={onDistrictSelect}

@@ -37,6 +37,7 @@ public class AnalysisData {
     // Static-ish per-state analysis blobs.
     private Map<String, Object> expectedSeatChange;
     private Map<String, Object> enactedDistrictEi;
+    private List<Map<String, Object>> interestingPlans;
 
     public StateId getId() { return id; }
     public void setId(StateId id) { this.id = id; }
@@ -96,4 +97,7 @@ public class AnalysisData {
 
     public Map<String, Object> getEnactedDistrictEi() { return enactedDistrictEi; }
     public void setEnactedDistrictEi(Map<String, Object> enactedDistrictEi) { this.enactedDistrictEi = enactedDistrictEi; }
+
+    public List<Map<String, Object>> getInterestingPlans() { return interestingPlans; }
+    public void setInterestingPlans(List<Map<String, Object>> interestingPlans) { this.interestingPlans = interestingPlans; }
 }

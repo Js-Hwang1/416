@@ -170,4 +170,12 @@ public class AnalysisController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @Cacheable("interestingPlans")
+    @GetMapping("/interesting-plans")
+    public ResponseEntity<List<Map<String, Object>>> getInterestingPlans(@PathVariable StateId id) {
+        return analysisService.getInterestingPlans(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }
