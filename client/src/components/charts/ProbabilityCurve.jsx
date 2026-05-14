@@ -71,7 +71,10 @@ function buildTraces(filteredData) {
     mode: "lines",
     name: displayName(d.race),
     fill: "tozeroy",
-    line: { color: lineFor(d.race), width: 2.5, shape: "spline" },
+    // The KDE ships ~61 dense points; linear interpolation between them looks
+    // smooth and avoids the ringing/overshoot plotly's spline produces on the
+    // steep tails of narrow posteriors.
+    line: { color: lineFor(d.race), width: 2.5, shape: "linear" },
     fillcolor: fillFor(d.race),
   }));
 }
