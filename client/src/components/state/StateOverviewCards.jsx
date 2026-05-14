@@ -115,7 +115,7 @@ const StateOverviewCards = ({ ov, cfg, roughProportionality, expectedSeatChange 
             {roughProportionality.map((row) => (
               <tr key={row.group}>
                 <td>{GROUP_LABELS[row.group] ?? row.group}</td>
-                <td>{row.effectiveDistrictCount}</td>
+                <td>{formatPct1(row.effectiveDistrictCount / cfg.districts * 100)}</td>
                 <td>{formatPct1(row.vapPct)}</td>
                 <td>{row.ratio.toFixed(2)}×</td>
               </tr>
