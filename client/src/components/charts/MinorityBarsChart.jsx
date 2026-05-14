@@ -120,23 +120,7 @@ function makeChartData(rbArr, vraArr) {
   };
 }
 
-// True if the only non-zero category is count=0, meaning across the entire
-// ensemble no plan produced even one effective/majority-minority district
-// for this group. Renders cleaner as a placeholder than a single fat bar.
-function isTrivialZero(rbArr, vraArr) {
-  const both = [...(rbArr || []), ...(vraArr || [])];
-  return both.length > 0 && both.every((r) => r.count === 0);
-}
-
 const DISPLAY = { Hispanic: "Latino", Black: "Black", Asian: "Asian", White: "White" };
-
-const EMPTY_DATA = { labels: [], datasets: [] };
-
-const TrivialPanel = ({ title }) => (
-  <div className="bar-chart-panel">
-    <Bar data={EMPTY_DATA} options={makeOptions(title, null)} />
-  </div>
-);
 
 const MinorityBarsChart = ({ data, group }) => {
   if (!data) return <div className="placeholder-card">Loading minority bar data…</div>;
@@ -158,35 +142,23 @@ const MinorityBarsChart = ({ data, group }) => {
   const effVra = groupData.effective?.vraData;
   const oppRb = groupData.opportunity?.raceBlindData;
   const oppVra = groupData.opportunity?.vraData;
-
-  const effTrivial = isTrivialZero(effRb, effVra);
-  const oppTrivial = isTrivialZero(oppRb, oppVra);
-
   const enactedEffective = groupData.effective?.enacted;
   const enactedOpportunity = groupData.opportunity?.enacted;
 
   return (
     <div className="bar-chart-wrapper">
-      {effTrivial ? (
-        <TrivialPanel title={`Minority-Effective Districts (${display})`} />
-      ) : (
-        <div className="bar-chart-panel">
-          <Bar
-            data={makeChartData(effRb, effVra)}
-            options={makeOptions(`Minority-Effective Districts (${display})`, enactedEffective)}
-          />
-        </div>
-      )}
-      {oppTrivial ? (
-        <TrivialPanel title={`Majority-Minority Districts (${display})`} />
-      ) : (
-        <div className="bar-chart-panel">
-          <Bar
-            data={makeChartData(oppRb, oppVra)}
-            options={makeOptions(`Majority-Minority Districts (${display})`, enactedOpportunity)}
-          />
-        </div>
-      )}
+      <div className="bar-chart-panel">
+        <Bar
+          data={makeChartData(effRb, effVra)}
+          options={makeOptions(`Minority-Effective Districts (${display})`, enactedEffective)}
+        />
+      </div>
+      <div className="bar-chart-panel">
+        <Bar
+          data={makeChartData(oppRb, oppVra)}
+          options={makeOptions(`Majority-Minority Districts (${display})`, enactedOpportunity)}
+        />
+      </div>
     </div>
   );
 };
