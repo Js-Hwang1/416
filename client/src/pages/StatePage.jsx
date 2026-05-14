@@ -8,7 +8,6 @@ import DistrictTable from "../components/state/DistrictTable";
 import ComparePlansView from "../components/planExplorer/ComparePlansView";
 import DemographicsAnalysisPanel, { RPV_CHART_OPTIONS, VRA_CHART_OPTIONS } from "../components/analysis/DemographicsAnalysisPanel";
 import InterestingPlanDropdown from "../components/ui/InterestingPlanDropdown";
-import { generateDummyPlanData } from "../utils/planData";
 import { apiUrl, tilesUrl, useFetchJson } from "../api";
 
 const STATE_CONFIG = {
@@ -52,18 +51,10 @@ const VIEWS = [
   { id: "vraImpact", label: "VRA Impact" },
 ];
 
-const INTERESTING_PLAN_OPTIONS = [
-  { value: "enacted", label: "Enacted" },
-  { value: "max_d", label: "Max Democrat" },
-  { value: "min_d", label: "Max Republican" },
-  { value: "median", label: "Median" },
-  { value: "most_competitive", label: "Most Competitive" },
-  { value: "least_competitive", label: "Least Competitive" },
-  { value: "fewest_county_splits", label: "Fewest County Splits" },
-  { value: "most_county_splits", label: "Most County Splits" },
-  { value: "max_minority_districts", label: "Max Minority Districts" },
-  { value: "min_minority_districts", label: "Min Minority Districts" },
-];
+// The enacted-plan slot is always present; everything else is computed
+// from the robust ensemble per state and fetched from
+// /api/states/{id}/analysis/interesting-plans.
+const ENACTED_OPTION = { value: "enacted", label: "Enacted" };
 
 export default function StatePage() {
   const { stateSlug } = useParams();
@@ -97,6 +88,20 @@ export default function StatePage() {
   const roughProportionalityData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis/rough-proportionality`) : null);
   const expectedSeatChange = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis/expected-seat-change`) : null);
   const enactedDistrictEi = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis/enacted-district-ei`) : null);
+  const interestingPlans = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/analysis/interesting-plans`) : null);
+  const planOptions = useMemo(() => {
+    const opts = [ENACTED_OPTION];
+    for (const p of interestingPlans || []) {
+      opts.push({ value: p.key, label: p.label, planId: p.planId, summary: p.summary, perDistrict: p.perDistrict });
+    }
+    return opts;
+  }, [interestingPlans]);
+  const selectedInterestingMeta = planOptions.find((o) => o.value === selectedInterestingPlan);
+  const alternatePlanGeoJson = useFetchJson(
+    selectedInterestingMeta?.planId
+      ? apiUrl(`/api/states/${cfg.stateId}/geojson/plan/${selectedInterestingMeta.planId}`)
+      : null
+  );
   const districtGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/districts`) : null);
   const precinctGeoJsonData = useFetchJson(cfg ? apiUrl(`/api/states/${cfg.stateId}/geojson/precincts`) : null);
 
@@ -125,9 +130,8 @@ export default function StatePage() {
 
   const activePlanParties = useMemo(() => {
     if (selectedInterestingPlan === "enacted") return reps;
-    if (!cfg) return reps;
-    return generateDummyPlanData(cfg.districts, selectedInterestingPlan);
-  }, [selectedInterestingPlan, reps, cfg]);
+    return selectedInterestingMeta?.perDistrict ?? reps;
+  }, [selectedInterestingPlan, reps, selectedInterestingMeta]);
 
   const heatmapMinorityGroups = useMemo(() => {
     if (!populationByGroupData) return [];
@@ -244,13 +248,14 @@ export default function StatePage() {
         {activeView === "planExplorer" && showCompare && selectedInterestingPlan !== "enacted" && (
           <ComparePlansView
             districtGeoJsonData={districtGeoJsonData}
+            alternatePlanGeoJsonData={alternatePlanGeoJson}
             cfg={cfg}
             selectedDistrict={selectedDistrict}
             onDistrictSelect={setSelectedDistrict}
             reps={reps}
             activePlanParties={activePlanParties}
             selectedInterestingPlan={selectedInterestingPlan}
-            planOptions={INTERESTING_PLAN_OPTIONS}
+            planOptions={planOptions}
             onPlanChange={handlePlanChange}
             onExitCompare={() => setShowCompare(false)}
           />
@@ -271,7 +276,7 @@ export default function StatePage() {
               </div>
               <div className="interesting-plan-controls">
                 <InterestingPlanDropdown
-                  options={INTERESTING_PLAN_OPTIONS}
+                  options={planOptions}
                   value={selectedInterestingPlan}
                   onChange={handlePlanChange}
                 />

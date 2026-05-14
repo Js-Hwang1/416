@@ -43,6 +43,23 @@ public class GeoJsonController {
     @Value("${tigers.geojson-dir:geojson}")
     private String geojsonDir;
 
+    @Value("${tigers.interesting-plans-dir:interesting_plans}")
+    private String interestingPlansDir;
+
+    @GetMapping("/plan/{planId}")
+    public ResponseEntity<Resource> getPlanGeoJson(@PathVariable StateId id, @PathVariable int planId) {
+        String filename = id.name().toLowerCase() + "_plan_" + planId + ".geojson";
+        Path path = Path.of(interestingPlansDir, filename);
+        if (!Files.isReadable(path)) return ResponseEntity.notFound().build();
+        long length;
+        try { length = Files.size(path); } catch (Exception e) { return ResponseEntity.notFound().build(); }
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_TYPE, "application/geo+json")
+            .header(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable")
+            .contentLength(length)
+            .body(new FileSystemResource(path));
+    }
+
     @GetMapping("/{type}")
     public ResponseEntity<Resource> getGeoJson(@PathVariable StateId id, @PathVariable String type) {
         Map<StateId, String> perState = FILENAMES.get(type.toLowerCase());
