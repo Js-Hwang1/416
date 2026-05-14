@@ -1,0 +1,23 @@
+[Unit]
+Description=Tigers Redistricting Spring Boot
+After=network.target mongod.service
+Requires=mongod.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/tigers
+ExecStart=/usr/bin/java -Xmx1500m -jar /opt/tigers/app/app.jar
+# All filesystem paths Spring Boot needs are env-configured so the JAR
+# is location-independent.
+Environment=TIGERS_TILES_DIR=/opt/tigers/tiles/
+Environment=TIGERS_GEOJSON_DIR=/opt/tigers/geojson/
+Environment=TIGERS_STATIC_DIR=/var/www/tigers/
+Restart=on-failure
+RestartSec=5
+SuccessExitStatus=143
+StandardOutput=append:/var/log/tigers.log
+StandardError=append:/var/log/tigers.log
+
+[Install]
+WantedBy=multi-user.target

@@ -118,4 +118,56 @@ public class AnalysisController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    // ---- Variant-aware aggregates ----
+    // Threshold values are passed as path segments using either decimal form
+    // ("0.5") or the legacy short form ("t05"). Both are accepted.
+    @Cacheable(value = "ensembleBarVariant", key = "#id.toString()+#threshold+#variant")
+    @GetMapping({ "/ensemble-bar/{threshold}/{variant}", "/ensemble-bar/{threshold}" })
+    public ResponseEntity<Object> getEnsembleBarVariant(
+            @PathVariable StateId id,
+            @PathVariable String threshold,
+            @PathVariable(required = false) String variant) {
+        return analysisService.getEnsembleBarVariant(id, threshold, variant)
+                .<ResponseEntity<Object>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @Cacheable(value = "minorityBarsVariant", key = "#id.toString()+#threshold+#variant")
+    @GetMapping({ "/minority-bars/{threshold}/{variant}", "/minority-bars/{threshold}" })
+    public ResponseEntity<Object> getMinorityBarsVariant(
+            @PathVariable StateId id,
+            @PathVariable String threshold,
+            @PathVariable(required = false) String variant) {
+        return analysisService.getMinorityBarsVariant(id, threshold, variant)
+                .<ResponseEntity<Object>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @Cacheable(value = "vraImpactVariant", key = "#id.toString()+#threshold+#variant")
+    @GetMapping({ "/vra-impact/{threshold}/{variant}", "/vra-impact/{threshold}" })
+    public ResponseEntity<Object> getVraImpactVariant(
+            @PathVariable StateId id,
+            @PathVariable String threshold,
+            @PathVariable(required = false) String variant) {
+        return analysisService.getVraImpactVariant(id, threshold, variant)
+                .<ResponseEntity<Object>>map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @Cacheable("expectedSeatChange")
+    @GetMapping("/expected-seat-change")
+    public ResponseEntity<Map<String, Object>> getExpectedSeatChange(@PathVariable StateId id) {
+        return analysisService.getExpectedSeatChange(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @Cacheable("enactedDistrictEi")
+    @GetMapping("/enacted-district-ei")
+    public ResponseEntity<Map<String, Object>> getEnactedDistrictEi(@PathVariable StateId id) {
+        return analysisService.getEnactedDistrictEi(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 }

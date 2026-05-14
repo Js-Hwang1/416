@@ -182,4 +182,57 @@ public class AnalysisService {
         for (int i = 0; i < xs.length; i++) points.add(xs[i], ys[i]);
         return PolynomialCurveFitter.create(POLY_DEGREE).fit(points.toList());
     }
+
+    // --------------- Variant-aware aggregates ---------------
+
+    private static final String DEFAULT_VARIANT = "robust";
+
+    /** Normalizes a path-segment threshold to the "0.5" / "0.6" / "0.7" key
+     *  used in the Mongo document. Accepts "0.5", "t05", "t5", etc. */
+    private static String normalizeThreshold(String raw) {
+        if (raw == null) return null;
+        String s = raw.toLowerCase().trim();
+        if (s.startsWith("t")) s = s.substring(1);
+        try {
+            double d = Double.parseDouble(s);
+            if (d > 1.0) d = d / 10.0;   // "5" / "05" -> 0.5
+            return String.format(java.util.Locale.US, "%.1f", d);
+        } catch (NumberFormatException ex) {
+            return raw;
+        }
+    }
+
+    private Optional<Object> getVariantSlice(StateId id, String threshold, String variant,
+                                             java.util.function.Function<AnalysisData, Map<String, Map<String, Object>>> picker) {
+        return analysisDataRepository.findById(id).map(ad -> {
+            Map<String, Map<String, Object>> byVariant = picker.apply(ad);
+            if (byVariant == null) return null;
+            String v = (variant == null || variant.isEmpty()) ? DEFAULT_VARIANT : variant;
+            Map<String, Object> byThreshold = byVariant.get(v);
+            if (byThreshold == null) return null;
+            String t = normalizeThreshold(threshold);
+            Object slice = byThreshold.get(t);
+            return slice;
+        });
+    }
+
+    public Optional<Object> getEnsembleBarVariant(StateId id, String threshold, String variant) {
+        return getVariantSlice(id, threshold, variant, AnalysisData::getEnsembleBarsByVariant);
+    }
+
+    public Optional<Object> getMinorityBarsVariant(StateId id, String threshold, String variant) {
+        return getVariantSlice(id, threshold, variant, AnalysisData::getMinorityBarsByVariant);
+    }
+
+    public Optional<Object> getVraImpactVariant(StateId id, String threshold, String variant) {
+        return getVariantSlice(id, threshold, variant, AnalysisData::getVraImpactByVariant);
+    }
+
+    public Optional<Map<String, Object>> getExpectedSeatChange(StateId id) {
+        return analysisDataRepository.findById(id).map(AnalysisData::getExpectedSeatChange);
+    }
+
+    public Optional<Map<String, Object>> getEnactedDistrictEi(StateId id) {
+        return analysisDataRepository.findById(id).map(AnalysisData::getEnactedDistrictEi);
+    }
 }

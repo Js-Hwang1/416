@@ -109,6 +109,34 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts" \
             deploy/www/ "$DROPLET_USER@$DROPLET_HOST:/var/www/tigers/"
 
+      - name: Sync nginx + systemd config
+        run: |
+          # Copy committed nginx config and systemd unit into place.
+          # Reload nginx if the config actually changed; do the same for
+          # systemd (daemon-reload only on change).
+          scp -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+            deploy/nginx-tigers.conf "$DROPLET_USER@$DROPLET_HOST:/tmp/nginx-tigers.conf"
+          scp -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+            deploy/tigers.service "$DROPLET_USER@$DROPLET_HOST:/tmp/tigers.service"
+          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \
+            "$DROPLET_USER@$DROPLET_HOST" "set -e
+              CHG_NGINX=0; CHG_SYSD=0
+              if ! cmp -s /tmp/nginx-tigers.conf /etc/nginx/sites-available/tigers 2>/dev/null; then
+                cp /etc/nginx/sites-available/tigers /etc/nginx/sites-available/tigers.bak.\$(date +%s) 2>/dev/null || true
+                mv /tmp/nginx-tigers.conf /etc/nginx/sites-available/tigers
+                ln -sf /etc/nginx/sites-available/tigers /etc/nginx/sites-enabled/tigers
+                rm -f /etc/nginx/sites-enabled/default
+                nginx -t && systemctl reload nginx && echo 'nginx reloaded'
+                CHG_NGINX=1
+              fi
+              if ! cmp -s /tmp/tigers.service /etc/systemd/system/tigers.service 2>/dev/null; then
+                mv /tmp/tigers.service /etc/systemd/system/tigers.service
+                systemctl daemon-reload && echo 'systemd reloaded'
+                CHG_SYSD=1
+              fi
+              rm -f /tmp/nginx-tigers.conf /tmp/tigers.service
+              echo \"nginx_changed=\$CHG_NGINX systemd_changed=\$CHG_SYSD\""
+
       - name: Restart Spring Boot
         run: |
           ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts \

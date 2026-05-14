@@ -27,6 +27,16 @@ public class AnalysisData {
     private MinorityEffectivenessData minorityEffectiveness;
     // Shape: { "0.5": { "Black": { "effective": { "enacted": N, ... }, ... }, ... }, ... }
     private Map<String, Map<String, Map<String, Map<String, Object>>>> minorityBarsByThreshold;
+    // Variant-aware aggregates. Shape:
+    //   { "robust": { "0.5": {...}, "0.6": {...}, "0.7": {...} },
+    //     "standard": {...},
+    //     "compactness": {...} }
+    private Map<String, Map<String, Object>> ensembleBarsByVariant;
+    private Map<String, Map<String, Object>> minorityBarsByVariant;
+    private Map<String, Map<String, Object>> vraImpactByVariant;
+    // Static-ish per-state analysis blobs.
+    private Map<String, Object> expectedSeatChange;
+    private Map<String, Object> enactedDistrictEi;
 
     public StateId getId() { return id; }
     public void setId(StateId id) { this.id = id; }
@@ -71,4 +81,19 @@ public class AnalysisData {
     public void setMinorityBarsByThreshold(Map<String, Map<String, Map<String, Map<String, Object>>>> minorityBarsByThreshold) {
         this.minorityBarsByThreshold = minorityBarsByThreshold;
     }
+
+    public Map<String, Map<String, Object>> getEnsembleBarsByVariant() { return ensembleBarsByVariant; }
+    public void setEnsembleBarsByVariant(Map<String, Map<String, Object>> v) { this.ensembleBarsByVariant = v; }
+
+    public Map<String, Map<String, Object>> getMinorityBarsByVariant() { return minorityBarsByVariant; }
+    public void setMinorityBarsByVariant(Map<String, Map<String, Object>> v) { this.minorityBarsByVariant = v; }
+
+    public Map<String, Map<String, Object>> getVraImpactByVariant() { return vraImpactByVariant; }
+    public void setVraImpactByVariant(Map<String, Map<String, Object>> v) { this.vraImpactByVariant = v; }
+
+    public Map<String, Object> getExpectedSeatChange() { return expectedSeatChange; }
+    public void setExpectedSeatChange(Map<String, Object> expectedSeatChange) { this.expectedSeatChange = expectedSeatChange; }
+
+    public Map<String, Object> getEnactedDistrictEi() { return enactedDistrictEi; }
+    public void setEnactedDistrictEi(Map<String, Object> enactedDistrictEi) { this.enactedDistrictEi = enactedDistrictEi; }
 }
