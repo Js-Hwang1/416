@@ -47,6 +47,7 @@ function makeOptions(title) {
         title: { display: true, text: "Number of districts", font: { size: 11, weight: "700", family: "'Verdana', sans-serif" }, color: "#000" },
         ticks: { font: { size: 10, weight: "700", family: "'Verdana', sans-serif" }, color: "#000" },
         grid: { display: false },
+        offset: true,
       },
       y: {
         beginAtZero: true,
@@ -69,6 +70,9 @@ function makeChartData(rbArr, vraArr) {
         backgroundColor: RB_COLOR,
         borderColor: RB_COLOR.replace("0.75", "1"),
         borderWidth: 1,
+        maxBarThickness: 60,
+        categoryPercentage: 0.6,
+        barPercentage: 0.85,
       },
       {
         label: "VRA-Constrained",
@@ -76,12 +80,30 @@ function makeChartData(rbArr, vraArr) {
         backgroundColor: VRA_COLOR,
         borderColor: VRA_COLOR.replace("0.75", "1"),
         borderWidth: 1,
+        maxBarThickness: 60,
+        categoryPercentage: 0.6,
+        barPercentage: 0.85,
       },
     ],
   };
 }
 
+// True if the only non-zero category is count=0, meaning across the entire
+// ensemble no plan produced even one effective/majority-minority district
+// for this group. Renders cleaner as a placeholder than a single fat bar.
+function isTrivialZero(rbArr, vraArr) {
+  const both = [...(rbArr || []), ...(vraArr || [])];
+  return both.length > 0 && both.every((r) => r.count === 0);
+}
+
 const DISPLAY = { Hispanic: "Latino", Black: "Black", Asian: "Asian", White: "White" };
+
+const TrivialPanel = ({ title }) => (
+  <div className="bar-chart-panel" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", color: "#666" }}>
+    <strong style={{ marginBottom: 8, color: "#111" }}>{title}</strong>
+    <span style={{ fontSize: "0.85rem" }}>No plan in either ensemble had any qualifying district for this group at the selected threshold.</span>
+  </div>
+);
 
 const MinorityBarsChart = ({ data, group }) => {
   if (!data) return <div className="placeholder-card">Loading minority bar data…</div>;
@@ -98,25 +120,31 @@ const MinorityBarsChart = ({ data, group }) => {
     );
   }
 
-  const effectiveData = makeChartData(
-    groupData.effective?.raceBlindData,
-    groupData.effective?.vraData
-  );
-  const opportunityData = makeChartData(
-    groupData.opportunity?.raceBlindData,
-    groupData.opportunity?.vraData
-  );
-
   const display = DISPLAY[groupKey] || groupKey;
+  const effRb = groupData.effective?.raceBlindData;
+  const effVra = groupData.effective?.vraData;
+  const oppRb = groupData.opportunity?.raceBlindData;
+  const oppVra = groupData.opportunity?.vraData;
+
+  const effTrivial = isTrivialZero(effRb, effVra);
+  const oppTrivial = isTrivialZero(oppRb, oppVra);
 
   return (
     <div className="bar-chart-wrapper">
-      <div className="bar-chart-panel">
-        <Bar data={effectiveData} options={makeOptions(`Minority-Effective Districts (${display})`)} />
-      </div>
-      <div className="bar-chart-panel">
-        <Bar data={opportunityData} options={makeOptions(`Majority-Minority Districts (${display})`)} />
-      </div>
+      {effTrivial ? (
+        <TrivialPanel title={`Minority-Effective Districts (${display})`} />
+      ) : (
+        <div className="bar-chart-panel">
+          <Bar data={makeChartData(effRb, effVra)} options={makeOptions(`Minority-Effective Districts (${display})`)} />
+        </div>
+      )}
+      {oppTrivial ? (
+        <TrivialPanel title={`Majority-Minority Districts (${display})`} />
+      ) : (
+        <div className="bar-chart-panel">
+          <Bar data={makeChartData(oppRb, oppVra)} options={makeOptions(`Majority-Minority Districts (${display})`)} />
+        </div>
+      )}
     </div>
   );
 };
